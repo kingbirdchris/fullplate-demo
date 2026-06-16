@@ -24,7 +24,7 @@
     .rcard:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
     .addbtn:hover,.paybtn:hover,.composer button:hover{background:var(--brand-dark)}
     .chip:hover{background:var(--brand);color:#fff}
-    .citytab:hover{border-color:var(--ink)}
+    .citytab:hover,.kindtab:hover{border-color:var(--ink)}
     .qstep button:hover,.back:hover,.close:hover,.again:hover{border-color:var(--ink)}
     .ai-launch:hover{box-shadow:var(--shadow-lg)}
   }
@@ -49,11 +49,15 @@
   .citytab .cpin{font-size:10px;color:var(--line)}
   .citytab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .citytab.on .cpin{color:var(--brand)}
+  .kindrow{display:flex;gap:8px;padding:10px 16px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .kindtab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:var(--pill);padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap}
+  .kindtab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
   .pop{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px;background:#FCEFD9;color:#9C6206}
   .rcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);margin:10px 16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer}
   .rcard:active{transform:scale(.99)}
   .rcard.is-feat{border-color:var(--brand);box-shadow:0 0 0 2px rgba(232,98,61,.22), var(--shadow)}
-  .rbanner{height:96px;display:flex;align-items:center;justify-content:center;font-size:46px;position:relative}
+  .rbanner{height:104px;display:flex;align-items:center;justify-content:center;font-size:50px;position:relative}
+  .bemoji{filter:drop-shadow(0 6px 10px rgba(42,33,28,.20))}
   .rbadge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.96);color:var(--good);font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill);display:flex;align-items:center;gap:5px}
   .feat{position:absolute;top:10px;right:10px;background:var(--ink);color:#fff;font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill)}
   .rbody{padding:12px 14px 14px}
@@ -62,7 +66,7 @@
   .rmeta .star{color:#B8740B}
   .rblurb{margin:8px 0 0;color:var(--muted);font-size:var(--t-sm);line-height:1.45}
   #view-restaurant{display:none}
-  .rhead-banner{height:140px;display:flex;align-items:center;justify-content:center;font-size:64px}
+  .rhead-banner{height:150px;display:flex;align-items:center;justify-content:center;font-size:70px}
   .rhead-info{padding:16px}
   .rhead-info h2{margin:0 0 6px;font-size:var(--t-xl);letter-spacing:-.5px}
   .rstory{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin:12px 0 4px;font-size:var(--t-sm);color:var(--muted);line-height:1.5}
@@ -141,6 +145,7 @@
   #view-done .again{margin-top:26px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 22px;font-weight:700}
   .footer{padding:26px 16px 14px;text-align:center;color:var(--muted);font-size:var(--t-xs);line-height:1.6}
   .footer b{color:var(--brand)}
+  .empty{padding:30px 24px;text-align:center;color:var(--muted);font-size:var(--t-sm)}
 </style>
 </head>
 <body>
@@ -162,6 +167,7 @@
       </div>
     </div>
     <div class="citytabs" id="cityTabs"></div>
+    <div class="kindrow" id="kindTabs"></div>
     <div class="section-label" id="rlistLabel">Restaurants near you</div>
     <div id="rlist"></div>
     <div class="footer">
@@ -204,10 +210,10 @@
 </div>
 
 <script>
-/* DATA — add a restaurant by appending one object. tags: gf, v, spicy. featured:true pins it first with a ribbon. */
+/* DATA — add a restaurant by appending one object. tags: gf, v, spicy. featured:true pins it first. kind drives the food-type filter. */
 const RESTAURANTS = [
   {
-    id:'chiwas', city:'Phoenix', featured:true, name:'Tacos Chiwas', cuisine:'Chihuahua-style Mexican', emoji:'🌮',
+    id:'chiwas', city:'Phoenix', kind:'Mexican', featured:true, name:'Tacos Chiwas', cuisine:'Chihuahua-style Mexican', emoji:'🌮',
     color:'#FBE3DA', rating:4.6, reviews:1064, eta:'15–25 min', price:'$$', popular:'tc1',
     blurb:'Family-run Chihuahua-style taqueria on Indian School Rd. Handmade tortillas, made to order.',
     story:"A beloved Phoenix taqueria serving the Chihuahua-style cooking the owners grew up on. The corn tortillas are pressed by hand and the gorditas are made to order.",
@@ -234,7 +240,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'rosas', city:'Phoenix', name:"Rosa's Cocina", cuisine:'Sonoran Mexican', emoji:'🌮',
+    id:'rosas', city:'Phoenix', kind:'Mexican', name:"Rosa's Cocina", cuisine:'Sonoran Mexican', emoji:'🌮',
     color:'#FBE7DD', rating:4.8, reviews:412, eta:'20–30 min', price:'$$', popular:'r4',
     blurb:'Family-run Sonoran kitchen in South Phoenix since 1998.',
     story:"Rosa learned mole from her grandmother in Hermosillo. Everything is made from scratch daily, and the salsas are not for the faint of heart.",
@@ -256,7 +262,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'pho', city:'Phoenix', name:'Pho Saigon Kitchen', cuisine:'Vietnamese', emoji:'🍜',
+    id:'pho', city:'Phoenix', kind:'Asian', name:'Pho Saigon Kitchen', cuisine:'Vietnamese', emoji:'🍜',
     color:'#E7F0EA', rating:4.7, reviews:286, eta:'15–25 min', price:'$$', popular:'p1',
     blurb:'Slow-simmered broth and bright herbs on East McDowell.',
     story:"The Tran family simmers their beef broth for 12 hours every morning. No shortcuts, no MSG, just the recipe they brought from Saigon.",
@@ -276,7 +282,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'slice', city:'Phoenix', name:'Slice & Co. Pizzeria', cuisine:'Wood-fired Pizza', emoji:'🍕',
+    id:'slice', city:'Phoenix', kind:'Pizza', name:'Slice & Co. Pizzeria', cuisine:'Wood-fired Pizza', emoji:'🍕',
     color:'#FBEFD9', rating:4.9, reviews:531, eta:'25–35 min', price:'$$', popular:'s2',
     blurb:'Naples-style pies from a downtown garage, fermented 72 hours.',
     story:"Danny ferments his dough for three days and fires every pie at 900 degrees. The menu is short on purpose. He only makes what he is proud of.",
@@ -296,7 +302,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'bashir', city:'Phoenix', name:"Bashir's Mediterranean", cuisine:'Mediterranean', emoji:'🥙',
+    id:'bashir', city:'Phoenix', kind:'Mediterranean', name:"Bashir's Mediterranean", cuisine:'Mediterranean', emoji:'🥙',
     color:'#EAF1F6', rating:4.7, reviews:243, eta:'20–30 min', price:'$$', popular:'b1',
     blurb:'Charcoal-grilled shawarma and fresh-pressed hummus in Tempe.',
     story:"Bashir came from Amman with his spice blends and a charcoal grill. He still greets regulars by name and slides an extra falafel into the bag.",
@@ -316,7 +322,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'smoke', city:'Phoenix', name:'Smoke & Oak BBQ', cuisine:'Texas BBQ', emoji:'🍖',
+    id:'smoke', city:'Phoenix', kind:'BBQ', name:'Smoke & Oak BBQ', cuisine:'Texas BBQ', emoji:'🍖',
     color:'#F3E5DD', rating:4.8, reviews:389, eta:'25–35 min', price:'$$$', popular:'m1',
     blurb:'Oak-smoked brisket by the pound, until it sells out.',
     story:"Marcus smokes brisket over Texas post oak for 14 hours and sells until it is gone, usually by mid-afternoon. When the sign flips to sold out, that is the day done.",
@@ -337,7 +343,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'sunrise', city:'Phoenix', name:'Sunrise Cafe', cuisine:'Breakfast & Brunch', emoji:'🍳',
+    id:'sunrise', city:'Phoenix', kind:'Breakfast', name:'Sunrise Cafe', cuisine:'Breakfast & Brunch', emoji:'🍳',
     color:'#FCEFD2', rating:4.6, reviews:512, eta:'15–25 min', price:'$$', popular:'n1',
     blurb:'All-day breakfast and bottomless coffee in Arcadia.',
     story:"A neighborhood diner run by the Ortiz sisters, where the green chile is roasted in-house and the regulars have had the same booth for years.",
@@ -358,7 +364,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'platos', city:'Orange, CA', name:'Plato Verde', cuisine:'Coastal Mexican', emoji:'🫔',
+    id:'platos', city:'Orange, CA', kind:'Mexican', name:'Plato Verde', cuisine:'Coastal Mexican', emoji:'🫔',
     color:'#E8F1E6', rating:4.8, reviews:367, eta:'20–30 min', price:'$$', popular:'o2',
     blurb:'Baja-style seafood and street tacos off the Orange Circle.',
     story:"Elena grew up cooking in Ensenada and opened Plato Verde two blocks from the Plaza. The fish is delivered every morning and the tortillas are pressed to order.",
@@ -378,7 +384,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'harbor', city:'Orange, CA', name:'Harbor & Vine', cuisine:'California Comfort', emoji:'🥪',
+    id:'harbor', city:'Orange, CA', kind:'Sandwiches', name:'Harbor & Vine', cuisine:'California Comfort', emoji:'🥪',
     color:'#FBEEDF', rating:4.7, reviews:298, eta:'15–25 min', price:'$$', popular:'h1',
     blurb:'Scratch sandwiches and grain bowls in Old Towne Orange.',
     story:"A husband-and-wife team who left restaurant kitchens to open a corner spot focused on local produce and bread baked down the street. Everything is made the morning you order it.",
@@ -397,7 +403,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'sakura', city:'Orange, CA', name:'Sakura Ramen Bar', cuisine:'Ramen & Japanese', emoji:'🍜',
+    id:'sakura', city:'Orange, CA', kind:'Asian', name:'Sakura Ramen Bar', cuisine:'Ramen & Japanese', emoji:'🍜',
     color:'#F3E7EE', rating:4.9, reviews:455, eta:'20–30 min', price:'$$', popular:'k1',
     blurb:'Tonkotsu simmered overnight, a few seats near Chapman.',
     story:"Kenji trained in Fukuoka and brings that broth home to Orange. The pork bones simmer for 18 hours and the noodles are made fresh in-house every day.",
@@ -417,7 +423,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'poke', city:'Orange, CA', name:'Citrus Poke Co.', cuisine:'Hawaiian Poke', emoji:'🐟',
+    id:'poke', city:'Orange, CA', kind:'Asian', name:'Citrus Poke Co.', cuisine:'Hawaiian Poke', emoji:'🐟',
     color:'#E6F1F2', rating:4.6, reviews:271, eta:'10–20 min', price:'$$', popular:'j1',
     blurb:'Build-your-own poke with sushi-grade fish near the Circle.',
     story:"Kai grew up in Oahu and missed real poke after moving to Orange, so he built a counter around daily-delivered ahi and his grandmother's shoyu recipe.",
@@ -437,7 +443,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'burger', city:'Orange, CA', name:'The Plaza Burger', cuisine:'Smash Burgers', emoji:'🍔',
+    id:'burger', city:'Orange, CA', kind:'Burgers', name:'The Plaza Burger', cuisine:'Smash Burgers', emoji:'🍔',
     color:'#FBE9DC', rating:4.8, reviews:604, eta:'15–25 min', price:'$$', popular:'u1',
     blurb:'Smash burgers and hand-cut fries on the Orange Plaza.',
     story:"A walk-up window run by two line cooks who wanted to make one thing perfectly. Local beef, smashed to order, never frozen.",
@@ -454,7 +460,7 @@ const RESTAURANTS = [
     ]
   },
   {
-    id:'bella', city:'Orange, CA', name:'Bella Trattoria', cuisine:'Italian', emoji:'🍝',
+    id:'bella', city:'Orange, CA', kind:'Italian', name:'Bella Trattoria', cuisine:'Italian', emoji:'🍝',
     color:'#F4E7E2', rating:4.7, reviews:418, eta:'25–35 min', price:'$$$', popular:'e1',
     blurb:'Handmade pasta and wood-fired classics in Old Towne.',
     story:"Nonna Bella's recipes, run by her grandson Marco. The pasta is rolled every morning and the marinara simmers from breakfast until close.",
@@ -475,25 +481,32 @@ const RESTAURANTS = [
   },
 ];
 
-let current=null, cart=[], activeCity='Phoenix', cartRest=null;
+let current=null, cart=[], activeCity='Phoenix', activeKind='All', cartRest=null;
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
 
-function setCity(c){ activeCity=c; renderHome(); window.scrollTo(0,0); }
+function setCity(c){ activeCity=c; activeKind='All'; renderHome(); window.scrollTo(0,0); }
+function setKind(k){ activeKind=k; renderHome(); }
 
 function renderHome(){
   document.getElementById('cityTabs').innerHTML = cities().map(c=>`
     <button class="citytab ${c===activeCity?'on':''}" onclick="setCity('${c}')"><span class="cpin">◉</span> ${c}</button>`).join('');
-  const list = RESTAURANTS.filter(r=>r.city===activeCity).sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
-  document.getElementById('rlistLabel').textContent = `${list.length} restaurants in ${activeCity}`;
-  document.getElementById('rlist').innerHTML = list.map(r=>`
+  const inCity = RESTAURANTS.filter(r=>r.city===activeCity);
+  const kinds = ['All', ...[...new Set(inCity.map(r=>r.kind))].sort()];
+  document.getElementById('kindTabs').innerHTML = kinds.map(k=>`
+    <button class="kindtab ${k===activeKind?'on':''}" onclick="setKind('${k}')">${k==='All'?'All food':k}</button>`).join('');
+  const list = inCity.filter(r=>activeKind==='All'||r.kind===activeKind)
+    .sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
+  document.getElementById('rlistLabel').textContent =
+    `${list.length} ${activeKind==='All'?'restaurants':activeKind.toLowerCase()+' spots'} in ${activeCity}`;
+  document.getElementById('rlist').innerHTML = list.length ? list.map(r=>`
     <div class="rcard ${r.featured?'is-feat':''}" onclick="openRestaurant('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRestaurant('${r.id}')" aria-label="${r.name}, ${r.cuisine}">
-      <div class="rbanner" style="background:${r.color}">${r.emoji}<div class="rbadge">● 0% commission</div>${r.featured?'<div class="feat">★ Featured</div>':''}</div>
+      <div class="rbanner" style="background:linear-gradient(135deg, ${r.color} 0%, #ffffff 140%)"><span class="bemoji">${r.emoji}</span><div class="rbadge">● 0% commission</div>${r.featured?'<div class="feat">★ Featured</div>':''}</div>
       <div class="rbody">
         <h3>${r.name}</h3>
         <div class="rmeta"><span class="star">★ ${r.rating}</span><span>(${r.reviews})</span>·<span>${r.cuisine}</span>·<span>${r.price}</span>·<span>◷ ${r.eta}</span></div>
         <p class="rblurb">${r.blurb}</p>
       </div>
-    </div>`).join('');
+    </div>`).join('') : '<div class="empty">No spots in this category yet.</div>';
 }
 
 function openRestaurant(id){
@@ -503,7 +516,7 @@ function openRestaurant(id){
   window.scrollTo(0,0);
   document.getElementById('view-restaurant').innerHTML = `
     <div class="rhead">
-      <div class="rhead-banner" style="background:${current.color}">${current.emoji}</div>
+      <div class="rhead-banner" style="background:linear-gradient(135deg, ${current.color} 0%, #ffffff 145%)"><span class="bemoji">${current.emoji}</span></div>
       <div class="rhead-info">
         <h2>${current.name}</h2>
         <div class="rmeta"><span class="star">★ ${current.rating}</span><span>(${current.reviews})</span>·<span>${current.cuisine}</span>·<span>${current.price}</span>·<span>◷ ${current.eta} pickup</span></div>
