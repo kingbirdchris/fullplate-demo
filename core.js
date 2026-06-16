@@ -142,7 +142,7 @@ function modSheetRender(){
     <div class="modgroup">
       <div class="modglabel">${g.name}<span>${g.multi?('Choose up to '+(g.max||g.options.length)):'Choose one'}</span></div>
       ${g.options.map((o,oi)=>{const on=modSel[g.name].some(s=>s.name===o.name);return `
-        <div class="modopt ${on?'on':''}" onclick="modPick(${gi},${oi})">
+        <div class="modopt ${on?'on':''}" onclick="modPick(${gi},${oi})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')modPick(${gi},${oi})">
           <span class="moname">${o.name}</span>
           <span class="moprice">${o.price>0?'+$'+o.price.toFixed(2):''}</span>
           <span class="modot"></span>
@@ -303,8 +303,14 @@ function reorder(idx){
   openRestaurant(r.id);
 }
 
-function show(id){ ['view-home','view-restaurant','view-checkout','view-done','view-owner','view-account'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
+function show(id){
+  ['view-home','view-restaurant','view-checkout','view-done','view-owner','view-account'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; });
+  const navmap={'view-home':'home','view-account':'account','view-owner':'owner'};
+  const active=navmap[id]||'home';
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on', b.getAttribute('data-nav')===active));
+}
 function goHome(){ closeChat(); show('view-home'); document.getElementById('backBtn').style.display='none'; updateCartBar(); window.scrollTo(0,0); }
+function goSearch(){ goHome(); const s=document.getElementById('searchBox'); if(s){ try{s.focus();}catch(e){} } document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on', b.getAttribute('data-nav')==='search')); }
 function goBack(){
   if(document.getElementById('view-checkout').style.display==='block' && current){ openRestaurant(current.id); updateCartBar(); return; }
   goHome();
