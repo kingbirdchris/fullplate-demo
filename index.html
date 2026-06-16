@@ -26,6 +26,12 @@
 .ratestars span{opacity:.3;transition:opacity .12s}
 .ratestars span.on{opacity:1}
 .ratedone{font-size:13.5px;color:var(--good);font-weight:700;margin-top:6px}
+/* Owner Menu row: stack item info on top, action buttons on their own full-width grid below */
+.mrow{flex-wrap:wrap}
+.mrow .mthumb.sm{align-self:flex-start}
+.medit{flex:1 1 100%;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);justify-content:stretch}
+.medit .ebtn{width:100%;text-align:center;padding:8px 6px}
+.medit .soldbtn{width:100%;text-align:center;padding:8px 6px;grid-column:1 / -1}
 </style>
 </head>
 <body>
