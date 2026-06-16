@@ -79,6 +79,7 @@
   .mitem{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);margin:8px 16px;padding:10px 12px}
   .mthumb{width:58px;height:58px;border-radius:11px;display:grid;place-items:center;font-size:26px;flex:0 0 auto;background-size:cover;background-position:center;overflow:hidden}
   .mthumb.dim{opacity:.45;filter:grayscale(.5)}
+  .mthumb.sm{width:44px;height:44px;font-size:20px;border-radius:9px}
   .minfo{flex:1;min-width:0}
   .minfo h4{margin:0 0 2px;font-size:14.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .minfo p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.4}
@@ -134,6 +135,10 @@
   .qstep{display:inline-flex;align-items:center;gap:14px;margin-top:8px}
   .qstep button{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:18px;line-height:1;color:var(--ink)}
   .qstep span{font-size:var(--t-md);font-weight:700;min-width:16px;text-align:center}
+  .promorow{display:flex;gap:8px;padding:12px 16px 2px}
+  .promoinput{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:13px;outline:none;text-transform:uppercase;background:#fff}
+  .promoinput:focus{border-color:var(--brand)}
+  .promobtn{border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:10px;padding:11px 16px;font-size:13px;font-weight:700}
   .co-tot{display:flex;justify-content:space-between;padding:12px 16px;font-size:var(--t-md)}
   .co-tot.big{font-weight:800;font-size:var(--t-lg);border-top:2px solid var(--line);margin-top:4px;padding-top:14px}
   .savecard{margin:16px;background:#EAF5EE;border:1px solid #CDE7D8;border-radius:var(--r-md);padding:14px 16px}
@@ -177,14 +182,21 @@
   .ofoot{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .ocust{font-size:12px;color:var(--muted)}
   .oadv{border:none;background:var(--brand);color:#fff;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;white-space:nowrap}
+  .addbtn2{width:100%;border:1px dashed var(--brand);background:#fff;color:var(--brand);border-radius:var(--r-md);padding:12px;font-size:13.5px;font-weight:700;margin:0 0 6px}
   .mrow{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;margin:8px 0;gap:10px}
   .mrow b{font-size:13.5px}.mrow .mp{font-size:12.5px;color:var(--muted)}
-  .soldbtn{flex:0 0 auto;border:1px solid #BFE0CC;background:#EAF5EE;color:#1F6B43;border-radius:var(--pill);padding:7px 13px;font-size:12px;font-weight:700;white-space:nowrap}
+  .mgrow{flex:1;min-width:0}
+  .medit{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+  .ebtn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:var(--pill);padding:6px 11px;font-size:11.5px;font-weight:700}
+  .ebtn.del{border-color:#E1B8AD;color:#C44A28}
+  .soldbtn{flex:0 0 auto;border:1px solid #BFE0CC;background:#EAF5EE;color:#1F6B43;border-radius:var(--pill);padding:6px 11px;font-size:11.5px;font-weight:700;white-space:nowrap}
   .soldbtn.off{border-color:#E1B8AD;background:#FBEAE5;color:#C44A28}
+  .rvreply{margin-top:8px;background:#F3ECE2;border-radius:var(--r-sm);padding:8px 10px;font-size:12.5px;color:var(--ink);line-height:1.4}
+  .rvreply b{color:var(--good)}
   .hrow{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;margin:8px 0;gap:12px}
   .hrow.col{flex-direction:column;align-items:stretch}
   .hrow b{font-size:14px;display:block;margin-bottom:2px}.hrow span{font-size:11.5px;color:var(--muted)}
-  .tgl{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--pill);padding:9px 16px;font-size:13px;font-weight:800;min-width:86px}
+  .tgl{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--pill);padding:9px 16px;font-size:13px;font-weight:800;min-width:80px}
   .tgl.on{background:var(--good);color:#fff;border-color:var(--good)}
   .tgl.warn{background:var(--brand-dark);color:#fff;border-color:var(--brand-dark)}
   .prepwrap{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -311,6 +323,7 @@ const PIC_ORDER = [
   ['taco',IMG.chiwas]
 ];
 function itemPhoto(name){ const n=name.toLowerCase(); for(const p of PIC_ORDER){ if(n.includes(p[0])) return p[1]; } return null; }
+function photoFor(it){ return photoOverride[it.id] || itemPhoto(it.name); }
 function bannerStyle(id, color, scrim){
   return IMG[id]
     ? `background-image:${scrim},url('${IMG[id]}')`
@@ -589,11 +602,13 @@ const RESTAURANTS = [
   },
 ];
 
-let current=null, cart=[], activeCity='Phoenix', activeKind='All', activeSearch='', cartRest=null;
+let current=null, cart=[], activeCity='Phoenix', activeKind='All', activeSearch='', cartRest=null, appliedPromo=null;
 const placedOrders=[];
 let aiHistory=[];
 let ownerRest='chiwas', ownerTab='overview', __oid=1000, __toastT=null;
-const QUEUE={}, STORE={}, unavailable={};
+const QUEUE={}, STORE={}, unavailable={}, photoOverride={}, reviews={};
+const promos=[{code:'LOCAL10',type:'pct',value:10,label:'10% off your order'}];
+const ownerSettings={sound:true,autoprint:true,smsReady:true,dailyEmail:false,tips:true};
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
 function storeOf(r){ if(!STORE[r.id]) STORE[r.id]={open:true,paused:false,prep:r.eta}; return STORE[r.id]; }
 function orderingOpen(r){ const s=storeOf(r); return s.open && !s.paused; }
@@ -637,7 +652,7 @@ function renderHome(){
 
 function openRestaurant(id){
   current = RESTAURANTS.find(r=>r.id===id);
-  if(cart.length && cartRest!==id){ cart=[]; updateCartBar(); }
+  if(cart.length && cartRest!==id){ cart=[]; appliedPromo=null; updateCartBar(); }
   chatStarted=false; aiHistory=[]; document.getElementById('chat').innerHTML='';
   window.scrollTo(0,0);
   const s=storeOf(current); const open=s.open && !s.paused;
@@ -660,7 +675,7 @@ function openRestaurant(id){
     </div>`:''}
     ${current.menu.map(cat=>`
       <div class="menucat">${cat.cat}</div>
-      ${cat.items.map(it=>{const ph=itemPhoto(it.name);const so=unavailable[it.id];return `
+      ${cat.items.map(it=>{const ph=photoFor(it);const so=unavailable[it.id];return `
         <div class="mitem">
           <div class="mthumb ${so?'dim':''}" style="${ph?`background-image:url('${ph}')`:`background:${current.color}`}">${ph?'':it.emoji}</div>
           <div class="minfo">
@@ -689,16 +704,24 @@ function addToCart(id){
   updateCartBar(); return it;
 }
 function cartTotals(){ const sub=cart.reduce((s,c)=>s+c.price*c.qty,0); const count=cart.reduce((s,c)=>s+c.qty,0); return {sub,count}; }
+function promoDiscount(sub){ if(!appliedPromo) return 0; return appliedPromo.type==='pct' ? sub*(appliedPromo.value/100) : Math.min(appliedPromo.value, sub); }
 function updateCartBar(){
   const {sub,count}=cartTotals(); const bar=document.getElementById('cartbar');
   if(count>0){bar.style.display='flex';document.getElementById('cartCount').textContent=count;document.getElementById('cartTotal').textContent=sub.toFixed(2);}
   else bar.style.display='none';
 }
+function applyPromo(){
+  const v=((document.getElementById('promoIn')||{}).value||'').trim().toUpperCase();
+  if(!v){ appliedPromo=null; openCheckout(); return; }
+  const p=promos.find(x=>x.code===v);
+  if(!p){ appliedPromo=null; showToast('Code not found'); openCheckout(); return; }
+  appliedPromo=p; showToast('Promo '+p.code+' applied'); openCheckout();
+}
 
 function openCheckout(){
   if(cartTotals().count===0) return;
   closeChat();
-  const {sub}=cartTotals(); const tax=sub*0.086; const total=sub+tax; const doordashCut=sub*0.30;
+  const {sub}=cartTotals(); const disc=promoDiscount(sub); const taxed=Math.max(0,sub-disc); const tax=taxed*0.086; const total=taxed+tax; const doordashCut=sub*0.30;
   document.getElementById('view-checkout').innerHTML=`
     <div class="section-label" style="padding-top:14px">Your order · ${current.name}</div>
     ${cart.map(c=>`
@@ -708,13 +731,15 @@ function openCheckout(){
         </div>
         <div>$${(c.price*c.qty).toFixed(2)}</div>
       </div>`).join('')}
+    <div class="promorow"><input id="promoIn" class="promoinput" placeholder="Promo code" value="${appliedPromo?appliedPromo.code:''}"><button class="promobtn" onclick="applyPromo()">${appliedPromo?'Change':'Apply'}</button></div>
     <div class="co-tot"><span>Subtotal</span><span>$${sub.toFixed(2)}</span></div>
+    ${disc>0?`<div class="co-tot"><span>Promo ${appliedPromo.code}</span><span style="color:var(--good);font-weight:700">−$${disc.toFixed(2)}</span></div>`:''}
     <div class="co-tot"><span>Estimated tax</span><span>$${tax.toFixed(2)}</span></div>
     <div class="co-tot"><span>Delivery-app markup</span><span style="color:var(--good);font-weight:700">$0.00</span></div>
     <div class="co-tot"><span>Service / commission fee</span><span style="color:var(--good);font-weight:700">$0.00</span></div>
     <div class="co-tot big"><span>Total</span><span>$${total.toFixed(2)}</span></div>
     <div class="savecard">
-      <h4>✓ ${current.name} keeps <span class="big">$${sub.toFixed(2)}</span></h4>
+      <h4>✓ ${current.name} keeps <span class="big">$${(sub-disc).toFixed(2)}</span></h4>
       <p>On a typical delivery app, this $${sub.toFixed(2)} order would cost the restaurant about <b>$${doordashCut.toFixed(2)}</b> in commission. On FullPlate they keep all of it. You pay honest menu prices, they keep their margin.</p>
     </div>
     <button class="paybtn" onclick="placeOrder()">Place pickup order · $${total.toFixed(2)}</button>
@@ -728,20 +753,20 @@ function changeQty(id,d){
   const row=cart.find(c=>c.id===id); if(!row) return;
   row.qty+=d; if(row.qty<=0) cart=cart.filter(c=>c.id!==id);
   updateCartBar();
-  if(cartTotals().count===0){ goHome(); return; }
+  if(cartTotals().count===0){ appliedPromo=null; goHome(); return; }
   openCheckout();
 }
 
 function placeOrder(){
-  const {sub}=cartTotals(); const cut=(sub*0.30).toFixed(2);
+  const {sub}=cartTotals(); const disc=promoDiscount(sub); const kept=sub-disc; const cut=(sub*0.30).toFixed(2);
   const items=cart.map(c=>({name:c.name,qty:c.qty,price:c.price}));
-  placedOrders.unshift({ id:current.id, names:cart.map(c=>c.qty+'× '+c.name), total:sub });
+  placedOrders.unshift({ id:current.id, names:cart.map(c=>c.qty+'× '+c.name), total:kept });
   ensureQueue(current);
-  QUEUE[current.id].unshift({ oid:++__oid, items:items, total:sub, status:'new', mins:0, name:'You (demo)' });
+  QUEUE[current.id].unshift({ oid:++__oid, items:items, total:kept, status:'new', mins:0, name:'You (demo)' });
   window.__lastRest=current.id;
   document.getElementById('doneMsg').innerHTML =
-    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${sub.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.`;
-  cart=[]; cartRest=null; updateCartBar();
+    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${kept.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.`;
+  cart=[]; cartRest=null; appliedPromo=null; updateCartBar();
   document.getElementById('backBtn').style.display='none';
   window.scrollTo(0,0); show('view-done');
 }
@@ -778,12 +803,20 @@ function ensureQueue(r){
     mk([2,1,4],'ready',9,'Alex T.'),
   ];
 }
+function ensureReviews(r){
+  if(reviews[r.id]) return;
+  reviews[r.id]=[
+    {name:'Jenna M.',stars:5,text:'Best in the neighborhood, and ordering on here is so easy now.',reply:''},
+    {name:'Carlos R.',stars:5,text:'Love that I can just talk to order. Food was ready right when I got there.',reply:''},
+    {name:'Priya S.',stars:4,text:'Great food. Wish there were a couple more veggie options.',reply:''},
+  ];
+}
 function openOwner(id, tab){
   ownerRest = id || ownerRest;
   if(tab) ownerTab = tab;
   const r = RESTAURANTS.find(x=>x.id===ownerRest) || RESTAURANTS.find(x=>x.featured) || RESTAURANTS[0];
-  current = r; ensureQueue(r); storeOf(r);
-  const tabs=[['overview','Overview'],['orders','Orders'],['menu','Menu'],['hours','Hours'],['payouts','Payouts']];
+  current = r; ensureQueue(r); storeOf(r); ensureReviews(r);
+  const tabs=[['overview','Overview'],['orders','Orders'],['menu','Menu'],['promos','Promos'],['reviews','Reviews'],['hours','Hours'],['payouts','Payouts'],['settings','Settings']];
   document.getElementById('view-owner').innerHTML = `
     <div class="odash">
       <div class="section-label" style="padding-left:0">Owner console · ${r.name}</div>
@@ -798,8 +831,11 @@ function openOwner(id, tab){
 function ownerBody(r){
   if(ownerTab==='orders') return ordersTab(r);
   if(ownerTab==='menu') return menuTab(r);
+  if(ownerTab==='promos') return promosTab(r);
+  if(ownerTab==='reviews') return reviewsTab(r);
   if(ownerTab==='hours') return hoursTab(r);
   if(ownerTab==='payouts') return payoutsTab(r);
+  if(ownerTab==='settings') return settingsTab(r);
   return overviewTab(r);
 }
 function overviewTab(r){
@@ -850,19 +886,56 @@ function advanceOrder(oid){
   openOwner(ownerRest,'orders');
 }
 function menuTab(r){
-  return r.menu.map(c=>`<div class="section-label" style="padding-left:0">${c.cat}</div>`+
-    c.items.map(i=>{const so=unavailable[i.id];return `
+  return `<button class="addbtn2" onclick="addMenuItem('${r.id}')">+ Add menu item</button>`+
+    r.menu.map(c=>`<div class="section-label" style="padding-left:0">${c.cat}</div>`+
+    c.items.map(i=>{const so=unavailable[i.id];const ph=photoFor(i);return `
     <div class="mrow">
-      <div><b>${i.name}</b> <span class="mp">$${i.price.toFixed(2)}</span></div>
-      <button class="soldbtn ${so?'off':''}" onclick="toggleSold('${i.id}')">${so?'Sold out':'Available'}</button>
+      <div class="mthumb sm ${so?'dim':''}" style="${ph?`background-image:url('${ph}')`:`background:${r.color}`}">${ph?'':i.emoji}</div>
+      <div class="mgrow"><b>${i.name}</b> <span class="mp">$${i.price.toFixed(2)}</span></div>
+      <div class="medit">
+        <button class="ebtn" onclick="editPrice('${i.id}')">Price</button>
+        <button class="ebtn" onclick="setPhoto('${i.id}')">Photo</button>
+        <button class="soldbtn ${so?'off':''}" onclick="toggleSold('${i.id}')">${so?'Sold out':'Available'}</button>
+      </div>
     </div>`;}).join('')).join('')
-    + '<div class="realnote" style="margin-top:14px">Tap an item to 86 it. Sold-out items hide instantly on the live menu and the AI stops offering them. Price and item edits work the same way in a full account.</div>';
+    + '<div class="realnote" style="margin-top:14px">Add a special, change a price, swap a photo, or 86 an item. Every change updates the live menu and the AI assistant instantly.</div>';
 }
+function addMenuItem(rid){
+  const r=RESTAURANTS.find(x=>x.id===rid);
+  const name=prompt('New item name?'); if(!name) return;
+  const price=parseFloat(prompt('Price? (e.g. 9.50)')); if(!(price>=0)) return;
+  const desc=prompt('Short description? (optional)')||'';
+  r.menu[0].items.push({id:'x'+(++__oid), name:name.trim(), price:price, desc:desc.trim(), tags:[], emoji:'🍽️'});
+  showToast('Added '+name); openOwner(rid,'menu');
+}
+function editPrice(id){ const it=findItem(id); if(!it) return; const v=prompt('New price for '+it.name, it.price.toFixed(2)); const n=parseFloat(v); if(n>=0){ it.price=n; showToast('Price updated'); } openOwner(ownerRest,'menu'); }
+function setPhoto(id){ const it=findItem(id); if(!it) return; const v=prompt('Image URL for '+it.name+' (leave blank to clear)', photoOverride[id]||''); if(v===null) return; if(v.trim()) photoOverride[id]=v.trim(); else delete photoOverride[id]; showToast('Photo updated'); openOwner(ownerRest,'menu'); }
 function toggleSold(id){
   if(unavailable[id]) delete unavailable[id]; else unavailable[id]=true;
   const it=findItem(id); showToast((it?it.name:'Item')+(unavailable[id]?' marked sold out':' back available'));
   openOwner(ownerRest,'menu');
 }
+function promosTab(r){
+  return `<button class="addbtn2" onclick="createPromo()">+ Create promo code</button>`+
+    (promos.length ? promos.map((p,idx)=>`<div class="mrow"><div class="mgrow"><b>${p.code}</b> <span class="mp">${p.label}</span></div><button class="ebtn del" onclick="deletePromo(${idx})">Delete</button></div>`).join('') : '<div class="empty">No promo codes yet.</div>')
+    + '<div class="realnote" style="margin-top:14px">Codes apply at checkout instantly. As a diner, try <b>LOCAL10</b> in the promo box. Restaurant keeps the rest, commission-free.</div>';
+}
+function createPromo(){
+  const code=(prompt('Promo code? (e.g. TACOTUES)')||'').trim().toUpperCase(); if(!code) return;
+  const t=prompt('Percent off or dollars off? (type % or $)','%')||'%';
+  const isPct=t.indexOf('$')<0;
+  const val=parseFloat(prompt(isPct?'Percent off? (e.g. 15)':'Dollars off? (e.g. 5)')); if(!(val>0)) return;
+  promos.push({code,type:isPct?'pct':'amt',value:val,label:isPct?val+'% off':'$'+val.toFixed(2)+' off'});
+  showToast('Promo '+code+' created'); openOwner(ownerRest,'promos');
+}
+function deletePromo(i){ promos.splice(i,1); showToast('Promo deleted'); openOwner(ownerRest,'promos'); }
+function reviewsTab(r){
+  ensureReviews(r); const rv=reviews[r.id];
+  const avg=(rv.reduce((s,x)=>s+x.stars,0)/rv.length).toFixed(1);
+  return `<div class="oqsum">★ ${avg} average · ${rv.length} reviews · replying builds loyalty and ranking</div>`+
+    rv.map((x,idx)=>`<div class="ocard"><div class="ohd"><b>${esc(x.name)}</b><span class="otime" style="color:#B8740B">${'★'.repeat(x.stars)}${'☆'.repeat(5-x.stars)}</span></div><div class="oitems" style="font-weight:500">${esc(x.text)}</div>${x.reply?`<div class="rvreply"><b>You replied:</b> ${esc(x.reply)}</div>`:`<button class="ebtn" onclick="replyReview('${r.id}',${idx})">Reply</button>`}</div>`).join('');
+}
+function replyReview(rid,idx){ const v=prompt('Your reply to this review'); if(!v) return; reviews[rid][idx].reply=v.trim(); showToast('Reply posted'); openOwner(rid,'reviews'); }
 function hoursTab(r){
   const s=storeOf(r);
   const preps=['10–20 min','15–25 min','20–30 min','30–45 min'];
@@ -898,6 +971,17 @@ function payoutsTab(r){
     ${rows.map(p=>`<div class="orow"><div><b>${p[1]}</b><span>${p[0]} · direct deposit</span></div><div class="okept">${p[2]}</div></div>`).join('')}
     <div class="realnote" style="margin-top:14px">In a live account, payouts run through Stripe Connect straight to the restaurant's bank. FullPlate never holds your money and charges no commission — only standard card processing is passed through at cost.</div>`;
 }
+function settingsTab(r){
+  const s=ownerSettings;
+  const row=(k,label,desc)=>`<div class="hrow"><div><b>${label}</b><span>${desc}</span></div><button class="tgl ${s[k]?'on':''}" onclick="toggleSetting('${k}')">${s[k]?'On':'Off'}</button></div>`;
+  return row('sound','New-order sound','Chime in the kitchen when a ticket arrives')
+    + row('autoprint','Auto-print tickets','Send each order to the receipt printer')
+    + row('smsReady','Text customer on ready','Auto-SMS the diner when you mark an order ready')
+    + row('dailyEmail','Daily summary email','Sales and orders recap emailed each night')
+    + row('tips','Accept tips','Let diners add a tip at checkout')
+    + '<div class="realnote" style="margin-top:6px">Notification and hardware settings. In a live account these connect to a receipt printer and SMS/email, and run per-location.</div>';
+}
+function toggleSetting(k){ ownerSettings[k]=!ownerSettings[k]; showToast(k+' '+(ownerSettings[k]?'on':'off')); openOwner(ownerRest,'settings'); }
 
 function show(id){ ['view-home','view-restaurant','view-checkout','view-done','view-owner'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
 function goHome(){ closeChat(); show('view-home'); document.getElementById('backBtn').style.display='none'; updateCartBar(); window.scrollTo(0,0); }
@@ -905,7 +989,7 @@ function goBack(){
   if(document.getElementById('view-checkout').style.display==='block' && current){ openRestaurant(current.id); updateCartBar(); return; }
   goHome();
 }
-function resetAll(){ cart=[]; cartRest=null; updateCartBar(); goHome(); }
+function resetAll(){ cart=[]; cartRest=null; appliedPromo=null; updateCartBar(); goHome(); }
 
 /* ASSISTANT — real Claude via /api/chat, with scripted fallback */
 let chatStarted=false;
