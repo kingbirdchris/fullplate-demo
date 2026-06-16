@@ -56,17 +56,17 @@
   .rcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);margin:10px 16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer}
   .rcard:active{transform:scale(.99)}
   .rcard.is-feat{border-color:var(--brand);box-shadow:0 0 0 2px rgba(232,98,61,.22), var(--shadow)}
-  .rbanner{height:104px;display:flex;align-items:center;justify-content:center;font-size:50px;position:relative}
+  .rbanner{height:120px;display:flex;align-items:center;justify-content:center;font-size:50px;position:relative;background-size:cover;background-position:center}
   .bemoji{filter:drop-shadow(0 6px 10px rgba(42,33,28,.20))}
-  .rbadge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.96);color:var(--good);font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill);display:flex;align-items:center;gap:5px}
-  .feat{position:absolute;top:10px;right:10px;background:var(--ink);color:#fff;font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill)}
+  .rbadge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.96);color:var(--good);font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill);display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .feat{position:absolute;top:10px;right:10px;background:var(--ink);color:#fff;font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill);box-shadow:0 2px 6px rgba(0,0,0,.2)}
   .rbody{padding:12px 14px 14px}
   .rbody h3{margin:0 0 3px;font-size:var(--t-lg);letter-spacing:-.3px}
   .rmeta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;flex-wrap:wrap}
   .rmeta .star{color:#B8740B}
   .rblurb{margin:8px 0 0;color:var(--muted);font-size:var(--t-sm);line-height:1.45}
   #view-restaurant{display:none}
-  .rhead-banner{height:150px;display:flex;align-items:center;justify-content:center;font-size:70px}
+  .rhead-banner{height:170px;display:flex;align-items:center;justify-content:center;font-size:70px;background-size:cover;background-position:center}
   .rhead-info{padding:16px}
   .rhead-info h2{margin:0 0 6px;font-size:var(--t-xl);letter-spacing:-.5px}
   .rstory{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin:12px 0 4px;font-size:var(--t-sm);color:var(--muted);line-height:1.5}
@@ -172,7 +172,7 @@
     <div id="rlist"></div>
     <div class="footer">
       <b>FullPlate</b> · a Kingbird Solutions concept demo<br>
-      Listings are illustrative; the featured spot is built from public info. Checkout is simulated.
+      Listings are illustrative; the featured spot is built from public info. Photos via Wikimedia Commons. Checkout is simulated.
     </div>
   </div>
 
@@ -210,7 +210,31 @@
 </div>
 
 <script>
-/* DATA — add a restaurant by appending one object. tags: gf, v, spicy. featured:true pins it first. kind drives the food-type filter. */
+/* Banner photos — true-to-life food shots from Wikimedia Commons (free license). Keyed by restaurant id. */
+const IMG = {
+  chiwas:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/%28El_Flaco%29_Al_Pastor_Tacos.jpg/1280px-%28El_Flaco%29_Al_Pastor_Tacos.jpg",
+  rosas:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Tacos_de_Carnitas_con_nopales.jpg/1280px-Tacos_de_Carnitas_con_nopales.jpg",
+  platos:"https://upload.wikimedia.org/wikipedia/commons/1/1e/Tacos_de_pescado_estilo_Ensenada_o_Baja_Fish_Taco..jpg",
+  pho:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Tofu_noodle_soup_%28Ph%E1%BB%9F_chay%29_-_Pho_Hanoi_Authentic_2024-12-01.jpg/1280px-Tofu_noodle_soup_%28Ph%E1%BB%9F_chay%29_-_Pho_Hanoi_Authentic_2024-12-01.jpg",
+  sakura:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Tonkotsu_Ramen_-_Goemon_Ramen_Bar_2023-06-06.jpg/1280px-Tonkotsu_Ramen_-_Goemon_Ramen_Bar_2023-06-06.jpg",
+  poke:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Almighty_steak_%28medium_size%29_-_Hawaiian_Pok%C3%A9_Bowl_2024-11-30.jpg/1280px-Almighty_steak_%28medium_size%29_-_Hawaiian_Pok%C3%A9_Bowl_2024-11-30.jpg",
+  slice:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Margherita_Originale.JPG/1280px-Margherita_Originale.JPG",
+  bashir:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Plate_Shawarma_-_variant.jpg/1280px-Plate_Shawarma_-_variant.jpg",
+  smoke:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Smoked_Brisket_with_smoke_ring.jpg/1280px-Smoked_Brisket_with_smoke_ring.jpg",
+  sunrise:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/2019-04-21_11_41_12_A_stack_of_blueberry_pancakes_with_syrup_in_the_Franklin_Farm_section_of_Oak_Hill%2C_Fairfax_County%2C_Virginia.jpg/1280px-2019-04-21_11_41_12_A_stack_of_blueberry_pancakes_with_syrup_in_the_Franklin_Farm_section_of_Oak_Hill%2C_Fairfax_County%2C_Virginia.jpg",
+  harbor:"https://upload.wikimedia.org/wikipedia/commons/b/bd/Club-sandwich.jpg",
+  burger:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Cheeseburger_with_onions_at_Hatfield_Heath_Festival_2017.jpg/1280px-Cheeseburger_with_onions_at_Hatfield_Heath_Festival_2017.jpg",
+  bella:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Spaghetti_Bolognese_-_Figaros%2C_Brighton_2023-10-06.jpg/1280px-Spaghetti_Bolognese_-_Figaros%2C_Brighton_2023-10-06.jpg"
+};
+function bannerStyle(id, color, scrim){
+  return IMG[id]
+    ? `background-image:${scrim},url('${IMG[id]}')`
+    : `background:linear-gradient(135deg, ${color} 0%, #ffffff 140%)`;
+}
+const CARD_SCRIM='linear-gradient(rgba(0,0,0,.34),rgba(0,0,0,0) 42%,rgba(0,0,0,0) 80%,rgba(0,0,0,.12))';
+const HEAD_SCRIM='linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,.06) 55%)';
+
+/* DATA — add a restaurant by appending one object. tags: gf, v, spicy. featured:true pins it first. kind drives the food-type filter. Add a banner photo by putting its id in IMG above. */
 const RESTAURANTS = [
   {
     id:'chiwas', city:'Phoenix', kind:'Mexican', featured:true, name:'Tacos Chiwas', cuisine:'Chihuahua-style Mexican', emoji:'🌮',
@@ -500,7 +524,7 @@ function renderHome(){
     `${list.length} ${activeKind==='All'?'restaurants':activeKind.toLowerCase()+' spots'} in ${activeCity}`;
   document.getElementById('rlist').innerHTML = list.length ? list.map(r=>`
     <div class="rcard ${r.featured?'is-feat':''}" onclick="openRestaurant('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRestaurant('${r.id}')" aria-label="${r.name}, ${r.cuisine}">
-      <div class="rbanner" style="background:linear-gradient(135deg, ${r.color} 0%, #ffffff 140%)"><span class="bemoji">${r.emoji}</span><div class="rbadge">● 0% commission</div>${r.featured?'<div class="feat">★ Featured</div>':''}</div>
+      <div class="rbanner" style="${bannerStyle(r.id, r.color, CARD_SCRIM)}">${IMG[r.id]?'':'<span class="bemoji">'+r.emoji+'</span>'}<div class="rbadge">● 0% commission</div>${r.featured?'<div class="feat">★ Featured</div>':''}</div>
       <div class="rbody">
         <h3>${r.name}</h3>
         <div class="rmeta"><span class="star">★ ${r.rating}</span><span>(${r.reviews})</span>·<span>${r.cuisine}</span>·<span>${r.price}</span>·<span>◷ ${r.eta}</span></div>
@@ -516,7 +540,7 @@ function openRestaurant(id){
   window.scrollTo(0,0);
   document.getElementById('view-restaurant').innerHTML = `
     <div class="rhead">
-      <div class="rhead-banner" style="background:linear-gradient(135deg, ${current.color} 0%, #ffffff 145%)"><span class="bemoji">${current.emoji}</span></div>
+      <div class="rhead-banner" style="${bannerStyle(current.id, current.color, HEAD_SCRIM)}">${IMG[current.id]?'':'<span class="bemoji">'+current.emoji+'</span>'}</div>
       <div class="rhead-info">
         <h2>${current.name}</h2>
         <div class="rmeta"><span class="star">★ ${current.rating}</span><span>(${current.reviews})</span>·<span>${current.cuisine}</span>·<span>${current.price}</span>·<span>◷ ${current.eta} pickup</span></div>
