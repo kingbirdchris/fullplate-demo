@@ -12,13 +12,12 @@
     <button class="back" id="backBtn" onclick="goBack()" aria-label="Back">‹</button>
     <div class="logo" onclick="goHome()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goHome()"><span class="dot">◗</span> Full<b>Plate</b></div>
     <div class="tagline">Order local.<br><b>0% commission.</b></div>
-    <button class="acct" onclick="openAccount()" aria-label="Your account">👤</button>
   </header>
 
   <div id="view-home">
     <div class="hero">
       <h1>Real food from your<br>neighborhood spots.</h1>
-      <p>Order direct from independent local restaurants. They keep every dollar. No delivery-app markup, no broken menus.</p>
+      <p>Order direct from independent local restaurants. They keep every dollar — no delivery-app markup.</p>
       <div class="pillrow">
         <div class="pill"><span class="ic">●</span> 0% commission</div>
         <div class="pill"><span class="ic">✦</span> AI ordering</div>
@@ -32,8 +31,7 @@
     <div id="rlist"></div>
     <div class="footer">
       <b>FullPlate</b> · a Kingbird Solutions concept demo<br>
-      Listings are illustrative; the featured spot is built from public info. Photos via Wikimedia Commons. Checkout is simulated.<br>
-      <button class="ownerlink" onclick="openOwner('chiwas','overview')">Run a restaurant? Open the owner console →</button>
+      Listings are illustrative; the featured spot is built from public info. Photos via Wikimedia Commons. Checkout is simulated.
     </div>
   </div>
 
@@ -55,6 +53,13 @@
   <div><span class="ct" id="cartCount">0</span><b>View order</b></div>
   <div class="cta">$<span id="cartTotal">0.00</span> ›</div>
 </div>
+
+<nav class="bottomnav" id="bottomnav" aria-label="Primary">
+  <button class="navbtn" data-nav="home" onclick="goHome()"><span>🏠</span>Home</button>
+  <button class="navbtn" data-nav="search" onclick="goSearch()"><span>🔍</span>Search</button>
+  <button class="navbtn" data-nav="account" onclick="openAccount()"><span>👤</span>Account</button>
+  <button class="navbtn" data-nav="owner" onclick="openOwner(ownerRest||'chiwas','overview')"><span>🏪</span>Owner</button>
+</nav>
 
 <div class="sheet-backdrop" id="backdrop" onclick="closeChat()"></div>
 <div class="sheet" id="sheet" role="dialog" aria-label="Ordering assistant">
