@@ -2,133 +2,153 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>FullPlate — order local, keep your margin</title>
 <style>
   :root{
-    --brand:#E8623D; --brand-dark:#C44A28; --ink:#2A211C; --muted:#7A6E66;
-    --cream:#FBF6EF; --card:#FFFFFF; --line:#EFE6DA; --good:#2E7D52;
+    --brand:#E8623D; --brand-dark:#C44A28; --ink:#2A211C; --muted:#655749;
+    --cream:#FBF6EF; --card:#FFFFFF; --line:#EFE6DA; --good:#2E7D52; --focus:#2563A8;
     --shadow:0 6px 24px rgba(42,33,28,.08); --shadow-lg:0 18px 50px rgba(42,33,28,.18);
+    /* radius scale */
+    --r-sm:10px; --r-md:14px; --r-lg:18px; --pill:999px;
+    /* spacing scale */
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px;
+    /* type scale */
+    --t-xs:11px; --t-sm:13px; --t-md:14px; --t-lg:17px; --t-xl:23px; --t-2xl:26px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--cream);color:var(--ink);max-width:480px;margin:0 auto;min-height:100vh;position:relative;-webkit-font-smoothing:antialiased;}
   .app{padding-bottom:96px}
+  /* unified interactive base */
+  button{font-family:inherit;cursor:pointer;transition:transform .1s ease, background .15s ease, box-shadow .15s ease, border-color .15s ease}
+  button:focus-visible, [role=button]:focus-visible, .rcard:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  @media(hover:hover){
+    .rcard:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+    .addbtn:hover,.paybtn:hover,.composer button:hover{background:var(--brand-dark)}
+    .chip:hover{background:var(--brand);color:#fff}
+    .citytab:hover{border-color:var(--ink)}
+    .qstep button:hover,.back:hover,.close:hover,.again:hover{border-color:var(--ink)}
+    .ai-launch:hover{box-shadow:var(--shadow-lg)}
+  }
   header{position:sticky;top:0;z-index:40;background:rgba(251,246,239,.92);
     backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line);
     display:flex;align-items:center;gap:10px;padding:14px 16px;}
   .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:-.4px;cursor:pointer}
-  .logo .dot{width:26px;height:26px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff;font-size:15px}
+  .logo .dot{width:26px;height:26px;border-radius:var(--pill);background:var(--brand);display:grid;place-items:center;color:#fff;font-size:15px}
   .logo b{color:var(--brand)}
-  .back{border:1px solid var(--line);background:#fff;border-radius:10px;width:38px;height:38px;font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center}
-  .tagline{margin-left:auto;font-size:11px;color:var(--muted);text-align:right;line-height:1.3}
+  .back{border:1px solid var(--line);background:#fff;border-radius:var(--r-sm);width:40px;height:40px;font-size:20px;display:none;align-items:center;justify-content:center}
+  .tagline{margin-left:auto;font-size:var(--t-xs);color:var(--muted);text-align:right;line-height:1.3}
   .tagline b{color:var(--good)}
   .hero{padding:22px 16px 8px}
-  .hero h1{font-size:26px;line-height:1.15;margin:0 0 8px;letter-spacing:-.6px}
-  .hero p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  .hero h1{font-size:var(--t-2xl);line-height:1.15;margin:0 0 8px;letter-spacing:-.6px}
+  .hero p{margin:0;color:var(--muted);font-size:var(--t-md);line-height:1.5}
   .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-  .pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .pill{background:#fff;border:1px solid var(--line);border-radius:var(--pill);padding:7px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
   .pill .ic{color:var(--brand)}
-  .section-label{padding:18px 16px 6px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .section-label{padding:18px 16px 6px;font-size:var(--t-sm);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
   .citytabs{display:flex;gap:8px;padding:14px 16px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .citytab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px}
+  .citytab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:var(--pill);padding:10px 15px;font-size:var(--t-sm);font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px}
   .citytab .cpin{font-size:10px;color:var(--line)}
   .citytab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .citytab.on .cpin{color:var(--brand)}
-  .pop{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px;background:#FCEFD9;color:#B8740B}
-  .rcard{background:var(--card);border:1px solid var(--line);border-radius:18px;margin:10px 16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s ease}
+  .pop{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px;background:#FCEFD9;color:#9C6206}
+  .rcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);margin:10px 16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer}
   .rcard:active{transform:scale(.99)}
   .rbanner{height:96px;display:flex;align-items:center;justify-content:center;font-size:46px;position:relative}
-  .rbadge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95);color:var(--good);font-size:11px;font-weight:800;padding:5px 9px;border-radius:999px;display:flex;align-items:center;gap:5px}
+  .rbadge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.96);color:var(--good);font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill);display:flex;align-items:center;gap:5px}
   .rbody{padding:12px 14px 14px}
-  .rbody h3{margin:0 0 3px;font-size:17px;letter-spacing:-.3px}
+  .rbody h3{margin:0 0 3px;font-size:var(--t-lg);letter-spacing:-.3px}
   .rmeta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;flex-wrap:wrap}
-  .rmeta .star{color:#E0A100}
-  .rblurb{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+  .rmeta .star{color:#B8740B}
+  .rblurb{margin:8px 0 0;color:var(--muted);font-size:var(--t-sm);line-height:1.45}
   #view-restaurant{display:none}
   .rhead-banner{height:140px;display:flex;align-items:center;justify-content:center;font-size:64px}
   .rhead-info{padding:16px}
-  .rhead-info h2{margin:0 0 6px;font-size:23px;letter-spacing:-.5px}
-  .rstory{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0 4px;font-size:13px;color:var(--muted);line-height:1.5}
+  .rhead-info h2{margin:0 0 6px;font-size:var(--t-xl);letter-spacing:-.5px}
+  .rstory{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin:12px 0 4px;font-size:var(--t-sm);color:var(--muted);line-height:1.5}
   .rstory b{color:var(--ink)}
   .menucat{padding:18px 16px 4px;font-size:15px;font-weight:800;letter-spacing:-.2px}
-  .mitem{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;margin:8px 16px;padding:10px 12px}
+  .mitem{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);margin:8px 16px;padding:10px 12px}
   .mthumb{width:54px;height:54px;border-radius:11px;display:grid;place-items:center;font-size:26px;flex:0 0 auto}
   .minfo{flex:1;min-width:0}
   .minfo h4{margin:0 0 2px;font-size:14.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .minfo p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
-  .tag{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px}
-  .tag.gf{background:#EAF5EE;color:var(--good)}
-  .tag.v{background:#EAF2FB;color:#2563A8}
-  .tag.spicy{background:#FBEAEA;color:#C0392B}
+  .minfo p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.4}
+  .tag{font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px}
+  .tag.gf{background:#EAF5EE;color:#1F6B43}
+  .tag.v{background:#EAF2FB;color:#1F548F}
+  .tag.spicy{background:#FBEAEA;color:#A8301F}
   .madd{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-  .mprice{font-weight:700;font-size:14px}
-  .addbtn{border:none;background:var(--brand);color:#fff;width:34px;height:34px;border-radius:10px;font-size:20px;line-height:1;cursor:pointer;font-weight:600}
+  .mprice{font-weight:700;font-size:var(--t-md)}
+  .addbtn{border:none;background:var(--brand);color:#fff;width:40px;height:40px;border-radius:11px;font-size:22px;line-height:1;font-weight:600}
   .addbtn:active{background:var(--brand-dark)}
-  .ai-launch{margin:16px;background:linear-gradient(135deg,#2A211C,#43342B);color:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--shadow)}
+  .ai-launch{margin:16px;background:linear-gradient(135deg,#2A211C,#43342B);color:#fff;border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--shadow)}
   .ai-launch .spark{font-size:24px}
   .ai-launch .t{flex:1}
   .ai-launch .t b{display:block;font-size:14.5px;margin-bottom:2px}
-  .ai-launch .t span{font-size:12px;color:#D8CBC0}
-  .ai-launch .go{font-size:18px;opacity:.8}
-  .cartbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;z-index:45;background:var(--brand);color:#fff;padding:14px 18px;display:none;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 -8px 24px rgba(42,33,28,.12)}
+  .ai-launch .t span{font-size:12.5px;color:#E4D8CD}
+  .ai-launch .go{font-size:18px;opacity:.85}
+  .cartbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;z-index:45;background:var(--brand);color:#fff;padding:15px 18px;display:none;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 -8px 24px rgba(42,33,28,.12)}
   .cartbar b{font-size:15px}
-  .cartbar .ct{background:rgba(255,255,255,.22);border-radius:8px;padding:3px 9px;font-size:13px;font-weight:700;margin-right:8px}
+  .cartbar .ct{background:rgba(255,255,255,.24);border-radius:8px;padding:3px 9px;font-size:var(--t-sm);font-weight:700;margin-right:8px}
   .cartbar .cta{font-weight:800;display:flex;align-items:center;gap:6px}
   .sheet-backdrop{position:fixed;inset:0;background:rgba(42,33,28,.45);z-index:60;display:none;opacity:0;transition:opacity .2s}
   .sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;height:86vh;background:var(--cream);border-radius:22px 22px 0 0;z-index:61;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1);box-shadow:var(--shadow-lg)}
   .sheet.open{transform:translateY(0)}
   .sheet-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
-  .sheet-head .av{width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:18px}
+  .sheet-head .av{width:36px;height:36px;border-radius:var(--pill);background:var(--ink);color:#fff;display:grid;place-items:center;font-size:18px}
   .sheet-head .ht{flex:1}
   .sheet-head .ht b{display:block;font-size:15px}
   .sheet-head .ht span{font-size:11.5px;color:var(--good);font-weight:600}
-  .sheet-head .close{border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer}
+  .sheet-head .close{border:1px solid var(--line);background:#fff;width:38px;height:38px;border-radius:var(--r-sm);font-size:17px}
   .chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-  .msg{max-width:82%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.45;white-space:pre-wrap}
+  .msg{max-width:82%;padding:11px 14px;border-radius:16px;font-size:var(--t-md);line-height:1.45;white-space:pre-wrap}
   .msg.bot{background:#fff;border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:5px}
   .msg.me{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:5px}
-  .msg.note{align-self:center;background:#F3ECE2;color:var(--muted);font-size:12px;border-radius:10px;max-width:90%;text-align:center}
+  .msg.note{align-self:center;background:#F3ECE2;color:var(--muted);font-size:12.5px;border-radius:var(--r-sm);max-width:90%;text-align:center}
   .typing{align-self:flex-start;background:#fff;border:1px solid var(--line);padding:13px 16px;border-radius:16px;border-bottom-left-radius:5px}
   .typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin:0 2px;animation:bob 1s infinite}
   .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
   @keyframes bob{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
   .chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 8px}
-  .chip{background:#fff;border:1px solid var(--brand);color:var(--brand);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer}
+  .chip{background:#fff;border:1px solid var(--brand);color:var(--brand);border-radius:var(--pill);padding:9px 14px;font-size:var(--t-sm);font-weight:600}
   .chip:active{background:var(--brand);color:#fff}
-  .composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:var(--cream)}
+  .composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:var(--cream);align-items:center}
   .composer input{flex:1;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;outline:none;background:#fff}
   .composer input:focus{border-color:var(--brand)}
-  .composer button{border:none;background:var(--brand);color:#fff;border-radius:12px;width:48px;font-size:19px;cursor:pointer}
+  .composer .mic{border:1px solid var(--line);background:#fff;border-radius:12px;width:48px;height:46px;font-size:20px;display:none;align-items:center;justify-content:center}
+  .composer .mic.on{background:var(--brand);color:#fff;border-color:var(--brand);animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,98,61,.5)}50%{box-shadow:0 0 0 8px rgba(232,98,61,0)}}
+  .composer .send{border:none;background:var(--brand);color:#fff;border-radius:12px;width:48px;height:46px;font-size:19px}
   #view-checkout{display:none;padding:8px 0 20px}
-  .co-line{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 16px;font-size:14px;border-bottom:1px solid var(--line)}
-  .qstep{display:inline-flex;align-items:center;gap:12px;margin-top:7px}
-  .qstep button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:16px;line-height:1;cursor:pointer;color:var(--ink)}
-  .qstep span{font-size:14px;font-weight:700;min-width:14px;text-align:center}
-  .co-tot{display:flex;justify-content:space-between;padding:12px 16px;font-size:14px}
-  .co-tot.big{font-weight:800;font-size:17px;border-top:2px solid var(--line);margin-top:4px;padding-top:14px}
-  .savecard{margin:16px;background:#EAF5EE;border:1px solid #CDE7D8;border-radius:16px;padding:14px 16px}
-  .savecard h4{margin:0 0 6px;color:var(--good);font-size:14px;display:flex;align-items:center;gap:7px}
-  .savecard p{margin:0;font-size:13px;color:#2A211C;line-height:1.5}
-  .savecard .big{font-size:22px;font-weight:800;color:var(--good)}
-  .paybtn{margin:8px 16px 4px;display:block;width:calc(100% - 32px);border:none;background:var(--brand);color:#fff;padding:16px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer}
+  .co-line{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 16px;font-size:var(--t-md);border-bottom:1px solid var(--line)}
+  .qstep{display:inline-flex;align-items:center;gap:14px;margin-top:8px}
+  .qstep button{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:18px;line-height:1;color:var(--ink)}
+  .qstep span{font-size:var(--t-md);font-weight:700;min-width:16px;text-align:center}
+  .co-tot{display:flex;justify-content:space-between;padding:12px 16px;font-size:var(--t-md)}
+  .co-tot.big{font-weight:800;font-size:var(--t-lg);border-top:2px solid var(--line);margin-top:4px;padding-top:14px}
+  .savecard{margin:16px;background:#EAF5EE;border:1px solid #CDE7D8;border-radius:var(--r-md);padding:14px 16px}
+  .savecard h4{margin:0 0 6px;color:#1F6B43;font-size:var(--t-md);display:flex;align-items:center;gap:7px}
+  .savecard p{margin:0;font-size:var(--t-sm);color:#2A211C;line-height:1.5}
+  .savecard .big{font-size:22px;font-weight:800;color:#1F6B43}
+  .paybtn{margin:8px 16px 4px;display:block;width:calc(100% - 32px);border:none;background:var(--brand);color:#fff;padding:16px;border-radius:var(--r-md);font-size:16px;font-weight:800}
   .paybtn:active{background:var(--brand-dark)}
-  .demo-note{text-align:center;font-size:11px;color:var(--muted);padding:8px 16px}
+  .demo-note{text-align:center;font-size:var(--t-xs);color:var(--muted);padding:8px 16px}
   #view-done{display:none;text-align:center;padding:60px 24px}
-  #view-done .check{width:84px;height:84px;border-radius:50%;background:var(--good);color:#fff;font-size:46px;display:grid;place-items:center;margin:0 auto 18px}
+  #view-done .check{width:84px;height:84px;border-radius:var(--pill);background:var(--good);color:#fff;font-size:46px;display:grid;place-items:center;margin:0 auto 18px}
   #view-done h2{margin:0 0 8px;font-size:24px}
-  #view-done p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 auto;max-width:300px}
-  #view-done .again{margin-top:26px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:13px 20px;font-weight:700;cursor:pointer}
-  .footer{padding:26px 16px 14px;text-align:center;color:var(--muted);font-size:11px;line-height:1.6}
+  #view-done p{color:var(--muted);font-size:var(--t-md);line-height:1.5;margin:0 auto;max-width:300px}
+  #view-done .again{margin-top:26px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 22px;font-weight:700}
+  .footer{padding:26px 16px 14px;text-align:center;color:var(--muted);font-size:var(--t-xs);line-height:1.6}
   .footer b{color:var(--brand)}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <button class="back" id="backBtn" onclick="goHome()">‹</button>
-    <div class="logo" onclick="goHome()"><span class="dot">◗</span> Full<b>Plate</b></div>
+    <button class="back" id="backBtn" onclick="goBack()" aria-label="Back">‹</button>
+    <div class="logo" onclick="goHome()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goHome()"><span class="dot">◗</span> Full<b>Plate</b></div>
     <div class="tagline">Order local.<br><b>0% commission.</b></div>
   </header>
 
@@ -162,24 +182,25 @@
   </div>
 </div>
 
-<div class="cartbar" id="cartbar" onclick="openCheckout()">
+<div class="cartbar" id="cartbar" onclick="openCheckout()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openCheckout()">
   <div><span class="ct" id="cartCount">0</span><b>View order</b></div>
   <div class="cta">$<span id="cartTotal">0.00</span> ›</div>
 </div>
 
 <div class="sheet-backdrop" id="backdrop" onclick="closeChat()"></div>
-<div class="sheet" id="sheet">
+<div class="sheet" id="sheet" role="dialog" aria-label="Ordering assistant">
   <div class="sheet-head">
     <div class="av">✦</div>
     <div class="ht"><b id="aiName">Order Assistant</b><span>● powered by FullPlate AI</span></div>
-    <button class="close" onclick="closeChat()">✕</button>
+    <button class="close" onclick="closeChat()" aria-label="Close assistant">✕</button>
   </div>
   <div class="chat" id="chat"></div>
   <div class="chips" id="chips"></div>
   <div class="composer">
-    <input id="chatInput" placeholder="Type your order..." autocomplete="off"
+    <input id="chatInput" placeholder="Type your order..." autocomplete="off" aria-label="Type your order"
       onkeydown="if(event.key==='Enter'){sendUser(this.value);this.value=''}">
-    <button onclick="var i=document.getElementById('chatInput');sendUser(i.value);i.value=''">➤</button>
+    <button class="mic" id="micBtn" onclick="toggleMic()" aria-label="Order by voice">🎤</button>
+    <button class="send" onclick="var i=document.getElementById('chatInput');sendUser(i.value);i.value=''" aria-label="Send">➤</button>
   </div>
 </div>
 
@@ -249,6 +270,68 @@ const RESTAURANTS = [
     ]
   },
   {
+    id:'bashir', city:'Phoenix', name:"Bashir's Mediterranean", cuisine:'Mediterranean', emoji:'🥙',
+    color:'#EAF1F6', rating:4.7, reviews:243, eta:'20–30 min', price:'$$', popular:'b1',
+    blurb:'Charcoal-grilled shawarma and fresh-pressed hummus in Tempe.',
+    story:"Bashir came from Amman with his spice blends and a charcoal grill. He still greets regulars by name and slides an extra falafel into the bag.",
+    menu:[
+      {cat:'Wraps & Plates', items:[
+        {id:'b1', name:'Chicken Shawarma Wrap', price:11.00, desc:'Charcoal chicken, garlic toum, pickles, saj bread', tags:[], emoji:'🌯'},
+        {id:'b2', name:'Falafel Plate', price:10.50, desc:'Crispy falafel, hummus, salad, tahini, rice', tags:['v'], emoji:'🧆'},
+        {id:'b3', name:'Beef & Lamb Gyro', price:12.00, desc:'Shaved gyro, tzatziki, tomato, onion', tags:[], emoji:'🥙'},
+      ]},
+      {cat:'Mezze', items:[
+        {id:'b4', name:'Hummus & Pita', price:6.50, desc:'Stone-ground chickpea, olive oil, warm pita', tags:['v'], emoji:'🫓'},
+        {id:'b5', name:'Tabbouleh', price:6.00, desc:'Parsley, bulgur, mint, lemon', tags:['v'], emoji:'🥗'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'b6', name:'Mint Lemonade', price:4.00, desc:'Fresh-squeezed, blended with mint', tags:['gf','v'], emoji:'🍋'},
+      ]},
+    ]
+  },
+  {
+    id:'smoke', city:'Phoenix', name:'Smoke & Oak BBQ', cuisine:'Texas BBQ', emoji:'🍖',
+    color:'#F3E5DD', rating:4.8, reviews:389, eta:'25–35 min', price:'$$$', popular:'m1',
+    blurb:'Oak-smoked brisket by the pound, until it sells out.',
+    story:"Marcus smokes brisket over Texas post oak for 14 hours and sells until it is gone, usually by mid-afternoon. When the sign flips to sold out, that is the day done.",
+    menu:[
+      {cat:'By the Plate', items:[
+        {id:'m1', name:'Brisket Plate', price:18.00, desc:'Half pound oak-smoked brisket, two sides, pickles', tags:['gf'], emoji:'🥩'},
+        {id:'m2', name:'Pulled Pork Plate', price:15.00, desc:'Hand-pulled pork shoulder, two sides', tags:['gf'], emoji:'🍖'},
+        {id:'m3', name:'Smoked Half Chicken', price:16.00, desc:'Dry-rubbed, slow-smoked, crisp skin', tags:['gf'], emoji:'🍗'},
+      ]},
+      {cat:'Sandwiches & Sides', items:[
+        {id:'m4', name:'Brisket Sandwich', price:12.00, desc:'Chopped brisket, pickles, white bread', tags:[], emoji:'🥪'},
+        {id:'m5', name:'Mac & Cheese', price:5.00, desc:'Three-cheese, baked crust', tags:['v'], emoji:'🧀'},
+        {id:'m6', name:'Smoked Beans', price:4.50, desc:'Burnt-end beans, brown sugar', tags:['gf'], emoji:'🫘'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'m7', name:'Sweet Tea', price:3.00, desc:'Brewed daily, proper Southern sweet', tags:['gf','v'], emoji:'🧊'},
+      ]},
+    ]
+  },
+  {
+    id:'sunrise', city:'Phoenix', name:'Sunrise Cafe', cuisine:'Breakfast & Brunch', emoji:'🍳',
+    color:'#FCEFD2', rating:4.6, reviews:512, eta:'15–25 min', price:'$$', popular:'n1',
+    blurb:'All-day breakfast and bottomless coffee in Arcadia.',
+    story:"A neighborhood diner run by the Ortiz sisters, where the green chile is roasted in-house and the regulars have had the same booth for years.",
+    menu:[
+      {cat:'Breakfast', items:[
+        {id:'n1', name:'Green Chile Breakfast Burrito', price:9.50, desc:'Egg, potato, cheese, house green chile', tags:['v'], emoji:'🌯'},
+        {id:'n2', name:'Buttermilk Pancakes (3)', price:8.50, desc:'Stack with whipped butter and syrup', tags:['v'], emoji:'🥞'},
+        {id:'n3', name:'Avocado Toast', price:9.00, desc:'Sourdough, smashed avocado, chili, egg', tags:['v'], emoji:'🥑'},
+      ]},
+      {cat:'Plates', items:[
+        {id:'n4', name:'Two-Egg Plate', price:10.00, desc:'Eggs any style, potatoes, toast, bacon', tags:['gf'], emoji:'🍳'},
+        {id:'n5', name:'Chilaquiles Rojos', price:11.00, desc:'Crispy tortilla, red salsa, eggs, crema', tags:['gf','v'], emoji:'🍳'},
+      ]},
+      {cat:'Coffee', items:[
+        {id:'n6', name:'Drip Coffee', price:3.00, desc:'Bottomless, local roast', tags:['gf','v'], emoji:'☕'},
+        {id:'n7', name:'Horchata Latte', price:5.00, desc:'Espresso, cinnamon rice milk', tags:['v'], emoji:'☕'},
+      ]},
+    ]
+  },
+  {
     id:'platos', city:'Orange, CA', name:'Plato Verde', cuisine:'Coastal Mexican', emoji:'🫔',
     color:'#E8F1E6', rating:4.8, reviews:367, eta:'20–30 min', price:'$$', popular:'o2',
     blurb:'Baja-style seafood and street tacos off the Orange Circle.',
@@ -307,6 +390,63 @@ const RESTAURANTS = [
       ]},
     ]
   },
+  {
+    id:'poke', city:'Orange, CA', name:'Citrus Poke Co.', cuisine:'Hawaiian Poke', emoji:'🐟',
+    color:'#E6F1F2', rating:4.6, reviews:271, eta:'10–20 min', price:'$$', popular:'j1',
+    blurb:'Build-your-own poke with sushi-grade fish near the Circle.',
+    story:"Kai grew up in Oahu and missed real poke after moving to Orange, so he built a counter around daily-delivered ahi and his grandmother's shoyu recipe.",
+    menu:[
+      {cat:'Signature Bowls', items:[
+        {id:'j1', name:'Classic Ahi Bowl', price:13.50, desc:'Ahi tuna, shoyu, sweet onion, rice, seaweed', tags:['gf'], emoji:'🍣'},
+        {id:'j2', name:'Spicy Salmon Bowl', price:13.50, desc:'Salmon, spicy mayo, cucumber, edamame', tags:['spicy'], emoji:'🐟'},
+        {id:'j3', name:'Tofu Veggie Bowl', price:11.50, desc:'Marinated tofu, avocado, mango, greens', tags:['gf','v'], emoji:'🥑'},
+      ]},
+      {cat:'Sides', items:[
+        {id:'j4', name:'Seaweed Salad', price:4.50, desc:'Sesame, rice vinegar', tags:['gf','v'], emoji:'🥗'},
+        {id:'j5', name:'Crab Rangoon (4)', price:6.00, desc:'Crispy, cream cheese', tags:[], emoji:'🥟'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'j6', name:'Pineapple Iced Tea', price:3.50, desc:'House-brewed, lightly sweet', tags:['gf','v'], emoji:'🍍'},
+      ]},
+    ]
+  },
+  {
+    id:'burger', city:'Orange, CA', name:'The Plaza Burger', cuisine:'Smash Burgers', emoji:'🍔',
+    color:'#FBE9DC', rating:4.8, reviews:604, eta:'15–25 min', price:'$$', popular:'u1',
+    blurb:'Smash burgers and hand-cut fries on the Orange Plaza.',
+    story:"A walk-up window run by two line cooks who wanted to make one thing perfectly. Local beef, smashed to order, never frozen.",
+    menu:[
+      {cat:'Burgers', items:[
+        {id:'u1', name:'Classic Smash', price:9.00, desc:'Two patties, American, onion, house sauce', tags:[], emoji:'🍔'},
+        {id:'u2', name:'Bacon Cheddar Smash', price:11.00, desc:'Double patty, bacon, aged cheddar', tags:[], emoji:'🥓'},
+        {id:'u3', name:'Crispy Veggie Burger', price:9.50, desc:'Black bean patty, lettuce, chipotle aioli', tags:['v'], emoji:'🥬'},
+      ]},
+      {cat:'Sides', items:[
+        {id:'u4', name:'Hand-Cut Fries', price:4.00, desc:'Sea salt, twice-fried', tags:['gf','v'], emoji:'🍟'},
+        {id:'u5', name:'Vanilla Shake', price:5.50, desc:'Real vanilla bean, thick', tags:['v'], emoji:'🥤'},
+      ]},
+    ]
+  },
+  {
+    id:'bella', city:'Orange, CA', name:'Bella Trattoria', cuisine:'Italian', emoji:'🍝',
+    color:'#F4E7E2', rating:4.7, reviews:418, eta:'25–35 min', price:'$$$', popular:'e1',
+    blurb:'Handmade pasta and wood-fired classics in Old Towne.',
+    story:"Nonna Bella's recipes, run by her grandson Marco. The pasta is rolled every morning and the marinara simmers from breakfast until close.",
+    menu:[
+      {cat:'Pasta', items:[
+        {id:'e1', name:'Tagliatelle Bolognese', price:17.00, desc:'Slow-cooked beef and pork ragu, parmesan', tags:[], emoji:'🍝'},
+        {id:'e2', name:'Cacio e Pepe', price:15.00, desc:'Pecorino, black pepper, house tonnarelli', tags:['v'], emoji:'🧀'},
+        {id:'e3', name:'Eggplant Parmigiana', price:14.50, desc:'Layered eggplant, marinara, mozzarella', tags:['v'], emoji:'🍆'},
+      ]},
+      {cat:'Starters', items:[
+        {id:'e4', name:'Bruschetta (3)', price:8.00, desc:'Tomato, basil, garlic, grilled bread', tags:['v'], emoji:'🍅'},
+        {id:'e5', name:'Caprese Salad', price:10.00, desc:'Mozzarella di bufala, tomato, basil', tags:['gf','v'], emoji:'🥗'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'e6', name:'San Pellegrino', price:3.50, desc:'Sparkling, chilled', tags:['gf','v'], emoji:'🥤'},
+      ]},
+    ]
+  },
 ];
 
 let current=null, cart=[], activeCity='Phoenix', cartRest=null;
@@ -320,7 +460,7 @@ function renderHome(){
   const list = RESTAURANTS.filter(r=>r.city===activeCity);
   document.getElementById('rlistLabel').textContent = `${list.length} restaurants in ${activeCity}`;
   document.getElementById('rlist').innerHTML = list.map(r=>`
-    <div class="rcard" onclick="openRestaurant('${r.id}')">
+    <div class="rcard" onclick="openRestaurant('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRestaurant('${r.id}')" aria-label="${r.name}, ${r.cuisine}">
       <div class="rbanner" style="background:${r.color}">${r.emoji}<div class="rbadge">● 0% commission</div></div>
       <div class="rbody">
         <h3>${r.name}</h3>
@@ -344,9 +484,9 @@ function openRestaurant(id){
         <div class="rstory">${current.story}</div>
       </div>
     </div>
-    <div class="ai-launch" onclick="openChat()">
+    <div class="ai-launch" onclick="openChat()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openChat()">
       <div class="spark">✦</div>
-      <div class="t"><b>Order by chatting</b><span>Just say what you want. Ask anything about the menu.</span></div>
+      <div class="t"><b>Order by chatting</b><span>Say or type what you want. Ask anything about the menu.</span></div>
       <div class="go">›</div>
     </div>
     ${current.menu.map(cat=>`
@@ -358,7 +498,7 @@ function openRestaurant(id){
             <h4>${it.name} ${it.id===current.popular?'<span class="pop">★ Most ordered</span>':''} ${it.tags.map(t=>tagHTML(t)).join('')}</h4>
             <p>${it.desc}</p>
           </div>
-          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span><button class="addbtn" onclick="addToCart('${it.id}')">+</button></div>
+          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span><button class="addbtn" onclick="addToCart('${it.id}')" aria-label="Add ${it.name}">+</button></div>
         </div>`).join('')}
     `).join('')}
     <div style="height:10px"></div>`;
@@ -393,7 +533,7 @@ function openCheckout(){
     ${cart.map(c=>`
       <div class="co-line">
         <div><b>${c.name}</b>
-          <div class="qstep"><button onclick="changeQty('${c.id}',-1)">−</button><span>${c.qty}</span><button onclick="changeQty('${c.id}',1)">+</button></div>
+          <div class="qstep"><button onclick="changeQty('${c.id}',-1)" aria-label="Remove one">−</button><span>${c.qty}</span><button onclick="changeQty('${c.id}',1)" aria-label="Add one">+</button></div>
         </div>
         <div>$${(c.price*c.qty).toFixed(2)}</div>
       </div>`).join('')}
@@ -407,7 +547,7 @@ function openCheckout(){
       <p>On a typical delivery app, this $${sub.toFixed(2)} order would cost the restaurant about <b>$${doordashCut.toFixed(2)}</b> in commission. On FullPlate they keep all of it. You pay honest menu prices, they keep their margin.</p>
     </div>
     <button class="paybtn" onclick="placeOrder()">Place pickup order · $${total.toFixed(2)}</button>
-    <div class="demo-note">Demo checkout — no card is charged. Stripe Connect test mode plugs in here for a real pilot.</div>`;
+    <div class="demo-note">Demo only — no card is charged.</div>`;
   window.scrollTo(0,0); show('view-checkout');
   document.getElementById('cartbar').style.display='none';
   document.getElementById('backBtn').style.display='flex';
@@ -432,6 +572,10 @@ function placeOrder(){
 
 function show(id){ ['view-home','view-restaurant','view-checkout','view-done'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
 function goHome(){ closeChat(); show('view-home'); document.getElementById('backBtn').style.display='none'; updateCartBar(); window.scrollTo(0,0); }
+function goBack(){
+  if(document.getElementById('view-checkout').style.display==='block' && current){ openRestaurant(current.id); updateCartBar(); }
+  else goHome();
+}
 function resetAll(){ cart=[]; cartRest=null; updateCartBar(); goHome(); }
 
 /* SCRIPTED AI ORDERING ASSISTANT */
@@ -439,27 +583,28 @@ let chatStarted=false;
 function openChat(){
   document.getElementById('backdrop').style.display='block';
   requestAnimationFrame(()=>{document.getElementById('backdrop').style.opacity='1';document.getElementById('sheet').classList.add('open');});
+  setupMic();
   if(!chatStarted){
     chatStarted=true;
-    botSay(`Hi! I am the ordering assistant for ${current.name}. You can just tell me what you would like, or ask me anything about the menu. What sounds good?`);
+    botSay(`Hi! I am the ordering assistant for ${current.name}. You can say or type what you would like, or ask me anything about the menu. What sounds good?`);
     setChips(["What do you recommend?","See popular items","Anything gluten free?"]);
   }
 }
-function closeChat(){ document.getElementById('sheet').classList.remove('open'); const b=document.getElementById('backdrop'); b.style.opacity='0'; setTimeout(()=>{b.style.display='none';},200); }
+function closeChat(){ stopMic(); document.getElementById('sheet').classList.remove('open'); const b=document.getElementById('backdrop'); b.style.opacity='0'; setTimeout(()=>{b.style.display='none';},200); }
 function scrollChat(){const c=document.getElementById('chat');c.scrollTop=c.scrollHeight;}
 function botSay(html){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg bot';d.innerHTML=html;c.appendChild(d);scrollChat();}
 function meSay(t){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg me';d.textContent=t;c.appendChild(d);scrollChat();}
 function noteSay(t){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg note';d.textContent=t;c.appendChild(d);scrollChat();}
-function setChips(arr){document.getElementById('chips').innerHTML=(arr||[]).map(t=>`<span class="chip" onclick="sendUser('${t.replace(/'/g,"\\'")}')">${t}</span>`).join('');}
+function setChips(arr){document.getElementById('chips').innerHTML=(arr||[]).map(t=>`<button class="chip" onclick="sendUser('${t.replace(/'/g,"\\'")}')">${t}</button>`).join('');}
 function botThink(cb){const c=document.getElementById('chat');const t=document.createElement('div');t.className='typing';t.id='typing';t.innerHTML='<span></span><span></span><span></span>';c.appendChild(t);scrollChat();setTimeout(()=>{const e=document.getElementById('typing');if(e)e.remove();cb();},650);}
 function allItems(){ const a=[]; current.menu.forEach(c=>c.items.forEach(i=>a.push(i))); return a; }
 
 function sendUser(raw){ const text=(raw||'').trim(); if(!text) return; meSay(text); setChips([]); botThink(()=>handleIntent(text.toLowerCase())); }
 
 function handleIntent(t){
-  if(/(check\s?out|that'?s it|that is it|i'?m done|im done|finish|pay|place order|nothing else|done)/.test(t)){
+  if(/(check\s?out|that'?s it|that is it|i'?m done|im done|finish|pay|place order|nothing else|^done|^checkout)/.test(t)){
     if(cartTotals().count===0){ botSay("You have not added anything yet. Want me to share a couple of favorites?"); setChips(["What do you recommend?","See popular items"]); return; }
-    botSay("Perfect. Sending you to checkout to confirm your pickup order."); setTimeout(openCheckout,500); return;
+    botSay("Perfect. Taking you to checkout to confirm your pickup order."); setTimeout(openCheckout,500); return;
   }
   if(/(recommend|popular|favorite|favourite|what'?s good|whats good|else is good|what else is|anything good|something good|\bbest\b|suggest)/.test(t)){
     const pop=allItems().find(i=>i.id===current.popular); const rest=allItems().filter(i=>i!==pop);
@@ -469,7 +614,7 @@ function handleIntent(t){
     setChips([`Add ${picks[0].name}`, `Add ${picks[1].name}`, "See full menu"]); return;
   }
   if(/(drink|beverage|soda|coffee|thirsty|to drink)/.test(t)){
-    const drinks=current.menu.filter(c=>/drink/i.test(c.cat)).flatMap(c=>c.items);
+    const drinks=current.menu.filter(c=>/(drink|coffee)/i.test(c.cat)).flatMap(c=>c.items);
     if(drinks.length){ botSay("Something to drink:<br>"+drinks.map(d=>`• <b>${d.name}</b> ($${d.price.toFixed(2)})`).join('<br>')); setChips([`Add ${drinks[0].name}`,"That's it, checkout"]); }
     else botSay("No drinks are listed separately here. Anything else from the menu?");
     return;
@@ -499,8 +644,9 @@ function handleIntent(t){
   }
   const qty = parseQty(t); const matched = matchItems(t);
   if(matched.length){
-    matched.forEach(it=>{ for(let k=0;k<qty;k++) addToCart(it.id); });
-    const names=matched.map(it=>`${qty>1?qty+'× ':''}${it.name}`).join(' and ');
+    const per = matched.length>1 ? 1 : qty;
+    matched.forEach(it=>{ for(let k=0;k<per;k++) addToCart(it.id); });
+    const names=matched.map(it=>`${(matched.length===1&&qty>1)?qty+'× ':''}${it.name}`).join(' and ');
     const {sub,count}=cartTotals();
     botSay(`Added <b>${names}</b>. ✓<br>Your order is now ${count} item${count>1?'s':''}, $${sub.toFixed(2)}.<br>Anything else?`);
     setChips(["Add a drink","What else is good?","That's it, checkout"]); return;
@@ -519,16 +665,45 @@ function parseQty(t){
   for(const w in words){ if(new RegExp('\\b'+w+'\\b').test(t)) return words[w]; }
   return 1;
 }
+const STOP=['the','and','with','plate','of','for','add','some','a','an','bowl'];
 function matchItems(t){
-  const found=[];
-  allItems().forEach(it=>{
-    const name=it.name.toLowerCase();
-    const kws=name.replace(/[()0-9]/g,'').split(/\s+/).filter(w=>w.length>2 && !['the','and','with','plate','taco'].includes(w));
-    let hit = t.includes(name); if(!hit) hit = kws.some(k=>t.includes(k));
-    if(hit && !found.includes(it)) found.push(it);
+  const items=allItems();
+  // 1) exact full-name matches are the most specific — return all distinct
+  const exact=items.filter(it=>t.includes(it.name.toLowerCase()));
+  if(exact.length) return exact;
+  // 2) otherwise score by distinctive keyword hits and take the single best
+  let best=null,bestScore=0;
+  items.forEach(it=>{
+    const kws=it.name.toLowerCase().replace(/[()0-9]/g,'').split(/\s+/).filter(w=>w.length>2 && !STOP.includes(w));
+    const score=kws.reduce((s,k)=>s+(t.includes(k)?1:0),0);
+    if(score>bestScore){bestScore=score;best=it;}
   });
-  if(found.length>1){ const exact=found.filter(it=>t.includes(it.name.toLowerCase())); if(exact.length) return exact; return [found[0]]; }
-  return found;
+  return best?[best]:[];
+}
+
+/* VOICE (progressive enhancement) */
+let recog=null, micActive=false;
+function micSupported(){ return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window; }
+function setupMic(){
+  const btn=document.getElementById('micBtn');
+  if(!micSupported()){ btn.style.display='none'; return; }
+  btn.style.display='flex';
+}
+function toggleMic(){
+  if(!micSupported()) return;
+  if(micActive){ stopMic(); return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR(); recog.lang='en-US'; recog.interimResults=false; recog.maxAlternatives=1;
+  recog.onresult=(e)=>{ const said=e.results[0][0].transcript; stopMic(); sendUser(said); };
+  recog.onerror=()=>stopMic();
+  recog.onend=()=>{ micActive=false; document.getElementById('micBtn').classList.remove('on'); };
+  try{ recog.start(); micActive=true; document.getElementById('micBtn').classList.add('on'); document.getElementById('chatInput').placeholder='Listening...'; }catch(err){ stopMic(); }
+}
+function stopMic(){
+  micActive=false;
+  const btn=document.getElementById('micBtn'); if(btn) btn.classList.remove('on');
+  const inp=document.getElementById('chatInput'); if(inp) inp.placeholder='Type your order...';
+  if(recog){ try{recog.stop();}catch(e){} recog=null; }
 }
 
 /* boot */
