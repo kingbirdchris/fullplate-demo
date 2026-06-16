@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FullPlate — order local, keep your margin</title>
+<style>
+  :root{
+    --brand:#E8623D; --brand-dark:#C44A28; --ink:#2A211C; --muted:#7A6E66;
+    --cream:#FBF6EF; --card:#FFFFFF; --line:#EFE6DA; --good:#2E7D52;
+    --shadow:0 6px 24px rgba(42,33,28,.08); --shadow-lg:0 18px 50px rgba(42,33,28,.18);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--cream);color:var(--ink);max-width:480px;margin:0 auto;min-height:100vh;position:relative;-webkit-font-smoothing:antialiased;}
+  .app{padding-bottom:96px}
+  header{position:sticky;top:0;z-index:40;background:rgba(251,246,239,.92);
+    backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:10px;padding:14px 16px;}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:-.4px;cursor:pointer}
+  .logo .dot{width:26px;height:26px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff;font-size:15px}
+  .logo b{color:var(--brand)}
+  .back{border:1px solid var(--line);background:#fff;border-radius:10px;width:38px;height:38px;font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center}
+  .tagline{margin-left:auto;font-size:11px;color:var(--muted);text-align:right;line-height:1.3}
+  .tagline b{color:var(--good)}
+  .hero{padding:22px 16px 8px}
+  .hero h1{font-size:26px;line-height:1.15;margin:0 0 8px;letter-spacing:-.6px}
+  .hero p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .pill .ic{color:var(--brand)}
+  .section-label{padding:18px 16px 6px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .citytabs{display:flex;gap:8px;padding:14px 16px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .citytab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px}
+  .citytab .cpin{font-size:10px;color:var(--line)}
+  .citytab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .citytab.on .cpin{color:var(--brand)}
+  .pop{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px;background:#FCEFD9;color:#B8740B}
+  .rcard{background:var(--card);border:1px solid var(--line);border-radius:18px;margin:10px 16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s ease}
+  .rcard:active{transform:scale(.99)}
+  .rbanner{height:96px;display:flex;align-items:center;justify-content:center;font-size:46px;position:relative}
+  .rbadge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95);color:var(--good);font-size:11px;font-weight:800;padding:5px 9px;border-radius:999px;display:flex;align-items:center;gap:5px}
+  .rbody{padding:12px 14px 14px}
+  .rbody h3{margin:0 0 3px;font-size:17px;letter-spacing:-.3px}
+  .rmeta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;flex-wrap:wrap}
+  .rmeta .star{color:#E0A100}
+  .rblurb{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+  #view-restaurant{display:none}
+  .rhead-banner{height:140px;display:flex;align-items:center;justify-content:center;font-size:64px}
+  .rhead-info{padding:16px}
+  .rhead-info h2{margin:0 0 6px;font-size:23px;letter-spacing:-.5px}
+  .rstory{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0 4px;font-size:13px;color:var(--muted);line-height:1.5}
+  .rstory b{color:var(--ink)}
+  .menucat{padding:18px 16px 4px;font-size:15px;font-weight:800;letter-spacing:-.2px}
+  .mitem{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;margin:8px 16px;padding:10px 12px}
+  .mthumb{width:54px;height:54px;border-radius:11px;display:grid;place-items:center;font-size:26px;flex:0 0 auto}
+  .minfo{flex:1;min-width:0}
+  .minfo h4{margin:0 0 2px;font-size:14.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .minfo p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
+  .tag{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.4px}
+  .tag.gf{background:#EAF5EE;color:var(--good)}
+  .tag.v{background:#EAF2FB;color:#2563A8}
+  .tag.spicy{background:#FBEAEA;color:#C0392B}
+  .madd{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .mprice{font-weight:700;font-size:14px}
+  .addbtn{border:none;background:var(--brand);color:#fff;width:34px;height:34px;border-radius:10px;font-size:20px;line-height:1;cursor:pointer;font-weight:600}
+  .addbtn:active{background:var(--brand-dark)}
+  .ai-launch{margin:16px;background:linear-gradient(135deg,#2A211C,#43342B);color:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--shadow)}
+  .ai-launch .spark{font-size:24px}
+  .ai-launch .t{flex:1}
+  .ai-launch .t b{display:block;font-size:14.5px;margin-bottom:2px}
+  .ai-launch .t span{font-size:12px;color:#D8CBC0}
+  .ai-launch .go{font-size:18px;opacity:.8}
+  .cartbar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;z-index:45;background:var(--brand);color:#fff;padding:14px 18px;display:none;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 -8px 24px rgba(42,33,28,.12)}
+  .cartbar b{font-size:15px}
+  .cartbar .ct{background:rgba(255,255,255,.22);border-radius:8px;padding:3px 9px;font-size:13px;font-weight:700;margin-right:8px}
+  .cartbar .cta{font-weight:800;display:flex;align-items:center;gap:6px}
+  .sheet-backdrop{position:fixed;inset:0;background:rgba(42,33,28,.45);z-index:60;display:none;opacity:0;transition:opacity .2s}
+  .sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;height:86vh;background:var(--cream);border-radius:22px 22px 0 0;z-index:61;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1);box-shadow:var(--shadow-lg)}
+  .sheet.open{transform:translateY(0)}
+  .sheet-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .sheet-head .av{width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:18px}
+  .sheet-head .ht{flex:1}
+  .sheet-head .ht b{display:block;font-size:15px}
+  .sheet-head .ht span{font-size:11.5px;color:var(--good);font-weight:600}
+  .sheet-head .close{border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer}
+  .chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .msg{max-width:82%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.45;white-space:pre-wrap}
+  .msg.bot{background:#fff;border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:5px}
+  .msg.me{background:var(--brand);color:#fff;align-self:flex-end;border-bottom-right-radius:5px}
+  .msg.note{align-self:center;background:#F3ECE2;color:var(--muted);font-size:12px;border-radius:10px;max-width:90%;text-align:center}
+  .typing{align-self:flex-start;background:#fff;border:1px solid var(--line);padding:13px 16px;border-radius:16px;border-bottom-left-radius:5px}
+  .typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin:0 2px;animation:bob 1s infinite}
+  .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+  @keyframes bob{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 8px}
+  .chip{background:#fff;border:1px solid var(--brand);color:var(--brand);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer}
+  .chip:active{background:var(--brand);color:#fff}
+  .composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:var(--cream)}
+  .composer input{flex:1;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;outline:none;background:#fff}
+  .composer input:focus{border-color:var(--brand)}
+  .composer button{border:none;background:var(--brand);color:#fff;border-radius:12px;width:48px;font-size:19px;cursor:pointer}
+  #view-checkout{display:none;padding:8px 0 20px}
+  .co-line{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 16px;font-size:14px;border-bottom:1px solid var(--line)}
+  .qstep{display:inline-flex;align-items:center;gap:12px;margin-top:7px}
+  .qstep button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:16px;line-height:1;cursor:pointer;color:var(--ink)}
+  .qstep span{font-size:14px;font-weight:700;min-width:14px;text-align:center}
+  .co-tot{display:flex;justify-content:space-between;padding:12px 16px;font-size:14px}
+  .co-tot.big{font-weight:800;font-size:17px;border-top:2px solid var(--line);margin-top:4px;padding-top:14px}
+  .savecard{margin:16px;background:#EAF5EE;border:1px solid #CDE7D8;border-radius:16px;padding:14px 16px}
+  .savecard h4{margin:0 0 6px;color:var(--good);font-size:14px;display:flex;align-items:center;gap:7px}
+  .savecard p{margin:0;font-size:13px;color:#2A211C;line-height:1.5}
+  .savecard .big{font-size:22px;font-weight:800;color:var(--good)}
+  .paybtn{margin:8px 16px 4px;display:block;width:calc(100% - 32px);border:none;background:var(--brand);color:#fff;padding:16px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer}
+  .paybtn:active{background:var(--brand-dark)}
+  .demo-note{text-align:center;font-size:11px;color:var(--muted);padding:8px 16px}
+  #view-done{display:none;text-align:center;padding:60px 24px}
+  #view-done .check{width:84px;height:84px;border-radius:50%;background:var(--good);color:#fff;font-size:46px;display:grid;place-items:center;margin:0 auto 18px}
+  #view-done h2{margin:0 0 8px;font-size:24px}
+  #view-done p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 auto;max-width:300px}
+  #view-done .again{margin-top:26px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:13px 20px;font-weight:700;cursor:pointer}
+  .footer{padding:26px 16px 14px;text-align:center;color:var(--muted);font-size:11px;line-height:1.6}
+  .footer b{color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <button class="back" id="backBtn" onclick="goHome()">‹</button>
+    <div class="logo" onclick="goHome()"><span class="dot">◗</span> Full<b>Plate</b></div>
+    <div class="tagline">Order local.<br><b>0% commission.</b></div>
+  </header>
+
+  <div id="view-home">
+    <div class="hero">
+      <h1>Real food from your<br>neighborhood spots.</h1>
+      <p>Order direct from independent local restaurants. They keep every dollar. No delivery-app markup, no broken menus.</p>
+      <div class="pillrow">
+        <div class="pill"><span class="ic">●</span> 0% commission</div>
+        <div class="pill"><span class="ic">✦</span> AI ordering</div>
+        <div class="pill"><span class="ic">◷</span> Pickup ready</div>
+      </div>
+    </div>
+    <div class="citytabs" id="cityTabs"></div>
+    <div class="section-label" id="rlistLabel">Restaurants near you</div>
+    <div id="rlist"></div>
+    <div class="footer">
+      <b>FullPlate</b> · a Kingbird Solutions concept demo<br>
+      Sample restaurants are fictional. Checkout is simulated.
+    </div>
+  </div>
+
+  <div id="view-restaurant"></div>
+  <div id="view-checkout"></div>
+
+  <div id="view-done">
+    <div class="check">✓</div>
+    <h2>Order confirmed</h2>
+    <p id="doneMsg"></p>
+    <button class="again" onclick="resetAll()">Back to FullPlate</button>
+  </div>
+</div>
+
+<div class="cartbar" id="cartbar" onclick="openCheckout()">
+  <div><span class="ct" id="cartCount">0</span><b>View order</b></div>
+  <div class="cta">$<span id="cartTotal">0.00</span> ›</div>
+</div>
+
+<div class="sheet-backdrop" id="backdrop" onclick="closeChat()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-head">
+    <div class="av">✦</div>
+    <div class="ht"><b id="aiName">Order Assistant</b><span>● powered by FullPlate AI</span></div>
+    <button class="close" onclick="closeChat()">✕</button>
+  </div>
+  <div class="chat" id="chat"></div>
+  <div class="chips" id="chips"></div>
+  <div class="composer">
+    <input id="chatInput" placeholder="Type your order..." autocomplete="off"
+      onkeydown="if(event.key==='Enter'){sendUser(this.value);this.value=''}">
+    <button onclick="var i=document.getElementById('chatInput');sendUser(i.value);i.value=''">➤</button>
+  </div>
+</div>
+
+<script>
+/* DATA — add a restaurant by appending one object. tags: gf, v, spicy */
+const RESTAURANTS = [
+  {
+    id:'rosas', city:'Phoenix', name:"Rosa's Cocina", cuisine:'Sonoran Mexican', emoji:'🌮',
+    color:'#FBE7DD', rating:4.8, reviews:412, eta:'20–30 min', price:'$$', popular:'r4',
+    blurb:'Family-run Sonoran kitchen in South Phoenix since 1998.',
+    story:"Rosa learned mole from her grandmother in Hermosillo. Everything is made from scratch daily, and the salsas are not for the faint of heart.",
+    menu:[
+      {cat:'Tacos', items:[
+        {id:'r1', name:'Carne Asada Taco', price:4.50, desc:'Mesquite-grilled steak, onion, cilantro, corn tortilla', tags:['gf'], emoji:'🌮'},
+        {id:'r2', name:'Rajas Taco', price:4.00, desc:'Roasted poblano, caramelized onion, crema', tags:['gf','v'], emoji:'🌶️'},
+        {id:'r3', name:'Carnitas Taco', price:4.25, desc:'Slow-braised pork, salsa verde', tags:['gf'], emoji:'🌮'},
+      ]},
+      {cat:'Plates', items:[
+        {id:'r4', name:'Chicken Mole Plate', price:14.00, desc:"Rosa's signature mole, rice, beans, handmade tortillas", tags:['gf'], emoji:'🍗'},
+        {id:'r5', name:'Tamale Plate (3)', price:12.50, desc:'Red chile pork tamales, steamed in corn husk', tags:['gf'], emoji:'🫔'},
+        {id:'r6', name:'Veggie Burrito', price:10.50, desc:'Beans, rice, rajas, guacamole, pico', tags:['v'], emoji:'🌯'},
+      ]},
+      {cat:'Sides & Drinks', items:[
+        {id:'r7', name:'Chips & Guacamole', price:6.00, desc:'Made to order', tags:['gf','v'], emoji:'🥑'},
+        {id:'r8', name:'Horchata', price:3.50, desc:'House cinnamon rice milk', tags:['gf','v'], emoji:'🥛'},
+      ]},
+    ]
+  },
+  {
+    id:'pho', city:'Phoenix', name:'Pho Saigon Kitchen', cuisine:'Vietnamese', emoji:'🍜',
+    color:'#E7F0EA', rating:4.7, reviews:286, eta:'15–25 min', price:'$$', popular:'p1',
+    blurb:'Slow-simmered broth and bright herbs on East McDowell.',
+    story:"The Tran family simmers their beef broth for 12 hours every morning. No shortcuts, no MSG, just the recipe they brought from Saigon.",
+    menu:[
+      {cat:'Pho & Noodles', items:[
+        {id:'p1', name:'Pho Tai (Rare Beef)', price:13.00, desc:'12-hour broth, rice noodles, herbs on the side', tags:['gf'], emoji:'🍜'},
+        {id:'p2', name:'Veggie Tofu Pho', price:12.00, desc:'Vegetable broth, tofu, bok choy', tags:['gf','v'], emoji:'🍲'},
+        {id:'p3', name:'Bun Cha Gio', price:12.50, desc:'Vermicelli, crispy spring rolls, nuoc cham', tags:[], emoji:'🍜'},
+      ]},
+      {cat:'Starters', items:[
+        {id:'p4', name:'Fresh Spring Rolls (2)', price:6.50, desc:'Shrimp, herbs, peanut sauce', tags:['gf'], emoji:'🥬'},
+        {id:'p5', name:'Crispy Spring Rolls (4)', price:7.00, desc:'Pork and glass noodle', tags:[], emoji:'🥢'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'p6', name:'Vietnamese Iced Coffee', price:4.50, desc:'Condensed milk, strong drip', tags:['v'], emoji:'☕'},
+      ]},
+    ]
+  },
+  {
+    id:'slice', city:'Phoenix', name:'Slice & Co. Pizzeria', cuisine:'Wood-fired Pizza', emoji:'🍕',
+    color:'#FBEFD9', rating:4.9, reviews:531, eta:'25–35 min', price:'$$', popular:'s2',
+    blurb:'Naples-style pies from a downtown garage, fermented 72 hours.',
+    story:"Danny ferments his dough for three days and fires every pie at 900 degrees. The menu is short on purpose. He only makes what he is proud of.",
+    menu:[
+      {cat:'Pizzas', items:[
+        {id:'s1', name:'Margherita', price:15.00, desc:'San Marzano, fresh mozzarella, basil', tags:['v'], emoji:'🍕'},
+        {id:'s2', name:'Pepperoni & Hot Honey', price:18.00, desc:'Cup-and-char pepperoni, chili honey drizzle', tags:['spicy'], emoji:'🍕'},
+        {id:'s3', name:'Funghi (Mushroom)', price:17.00, desc:'Roasted mushrooms, thyme, taleggio', tags:['v'], emoji:'🍄'},
+      ]},
+      {cat:'Salads & Sides', items:[
+        {id:'s4', name:'Little Gem Caesar', price:9.00, desc:'House dressing, parmesan, focaccia crumb', tags:['v'], emoji:'🥗'},
+        {id:'s5', name:'Garlic Knots (6)', price:7.00, desc:'Pulled from the dough, sea salt, butter', tags:['v'], emoji:'🥨'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'s6', name:'Italian Soda', price:3.50, desc:'Blood orange or lemon', tags:['gf','v'], emoji:'🥤'},
+      ]},
+    ]
+  },
+  {
+    id:'platos', city:'Orange, CA', name:'Plato Verde', cuisine:'Coastal Mexican', emoji:'🫔',
+    color:'#E8F1E6', rating:4.8, reviews:367, eta:'20–30 min', price:'$$', popular:'o2',
+    blurb:'Baja-style seafood and street tacos off the Orange Circle.',
+    story:"Elena grew up cooking in Ensenada and opened Plato Verde two blocks from the Plaza. The fish is delivered every morning and the tortillas are pressed to order.",
+    menu:[
+      {cat:'Tacos', items:[
+        {id:'o1', name:'Baja Fish Taco', price:5.00, desc:'Beer-battered cod, cabbage, chipotle crema', tags:[], emoji:'🌮'},
+        {id:'o2', name:'Carne Asada Taco', price:4.75, desc:'Citrus-marinated steak, onion, cilantro', tags:['gf'], emoji:'🌮'},
+        {id:'o3', name:'Grilled Veggie Taco', price:4.25, desc:'Zucchini, corn, poblano, cotija', tags:['gf','v'], emoji:'🌽'},
+      ]},
+      {cat:'Plates', items:[
+        {id:'o4', name:'Shrimp Ceviche Tostada', price:13.50, desc:'Lime-cured shrimp, avocado, pico', tags:['gf'], emoji:'🦐'},
+        {id:'o5', name:'Carnitas Burrito', price:11.50, desc:'Slow-roasted pork, rice, beans, salsa roja', tags:[], emoji:'🌯'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'o6', name:'Agua de Jamaica', price:3.50, desc:'Hibiscus, lightly sweetened', tags:['gf','v'], emoji:'🧊'},
+      ]},
+    ]
+  },
+  {
+    id:'harbor', city:'Orange, CA', name:'Harbor & Vine', cuisine:'California Comfort', emoji:'🥪',
+    color:'#FBEEDF', rating:4.7, reviews:298, eta:'15–25 min', price:'$$', popular:'h1',
+    blurb:'Scratch sandwiches and grain bowls in Old Towne Orange.',
+    story:"A husband-and-wife team who left restaurant kitchens to open a corner spot focused on local produce and bread baked down the street. Everything is made the morning you order it.",
+    menu:[
+      {cat:'Sandwiches', items:[
+        {id:'h1', name:'Roasted Turkey Club', price:13.00, desc:'Herb-roasted turkey, bacon, avocado, sourdough', tags:[], emoji:'🥪'},
+        {id:'h2', name:'Caprese Melt', price:11.50, desc:'Fresh mozzarella, tomato, basil pesto, ciabatta', tags:['v'], emoji:'🧀'},
+      ]},
+      {cat:'Bowls & Salads', items:[
+        {id:'h3', name:'Citrus Harvest Bowl', price:12.50, desc:'Quinoa, roasted veg, orange vinaigrette', tags:['gf','v'], emoji:'🥗'},
+        {id:'h4', name:'Chili-Lime Chicken Bowl', price:13.50, desc:'Grilled chicken, brown rice, slaw', tags:['gf'], emoji:'🍗'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'h5', name:'Cold Brew', price:4.50, desc:'House blend, 18-hour steep', tags:['gf','v'], emoji:'☕'},
+      ]},
+    ]
+  },
+  {
+    id:'sakura', city:'Orange, CA', name:'Sakura Ramen Bar', cuisine:'Ramen & Japanese', emoji:'🍜',
+    color:'#F3E7EE', rating:4.9, reviews:455, eta:'20–30 min', price:'$$', popular:'k1',
+    blurb:'Tonkotsu simmered overnight, a few seats near Chapman.',
+    story:"Kenji trained in Fukuoka and brings that broth home to Orange. The pork bones simmer for 18 hours and the noodles are made fresh in-house every day.",
+    menu:[
+      {cat:'Ramen', items:[
+        {id:'k1', name:'Tonkotsu Ramen', price:15.00, desc:'18-hour pork broth, chashu, soft egg, scallion', tags:[], emoji:'🍜'},
+        {id:'k2', name:'Spicy Miso Ramen', price:15.50, desc:'Miso-chili broth, ground pork, corn', tags:['spicy'], emoji:'🌶️'},
+        {id:'k3', name:'Veggie Shoyu Ramen', price:13.50, desc:'Kombu-shiitake broth, tofu, greens', tags:['v'], emoji:'🍲'},
+      ]},
+      {cat:'Starters', items:[
+        {id:'k4', name:'Pork Gyoza (5)', price:7.50, desc:'Pan-seared dumplings, ponzu', tags:[], emoji:'🥟'},
+        {id:'k5', name:'Edamame', price:5.00, desc:'Sea salt, steamed', tags:['gf','v'], emoji:'🫛'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'k6', name:'Ramune Soda', price:3.50, desc:'Original marble soda', tags:['gf','v'], emoji:'🥤'},
+      ]},
+    ]
+  },
+];
+
+let current=null, cart=[], activeCity='Phoenix', cartRest=null;
+function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
+
+function setCity(c){ activeCity=c; renderHome(); window.scrollTo(0,0); }
+
+function renderHome(){
+  document.getElementById('cityTabs').innerHTML = cities().map(c=>`
+    <button class="citytab ${c===activeCity?'on':''}" onclick="setCity('${c}')"><span class="cpin">◉</span> ${c}</button>`).join('');
+  const list = RESTAURANTS.filter(r=>r.city===activeCity);
+  document.getElementById('rlistLabel').textContent = `${list.length} restaurants in ${activeCity}`;
+  document.getElementById('rlist').innerHTML = list.map(r=>`
+    <div class="rcard" onclick="openRestaurant('${r.id}')">
+      <div class="rbanner" style="background:${r.color}">${r.emoji}<div class="rbadge">● 0% commission</div></div>
+      <div class="rbody">
+        <h3>${r.name}</h3>
+        <div class="rmeta"><span class="star">★ ${r.rating}</span><span>(${r.reviews})</span>·<span>${r.cuisine}</span>·<span>${r.price}</span>·<span>◷ ${r.eta}</span></div>
+        <p class="rblurb">${r.blurb}</p>
+      </div>
+    </div>`).join('');
+}
+
+function openRestaurant(id){
+  current = RESTAURANTS.find(r=>r.id===id);
+  if(cart.length && cartRest!==id){ cart=[]; updateCartBar(); }
+  chatStarted=false; document.getElementById('chat').innerHTML='';
+  window.scrollTo(0,0);
+  document.getElementById('view-restaurant').innerHTML = `
+    <div class="rhead">
+      <div class="rhead-banner" style="background:${current.color}">${current.emoji}</div>
+      <div class="rhead-info">
+        <h2>${current.name}</h2>
+        <div class="rmeta"><span class="star">★ ${current.rating}</span><span>(${current.reviews})</span>·<span>${current.cuisine}</span>·<span>${current.price}</span>·<span>◷ ${current.eta} pickup</span></div>
+        <div class="rstory">${current.story}</div>
+      </div>
+    </div>
+    <div class="ai-launch" onclick="openChat()">
+      <div class="spark">✦</div>
+      <div class="t"><b>Order by chatting</b><span>Just say what you want. Ask anything about the menu.</span></div>
+      <div class="go">›</div>
+    </div>
+    ${current.menu.map(cat=>`
+      <div class="menucat">${cat.cat}</div>
+      ${cat.items.map(it=>`
+        <div class="mitem">
+          <div class="mthumb" style="background:${current.color}">${it.emoji}</div>
+          <div class="minfo">
+            <h4>${it.name} ${it.id===current.popular?'<span class="pop">★ Most ordered</span>':''} ${it.tags.map(t=>tagHTML(t)).join('')}</h4>
+            <p>${it.desc}</p>
+          </div>
+          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span><button class="addbtn" onclick="addToCart('${it.id}')">+</button></div>
+        </div>`).join('')}
+    `).join('')}
+    <div style="height:10px"></div>`;
+  show('view-restaurant');
+  document.getElementById('backBtn').style.display='flex';
+  document.getElementById('aiName').textContent = current.name + ' Assistant';
+}
+
+function tagHTML(t){ const map={gf:['gf','GF'],v:['v','VEG'],spicy:['spicy','🌶']}; const m=map[t]; return m?`<span class="tag ${m[0]}">${m[1]}</span>`:''; }
+
+function findItem(id){ for(const r of RESTAURANTS) for(const c of r.menu) for(const it of c.items) if(it.id===id) return it; }
+function addToCart(id){
+  const it=findItem(id); if(!it) return;
+  cartRest=current?current.id:cartRest;
+  const row=cart.find(c=>c.id===id);
+  if(row) row.qty++; else cart.push({id:it.id,name:it.name,price:it.price,qty:1});
+  updateCartBar(); return it;
+}
+function cartTotals(){ const sub=cart.reduce((s,c)=>s+c.price*c.qty,0); const count=cart.reduce((s,c)=>s+c.qty,0); return {sub,count}; }
+function updateCartBar(){
+  const {sub,count}=cartTotals(); const bar=document.getElementById('cartbar');
+  if(count>0){bar.style.display='flex';document.getElementById('cartCount').textContent=count;document.getElementById('cartTotal').textContent=sub.toFixed(2);}
+  else bar.style.display='none';
+}
+
+function openCheckout(){
+  if(cartTotals().count===0) return;
+  closeChat();
+  const {sub}=cartTotals(); const tax=sub*0.086; const total=sub+tax; const doordashCut=sub*0.30;
+  document.getElementById('view-checkout').innerHTML=`
+    <div class="section-label" style="padding-top:14px">Your order · ${current.name}</div>
+    ${cart.map(c=>`
+      <div class="co-line">
+        <div><b>${c.name}</b>
+          <div class="qstep"><button onclick="changeQty('${c.id}',-1)">−</button><span>${c.qty}</span><button onclick="changeQty('${c.id}',1)">+</button></div>
+        </div>
+        <div>$${(c.price*c.qty).toFixed(2)}</div>
+      </div>`).join('')}
+    <div class="co-tot"><span>Subtotal</span><span>$${sub.toFixed(2)}</span></div>
+    <div class="co-tot"><span>Estimated tax</span><span>$${tax.toFixed(2)}</span></div>
+    <div class="co-tot"><span>Delivery-app markup</span><span style="color:var(--good);font-weight:700">$0.00</span></div>
+    <div class="co-tot"><span>Service / commission fee</span><span style="color:var(--good);font-weight:700">$0.00</span></div>
+    <div class="co-tot big"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+    <div class="savecard">
+      <h4>✓ ${current.name} keeps <span class="big">$${sub.toFixed(2)}</span></h4>
+      <p>On a typical delivery app, this $${sub.toFixed(2)} order would cost the restaurant about <b>$${doordashCut.toFixed(2)}</b> in commission. On FullPlate they keep all of it. You pay honest menu prices, they keep their margin.</p>
+    </div>
+    <button class="paybtn" onclick="placeOrder()">Place pickup order · $${total.toFixed(2)}</button>
+    <div class="demo-note">Demo checkout — no card is charged. Stripe Connect test mode plugs in here for a real pilot.</div>`;
+  window.scrollTo(0,0); show('view-checkout');
+  document.getElementById('cartbar').style.display='none';
+  document.getElementById('backBtn').style.display='flex';
+}
+
+function changeQty(id,d){
+  const row=cart.find(c=>c.id===id); if(!row) return;
+  row.qty+=d; if(row.qty<=0) cart=cart.filter(c=>c.id!==id);
+  updateCartBar();
+  if(cartTotals().count===0){ goHome(); return; }
+  openCheckout();
+}
+
+function placeOrder(){
+  const {sub}=cartTotals(); const cut=(sub*0.30).toFixed(2);
+  document.getElementById('doneMsg').innerHTML =
+    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${sub.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.`;
+  cart=[]; cartRest=null; updateCartBar();
+  document.getElementById('backBtn').style.display='none';
+  window.scrollTo(0,0); show('view-done');
+}
+
+function show(id){ ['view-home','view-restaurant','view-checkout','view-done'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
+function goHome(){ closeChat(); show('view-home'); document.getElementById('backBtn').style.display='none'; updateCartBar(); window.scrollTo(0,0); }
+function resetAll(){ cart=[]; cartRest=null; updateCartBar(); goHome(); }
+
+/* SCRIPTED AI ORDERING ASSISTANT */
+let chatStarted=false;
+function openChat(){
+  document.getElementById('backdrop').style.display='block';
+  requestAnimationFrame(()=>{document.getElementById('backdrop').style.opacity='1';document.getElementById('sheet').classList.add('open');});
+  if(!chatStarted){
+    chatStarted=true;
+    botSay(`Hi! I am the ordering assistant for ${current.name}. You can just tell me what you would like, or ask me anything about the menu. What sounds good?`);
+    setChips(["What do you recommend?","See popular items","Anything gluten free?"]);
+  }
+}
+function closeChat(){ document.getElementById('sheet').classList.remove('open'); const b=document.getElementById('backdrop'); b.style.opacity='0'; setTimeout(()=>{b.style.display='none';},200); }
+function scrollChat(){const c=document.getElementById('chat');c.scrollTop=c.scrollHeight;}
+function botSay(html){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg bot';d.innerHTML=html;c.appendChild(d);scrollChat();}
+function meSay(t){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg me';d.textContent=t;c.appendChild(d);scrollChat();}
+function noteSay(t){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg note';d.textContent=t;c.appendChild(d);scrollChat();}
+function setChips(arr){document.getElementById('chips').innerHTML=(arr||[]).map(t=>`<span class="chip" onclick="sendUser('${t.replace(/'/g,"\\'")}')">${t}</span>`).join('');}
+function botThink(cb){const c=document.getElementById('chat');const t=document.createElement('div');t.className='typing';t.id='typing';t.innerHTML='<span></span><span></span><span></span>';c.appendChild(t);scrollChat();setTimeout(()=>{const e=document.getElementById('typing');if(e)e.remove();cb();},650);}
+function allItems(){ const a=[]; current.menu.forEach(c=>c.items.forEach(i=>a.push(i))); return a; }
+
+function sendUser(raw){ const text=(raw||'').trim(); if(!text) return; meSay(text); setChips([]); botThink(()=>handleIntent(text.toLowerCase())); }
+
+function handleIntent(t){
+  if(/(check\s?out|that'?s it|that is it|i'?m done|im done|finish|pay|place order|nothing else|done)/.test(t)){
+    if(cartTotals().count===0){ botSay("You have not added anything yet. Want me to share a couple of favorites?"); setChips(["What do you recommend?","See popular items"]); return; }
+    botSay("Perfect. Sending you to checkout to confirm your pickup order."); setTimeout(openCheckout,500); return;
+  }
+  if(/(recommend|popular|favorite|favourite|what'?s good|whats good|else is good|what else is|anything good|something good|\bbest\b|suggest)/.test(t)){
+    const pop=allItems().find(i=>i.id===current.popular); const rest=allItems().filter(i=>i!==pop);
+    const picks=[pop||rest[0], rest[0]===pop?rest[1]:rest[0]].filter(Boolean);
+    botSay(`A couple of favorites at ${current.name}:`);
+    picks.forEach((p,idx)=>botSay(`<b>${p.name}</b>${idx===0?' ★ most ordered':''} · $${p.price.toFixed(2)}<br>${p.desc}`));
+    setChips([`Add ${picks[0].name}`, `Add ${picks[1].name}`, "See full menu"]); return;
+  }
+  if(/(drink|beverage|soda|coffee|thirsty|to drink)/.test(t)){
+    const drinks=current.menu.filter(c=>/drink/i.test(c.cat)).flatMap(c=>c.items);
+    if(drinks.length){ botSay("Something to drink:<br>"+drinks.map(d=>`• <b>${d.name}</b> ($${d.price.toFixed(2)})`).join('<br>')); setChips([`Add ${drinks[0].name}`,"That's it, checkout"]); }
+    else botSay("No drinks are listed separately here. Anything else from the menu?");
+    return;
+  }
+  if(/(gluten|celiac|coeliac|\bgf\b)/.test(t)){
+    const gf=allItems().filter(i=>i.tags.includes('gf'));
+    if(gf.length){
+      botSay("These are marked gluten free on the menu:<br>"+gf.map(i=>`• <b>${i.name}</b> ($${i.price.toFixed(2)})`).join('<br>'));
+      noteSay("The restaurant lists these as gluten free. Please confirm with staff about cross-contamination if you have an allergy.");
+      setChips([`Add ${gf[0].name}`,"What else do you have?","Checkout"]);
+    } else { botSay("I do not see gluten-free items flagged on this menu. The restaurant can confirm options directly."); }
+    return;
+  }
+  if(/(vegetarian|veggie|vegan|meatless|plant)/.test(t)){
+    const v=allItems().filter(i=>i.tags.includes('v'));
+    if(v.length){ botSay("Vegetarian-friendly picks:<br>"+v.map(i=>`• <b>${i.name}</b> ($${i.price.toFixed(2)})`).join('<br>')); setChips([`Add ${v[0].name}`,"What do you recommend?","Checkout"]); }
+    else botSay("No vegetarian items are flagged here, but the restaurant can advise on substitutions.");
+    return;
+  }
+  if(/(hour|open|close|when|location|where|address|pickup time)/.test(t)){
+    botSay(`${current.name} is set up for pickup with about a ${current.eta} wait. In a live FullPlate listing this is where the real hours, address, and pickup time would show.`);
+    setChips(["What do you recommend?","See full menu"]); return;
+  }
+  if(/(menu|what do you have|do you have|what else do you|see more|options|see (the )?menu|\blist\b)/.test(t)){
+    const lines=current.menu.map(c=>`<b>${c.cat}</b><br>`+c.items.map(i=>`• ${i.name} ($${i.price.toFixed(2)})`).join('<br>')).join('<br><br>');
+    botSay(lines); setChips([`Add ${allItems()[0].name}`,"What do you recommend?","Checkout"]); return;
+  }
+  const qty = parseQty(t); const matched = matchItems(t);
+  if(matched.length){
+    matched.forEach(it=>{ for(let k=0;k<qty;k++) addToCart(it.id); });
+    const names=matched.map(it=>`${qty>1?qty+'× ':''}${it.name}`).join(' and ');
+    const {sub,count}=cartTotals();
+    botSay(`Added <b>${names}</b>. ✓<br>Your order is now ${count} item${count>1?'s':''}, $${sub.toFixed(2)}.<br>Anything else?`);
+    setChips(["Add a drink","What else is good?","That's it, checkout"]); return;
+  }
+  if(/(^hi|^hey|^hello|^yo|good morning|good evening)/.test(t)){
+    botSay(`Hey! Hungry? Tell me what you are in the mood for, or I can recommend something from ${current.name}.`);
+    setChips(["What do you recommend?","Anything gluten free?","See full menu"]); return;
+  }
+  botSay("I want to get this right. I can recommend dishes, answer menu questions, or add something to your order. Try one of these:");
+  setChips(["What do you recommend?","See full menu","Anything gluten free?"]);
+}
+
+function parseQty(t){
+  const words={one:1,two:2,three:3,four:4,five:5,a:1,an:1,couple:2,double:2};
+  const num=t.match(/\b(\d+)\b/); if(num) return Math.min(parseInt(num[1]),20);
+  for(const w in words){ if(new RegExp('\\b'+w+'\\b').test(t)) return words[w]; }
+  return 1;
+}
+function matchItems(t){
+  const found=[];
+  allItems().forEach(it=>{
+    const name=it.name.toLowerCase();
+    const kws=name.replace(/[()0-9]/g,'').split(/\s+/).filter(w=>w.length>2 && !['the','and','with','plate','taco'].includes(w));
+    let hit = t.includes(name); if(!hit) hit = kws.some(k=>t.includes(k));
+    if(hit && !found.includes(it)) found.push(it);
+  });
+  if(found.length>1){ const exact=found.filter(it=>t.includes(it.name.toLowerCase())); if(exact.length) return exact; return [found[0]]; }
+  return found;
+}
+
+/* boot */
+renderHome();
+</script>
+</body>
+</html>
