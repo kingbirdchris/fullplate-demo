@@ -1,6 +1,7 @@
-/* FullPlate owner console: order queue, menu editor/builder, promos, reviews,
-   store hours/availability, payouts, settings. Uses shared state + helpers
-   from core.js and data from data.js. Loaded last. */
+/* FullPlate owner console: portfolio/location switchers, order queue, menu
+   editor/builder, promos, reviews, store hours/availability, payouts, settings,
+   and food-truck go-live controls. Uses shared state + helpers from core.js,
+   data from data.js, and brand/operator helpers from platform.js. Loaded last. */
 
 function ownerStats(r){
   const items=r.menu.flatMap(c=>c.items);
@@ -41,6 +42,31 @@ function ensureReviews(r){
     {name:'Priya S.',stars:4,text:'Great food. Wish there were a couple more veggie options.',reply:''},
   ];
 }
+
+/* operator portfolio + brand/location switching */
+function portfolioSaved(opKey){
+  return RESTAURANTS.filter(x=>(x.operator||x.id)===opKey).reduce((s,x)=>s+ownerStats(x).saved,0);
+}
+function ownerPortfolioBar(r){
+  const opName=r.operatorName||(r.name+' (owner)');
+  const brands=(typeof operatorBrands==='function')?operatorBrands(r.operator||r.id):[r.brand||r.id];
+  if(brands.length<2){
+    const n=(typeof brandLocations==='function')?brandLocations(r.brand||r.id).length:1;
+    return `<div class="portbar"><div class="portop">🏢 ${esc(opName)}</div><div class="portsub">1 brand · ${n} location${n>1?'s':''}</div></div>`;
+  }
+  const totalKept=portfolioSaved(r.operator);
+  return `<div class="portbar">
+      <div class="portop">🏢 ${esc(opName)}<span class="portroll">all brands · ~$${totalKept.toLocaleString()}/mo kept</span></div>
+      <div class="portchips">${brands.map(b=>{const bp=brandPrimary(b);const on=bp&&(bp.brand||bp.id)===(r.brand||r.id);return `<button class="portchip ${on?'on':''}" onclick="switchOwnerBrand('${b}')">${esc(bp?(bp.brandName||bp.name):b)}${bp&&bp.type==='truck'?' 🚚':''}</button>`;}).join('')}</div>
+    </div>`;
+}
+function ownerLocationBar(r){
+  const locs=(typeof brandLocations==='function')?brandLocations(r.brand||r.id):[r];
+  if(locs.length<2) return '';
+  return `<div class="locswitch"><span class="lswlbl">📍 Location</span>${locs.map(l=>`<button class="locchip ${l.id===r.id?'on':''}" onclick="openOwner('${l.id}','${ownerTab}')">${esc(l.loc||l.name)}</button>`).join('')}</div>`;
+}
+function switchOwnerBrand(bkey){ const bp=(typeof brandPrimary==='function')?brandPrimary(bkey):null; if(bp) openOwner(bp.id, ownerTab); }
+
 function openOwner(id, tab){
   ownerRest = id || ownerRest;
   if(tab) ownerTab = tab;
@@ -49,7 +75,9 @@ function openOwner(id, tab){
   const tabs=[['overview','Overview'],['orders','Orders'],['menu','Menu'],['promos','Promos'],['reviews','Reviews'],['hours','Hours'],['payouts','Payouts'],['settings','Settings']];
   document.getElementById('view-owner').innerHTML = `
     <div class="odash">
+      ${ownerPortfolioBar(r)}
       <div class="section-label" style="padding-left:0">Owner console · ${r.name}</div>
+      ${ownerLocationBar(r)}
       <div class="otabs">${tabs.map(t=>`<button class="otab ${t[0]===ownerTab?'on':''}" onclick="openOwner('${r.id}','${t[0]}')">${t[1]}</button>`).join('')}</div>
       <div id="ownerBody">${ownerBody(r)}</div>
     </div>`;
@@ -68,6 +96,31 @@ function ownerBody(r){
   if(ownerTab==='settings') return settingsTab(r);
   return overviewTab(r);
 }
+function truckPanel(r){
+  if(r.type!=='truck') return '';
+  return `<div class="golive ${r.live?'on':''}">
+      <div class="glhd">${r.live?'🟢 You are live':'⚪ Off — not serving'}</div>
+      <div class="glspot">${r.live?('📍 '+esc(r.spot)+'<br>Open until '+esc(r.until)):('Next stop: '+esc(r.nextStop||'set your spot to go live'))}</div>
+      <div class="glbtns">
+        <button class="glbtn ${r.live?'end':'go'}" onclick="toggleLive('${r.id}')">${r.live?'End service':'Go live'}</button>
+        <button class="glbtn upd" onclick="setTruckSpot('${r.id}')">Update spot / time</button>
+      </div>
+      <div class="glnote">Diners only see your truck in “nearby” while you’re live. End service and it drops off the map automatically — so customers never chase a stale location.</div>
+    </div>`;
+}
+function toggleLive(id){
+  const r=RESTAURANTS.find(x=>x.id===id); if(!r) return;
+  r.live=!r.live;
+  showToast(r.live?'You are live — diners can find you now':'Service ended — hidden from nearby');
+  openOwner(id,'overview');
+}
+function setTruckSpot(id){
+  const r=RESTAURANTS.find(x=>x.id===id); if(!r) return;
+  const s=prompt('Where are you parked right now?', r.spot||''); if(s===null) return;
+  const u=prompt('Serving until? (e.g. 8:00pm)', r.until||''); if(u===null) return;
+  r.spot=s.trim()||r.spot; r.until=u.trim()||r.until; r.live=true;
+  showToast('Location updated — you are live'); openOwner(id,'overview');
+}
 function overviewTab(r){
   const st=ownerStats(r);
   const sess=placedOrders.filter(o=>o.id===r.id);
@@ -76,6 +129,7 @@ function overviewTab(r){
   const active=(QUEUE[r.id]||[]).filter(o=>o.status!=='done').length;
   const feed=sess.map(o=>({names:o.names,total:o.total,ago:'just now'})).concat(seedFeed(r));
   return `
+    ${truckPanel(r)}
     <div class="ohero">
       <div class="lbl">Commission saved this month</div>
       <div class="amt">$${totalSaved.toLocaleString()}</div>
@@ -88,7 +142,7 @@ function overviewTab(r){
     </div>
     <div class="section-label" style="padding-left:0">Latest orders</div>
     ${feed.slice(0,5).map(o=>`<div class="orow"><div><b>${o.names.join(', ')}</b><span>${o.ago} · pickup</span></div><div class="okept">+$${o.total.toFixed(2)} kept</div></div>`).join('')}
-    <div class="realnote" style="margin-top:14px">Illustrative figures based on this restaurant's activity. Place an order in the demo and it lands in Orders as a new ticket.</div>`;
+    <div class="realnote" style="margin-top:14px">Illustrative figures based on this ${r.type==='truck'?'truck':'location'}'s activity. Place an order in the demo and it lands in Orders as a new ticket.</div>`;
 }
 function ordersTab(r){
   const q=QUEUE[r.id]||[];
@@ -132,7 +186,7 @@ function menuTab(r){
         <button class="soldbtn ${so?'off':''}" onclick="toggleSold('${i.id}')">${so?'Sold out':'Available'}</button>
       </div>
     </div>`;}).join(''):'<div class="empty" style="padding:14px">No items yet — tap + Item.</div>')).join('')
-    + '<div class="realnote" style="margin-top:14px">Build the menu: add categories and items, set prices and photos, attach modifier groups (sizes, add-ons), or 86 an item. Every change updates the live storefront and the AI instantly.</div>';
+    + `<div class="realnote" style="margin-top:14px">Build the menu: add categories and items, set prices and photos, attach modifier groups (sizes, add-ons), or 86 an item. Every change updates the live storefront and the AI instantly.${(typeof brandLocations==='function'&&brandLocations(r.brand||r.id).length>1)?' This menu is shared across all '+brandLocations(r.brand||r.id).length+' '+(r.brandName||r.name)+' locations.':''}</div>`;
 }
 function addCategory(rid){
   const r=RESTAURANTS.find(x=>x.id===rid);
@@ -198,7 +252,7 @@ function hoursTab(r){
       <button class="tgl ${s.paused?'warn':''}" onclick="togglePause('${r.id}')">${s.paused?'Paused':'Live'}</button></div>
     <div class="hrow col"><div><b>Pickup prep time</b><span>Shown to diners as the wait</span></div>
       <div class="prepwrap">${preps.map(p=>`<button class="prepbtn ${s.prep===p?'on':''}" onclick="setPrep('${r.id}','${p}')">${p}</button>`).join('')}</div></div>
-    <div class="realnote" style="margin-top:6px">These flip the live storefront instantly. Closing or pausing shows diners a banner and turns off ordering.</div>`;
+    <div class="realnote" style="margin-top:6px">These flip the live storefront instantly. Closing or pausing shows diners a banner and turns off ordering.${r.type==='truck'?' For a truck, use Go live on the Overview tab to set where you are right now.':''}</div>`;
 }
 function toggleOpen(id){ const s=storeOf(RESTAURANTS.find(r=>r.id===id)); s.open=!s.open; showToast('Store '+(s.open?'opened':'closed')); openOwner(id,'hours'); }
 function togglePause(id){ const s=storeOf(RESTAURANTS.find(r=>r.id===id)); s.paused=!s.paused; showToast(s.paused?'New orders paused':'Orders live again'); openOwner(id,'hours'); }
@@ -221,7 +275,7 @@ function payoutsTab(r){
     </div>
     <div class="section-label" style="padding-left:0">Payout history</div>
     ${rows.map(p=>`<div class="orow"><div><b>${p[1]}</b><span>${p[0]} · direct deposit</span></div><div class="okept">${p[2]}</div></div>`).join('')}
-    <div class="realnote" style="margin-top:14px">In a live account, payouts run through Stripe Connect straight to the restaurant's bank. FullPlate never holds your money and charges no commission — only standard card processing is passed through at cost.</div>`;
+    <div class="realnote" style="margin-top:14px">In a live account, payouts run through Stripe Connect straight to this location's bank — each location keeps its own merchant account. FullPlate never holds your money and charges no commission; only standard card processing is passed through at cost.</div>`;
 }
 function settingsTab(r){
   const s=ownerSettings;
