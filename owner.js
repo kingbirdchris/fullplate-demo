@@ -1,4 +1,4 @@
-/* FullPlate owner console: order queue, menu editor, promos, reviews,
+/* FullPlate owner console: order queue, menu editor/builder, promos, reviews,
    store hours/availability, payouts, settings. Uses shared state + helpers
    from core.js and data from data.js. Loaded last. */
 
@@ -116,27 +116,49 @@ function advanceOrder(oid){
   openOwner(ownerRest,'orders');
 }
 function menuTab(r){
-  return `<button class="addbtn2" onclick="addMenuItem('${r.id}')">+ Add menu item</button>`+
+  return `<div style="display:flex;gap:8px;margin:0 0 6px">
+      <button class="addbtn2" style="margin:0" onclick="addCategory('${r.id}')">+ Category</button>
+      <button class="addbtn2" style="margin:0" onclick="addMenuItem('${r.id}')">+ Item</button>
+    </div>`+
     r.menu.map(c=>`<div class="section-label" style="padding-left:0">${c.cat}</div>`+
-    c.items.map(i=>{const so=unavailable[i.id];const ph=photoFor(i);return `
+    (c.items.length?c.items.map(i=>{const so=unavailable[i.id];const ph=photoFor(i);const mc=i.mods?i.mods.length:0;return `
     <div class="mrow">
       <div class="mthumb sm ${so?'dim':''}" style="${ph?`background-image:url('${ph}')`:`background:${r.color}`}">${ph?'':i.emoji}</div>
-      <div class="mgrow"><b>${i.name}</b> <span class="mp">$${i.price.toFixed(2)}</span></div>
+      <div class="mgrow"><b>${i.name}</b> <span class="mp">$${i.price.toFixed(2)}</span>${mc?`<span class="modcount">${mc} modifier group${mc>1?'s':''}</span>`:''}</div>
       <div class="medit">
         <button class="ebtn" onclick="editPrice('${i.id}')">Price</button>
         <button class="ebtn" onclick="setPhoto('${i.id}')">Photo</button>
+        <button class="ebtn" onclick="addModGroup('${i.id}')">+ Mod</button>
         <button class="soldbtn ${so?'off':''}" onclick="toggleSold('${i.id}')">${so?'Sold out':'Available'}</button>
       </div>
-    </div>`;}).join('')).join('')
-    + '<div class="realnote" style="margin-top:14px">Add a special, change a price, swap a photo, or 86 an item. Every change updates the live menu and the AI assistant instantly.</div>';
+    </div>`;}).join(''):'<div class="empty" style="padding:14px">No items yet — tap + Item.</div>')).join('')
+    + '<div class="realnote" style="margin-top:14px">Build the menu: add categories and items, set prices and photos, attach modifier groups (sizes, add-ons), or 86 an item. Every change updates the live storefront and the AI instantly.</div>';
+}
+function addCategory(rid){
+  const r=RESTAURANTS.find(x=>x.id===rid);
+  const name=prompt('New category name? (e.g. Specials)'); if(!name) return;
+  r.menu.push({cat:name.trim(), items:[]}); showToast('Category "'+name.trim()+'" added'); openOwner(rid,'menu');
 }
 function addMenuItem(rid){
   const r=RESTAURANTS.find(x=>x.id===rid);
   const name=prompt('New item name?'); if(!name) return;
   const price=parseFloat(prompt('Price? (e.g. 9.50)')); if(!(price>=0)) return;
   const desc=prompt('Short description? (optional)')||'';
-  r.menu[0].items.push({id:'x'+(++__oid), name:name.trim(), price:price, desc:desc.trim(), tags:[], emoji:'🍽️'});
-  showToast('Added '+name); openOwner(rid,'menu');
+  const cat=r.menu[r.menu.length-1] || (r.menu[0]={cat:'Menu',items:[]});
+  cat.items.push({id:'x'+(++__oid), name:name.trim(), price:price, desc:desc.trim(), tags:[], emoji:'🍽️'});
+  showToast('Added '+name+' to '+cat.cat); openOwner(rid,'menu');
+}
+function addModGroup(id){
+  const it=findItem(id); if(!it) return;
+  const gname=prompt('Modifier group name? (e.g. Add-ons, Choose a size)'); if(!gname) return;
+  const multiAns=prompt('Can the diner pick more than one? (yes/no)','yes')||'no';
+  const multi=/^y/i.test(multiAns.trim());
+  const raw=prompt('Options as name:price, comma-separated\n(e.g. Bacon:2, Avocado:1.5, Egg:1.5)'); if(!raw) return;
+  const options=raw.split(',').map(s=>{const parts=s.split(':');return {name:(parts[0]||'').trim(), price:parseFloat(parts[1])||0};}).filter(o=>o.name);
+  if(!options.length) return;
+  if(!it.mods) it.mods=[];
+  it.mods.push(multi?{name:gname.trim(),multi:true,max:options.length,options:options}:{name:gname.trim(),options:options});
+  showToast('Modifier group added to '+it.name); openOwner(ownerRest,'menu');
 }
 function editPrice(id){ const it=findItem(id); if(!it) return; const v=prompt('New price for '+it.name, it.price.toFixed(2)); const n=parseFloat(v); if(n>=0){ it.price=n; showToast('Price updated'); } openOwner(ownerRest,'menu'); }
 function setPhoto(id){ const it=findItem(id); if(!it) return; const v=prompt('Image URL for '+it.name+' (leave blank to clear)', photoOverride[id]||''); if(v===null) return; if(v.trim()) photoOverride[id]=v.trim(); else delete photoOverride[id]; showToast('Photo updated'); openOwner(ownerRest,'menu'); }
