@@ -8,6 +8,9 @@ let ownerRest='chiwas', ownerTab='overview', __oid=1000, __toastT=null;
 const QUEUE={}, STORE={}, unavailable={}, photoOverride={}, reviews={}, favorites={};
 const promos=[{code:'LOCAL10',type:'pct',value:10,label:'10% off your order'}];
 const ownerSettings={sound:true,autoprint:true,smsReady:true,dailyEmail:false,tips:true};
+let __lid=0, tipPct=0, tipAmt=null;
+const profile={name:'Guest', phone:'', pickup:'Pickup at the counter', pay:'Visa •••• 4242 · demo'};
+let modItem=null, modSel={};
 
 function photoFor(it){ return photoOverride[it.id] || itemPhoto(it.name); }
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
@@ -59,7 +62,7 @@ function renderHome(){
 
 function openRestaurant(id){
   current = RESTAURANTS.find(r=>r.id===id);
-  if(cart.length && cartRest!==id){ cart=[]; appliedPromo=null; updateCartBar(); }
+  if(cart.length && cartRest!==id){ cart=[]; appliedPromo=null; tipPct=0; tipAmt=null; updateCartBar(); }
   chatStarted=false; aiHistory=[]; document.getElementById('chat').innerHTML='';
   window.scrollTo(0,0);
   const s=storeOf(current); const open=s.open && !s.paused;
@@ -82,14 +85,14 @@ function openRestaurant(id){
     </div>`:''}
     ${current.menu.map(cat=>`
       <div class="menucat">${cat.cat}</div>
-      ${cat.items.map(it=>{const ph=photoFor(it);const so=unavailable[it.id];return `
+      ${cat.items.map(it=>{const ph=photoFor(it);const so=unavailable[it.id];const hasMods=it.mods&&it.mods.length;return `
         <div class="mitem">
           <div class="mthumb ${so?'dim':''}" style="${ph?`background-image:url('${ph}')`:`background:${current.color}`}">${ph?'':it.emoji}</div>
           <div class="minfo">
             <h4>${it.name} ${it.id===current.popular?'<span class="pop">★ Most ordered</span>':''} ${it.tags.map(t=>tagHTML(t)).join('')}</h4>
-            <p>${it.desc}</p>
+            <p>${it.desc}${hasMods?' <span class="modhint">· customizable</span>':''}</p>
           </div>
-          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span>${so?'<span class="soldtag">Sold out</span>':(open?`<button class="addbtn" onclick="addToCart('${it.id}')" aria-label="Add ${it.name}">+</button>`:'')}</div>
+          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span>${so?'<span class="soldtag">Sold out</span>':(open?`<button class="addbtn" onclick="addOrConfigure('${it.id}')" aria-label="Add ${it.name}">+</button>`:'')}</div>
         </div>`;}).join('')}
     `).join('')}
     <div style="height:10px"></div>`;
@@ -101,17 +104,73 @@ function openRestaurant(id){
 function tagHTML(t){ const map={gf:['gf','GF'],v:['v','VEG'],spicy:['spicy','🌶']}; const m=map[t]; return m?`<span class="tag ${m[0]}">${m[1]}</span>`:''; }
 
 function findItem(id){ for(const r of RESTAURANTS) for(const c of r.menu) for(const it of c.items) if(it.id===id) return it; }
-function addToCart(id){
+function lineUnit(it, mods){ return it.price + (mods? mods.reduce((s,m)=>s+(m.price||0),0):0); }
+function addToCart(id, mods){
   const it=findItem(id); if(!it) return;
   if(unavailable[id]) return;
   if(current && !orderingOpen(current)) return;
+  if(it.mods && it.mods.length && !mods){
+    mods = it.mods.filter(g=>!g.multi).map(g=>({group:g.name, option:g.options[0].name, price:g.options[0].price}));
+    if(!mods.length) mods=null;
+  }
   cartRest=current?current.id:cartRest;
-  const row=cart.find(c=>c.id===id);
-  if(row) row.qty++; else cart.push({id:it.id,name:it.name,price:it.price,qty:1});
-  updateCartBar(); return it;
+  if(!mods || !mods.length){
+    const row=cart.find(c=>c.id===id && (!c.mods || !c.mods.length));
+    if(row){ row.qty++; updateCartBar(); return; }
+  }
+  cart.push({lid:++__lid, id:it.id, name:it.name, price:lineUnit(it,mods), qty:1, mods:(mods&&mods.length)?mods:null});
+  updateCartBar();
 }
+function addOrConfigure(id){ const it=findItem(id); if(it && it.mods && it.mods.length){ openModSheet(it); } else { addToCart(id); } }
+
+/* MODIFIER SHEET */
+function openModSheet(it){
+  if(unavailable[it.id]) return;
+  if(current && !orderingOpen(current)) return;
+  modItem=it; modSel={};
+  it.mods.forEach(g=>{ modSel[g.name] = g.multi ? [] : [g.options[0]]; });
+  modSheetRender();
+  document.getElementById('modback').style.display='block';
+  requestAnimationFrame(()=>{document.getElementById('modback').style.opacity='1';document.getElementById('modsheet').classList.add('open');});
+}
+function closeModSheet(){ document.getElementById('modsheet').classList.remove('open'); const b=document.getElementById('modback'); b.style.opacity='0'; setTimeout(()=>{b.style.display='none';},200); modItem=null; }
+function modUnit(){ let u=modItem.price; Object.keys(modSel).forEach(gn=>modSel[gn].forEach(o=>u+=o.price)); return u; }
+function modSheetRender(){
+  document.getElementById('modTitle').textContent = modItem.name;
+  document.getElementById('modSub').textContent = modItem.desc || '';
+  document.getElementById('modBody').innerHTML = modItem.mods.map((g,gi)=>`
+    <div class="modgroup">
+      <div class="modglabel">${g.name}<span>${g.multi?('Choose up to '+(g.max||g.options.length)):'Choose one'}</span></div>
+      ${g.options.map((o,oi)=>{const on=modSel[g.name].some(s=>s.name===o.name);return `
+        <div class="modopt ${on?'on':''}" onclick="modPick(${gi},${oi})">
+          <span class="moname">${o.name}</span>
+          <span class="moprice">${o.price>0?'+$'+o.price.toFixed(2):''}</span>
+          <span class="modot"></span>
+        </div>`;}).join('')}
+    </div>`).join('');
+  document.getElementById('modAddBtn').textContent = 'Add to order · $'+modUnit().toFixed(2);
+}
+function modPick(gi,oi){
+  const g=modItem.mods[gi]; const opt=g.options[oi]; const arr=modSel[g.name];
+  if(g.multi){
+    const idx=arr.findIndex(s=>s.name===opt.name);
+    if(idx>=0) arr.splice(idx,1);
+    else { if(g.max && arr.length>=g.max){ showToast('Up to '+g.max); return; } arr.push(opt); }
+  } else { modSel[g.name]=[opt]; }
+  modSheetRender();
+}
+function modConfirm(){
+  if(!modItem) return;
+  const mods=[];
+  Object.keys(modSel).forEach(gn=>modSel[gn].forEach(o=>mods.push({group:gn,option:o.name,price:o.price})));
+  const id=modItem.id; closeModSheet();
+  addToCart(id, mods.length?mods:null);
+  showToast('Added to order');
+}
+
 function cartTotals(){ const sub=cart.reduce((s,c)=>s+c.price*c.qty,0); const count=cart.reduce((s,c)=>s+c.qty,0); return {sub,count}; }
 function promoDiscount(sub){ if(!appliedPromo) return 0; return appliedPromo.type==='pct' ? sub*(appliedPromo.value/100) : Math.min(appliedPromo.value, sub); }
+function tipAmount(base){ if(!ownerSettings.tips) return 0; return tipAmt!=null ? tipAmt : base*(tipPct/100); }
 function updateCartBar(){
   const {sub,count}=cartTotals(); const bar=document.getElementById('cartbar');
   if(count>0){bar.style.display='flex';document.getElementById('cartCount').textContent=count;document.getElementById('cartTotal').textContent=sub.toFixed(2);}
@@ -124,30 +183,36 @@ function applyPromo(){
   if(!p){ appliedPromo=null; showToast('Code not found'); openCheckout(); return; }
   appliedPromo=p; showToast('Promo '+p.code+' applied'); openCheckout();
 }
+function setTip(p){ tipPct=p; tipAmt=null; openCheckout(); }
+function setTipCustom(){ const v=parseFloat(prompt('Tip amount in dollars? (e.g. 3.00)')); if(v>=0){ tipAmt=v; } openCheckout(); }
 
 function openCheckout(){
   if(cartTotals().count===0) return;
   closeChat();
-  const {sub}=cartTotals(); const disc=promoDiscount(sub); const taxed=Math.max(0,sub-disc); const tax=taxed*0.086; const total=taxed+tax; const doordashCut=sub*0.30;
+  const {sub}=cartTotals(); const disc=promoDiscount(sub); const keptFood=Math.max(0,sub-disc); const tax=keptFood*0.086; const tip=tipAmount(keptFood); const total=keptFood+tax+tip; const doordashCut=sub*0.30;
   document.getElementById('view-checkout').innerHTML=`
     <div class="section-label" style="padding-top:14px">Your order · ${current.name}</div>
     ${cart.map(c=>`
       <div class="co-line">
         <div><b>${c.name}</b>
-          <div class="qstep"><button onclick="changeQty('${c.id}',-1)" aria-label="Remove one">−</button><span>${c.qty}</span><button onclick="changeQty('${c.id}',1)" aria-label="Add one">+</button></div>
+          ${c.mods?`<div class="comods">${c.mods.map(m=>m.option).join(', ')}</div>`:''}
+          <div class="qstep"><button onclick="changeQty(${c.lid},-1)" aria-label="Remove one">−</button><span>${c.qty}</span><button onclick="changeQty(${c.lid},1)" aria-label="Add one">+</button></div>
         </div>
         <div>$${(c.price*c.qty).toFixed(2)}</div>
       </div>`).join('')}
     <div class="promorow"><input id="promoIn" class="promoinput" placeholder="Promo code" value="${appliedPromo?appliedPromo.code:''}"><button class="promobtn" onclick="applyPromo()">${appliedPromo?'Change':'Apply'}</button></div>
+    ${ownerSettings.tips?`<div class="tiplabel">Add a tip — 100% goes to the restaurant</div>
+    <div class="tiprow">${[0,15,18,20].map(p=>`<button class="tipbtn ${(tipAmt==null&&tipPct===p)?'on':''}" onclick="setTip(${p})">${p===0?'No tip':p+'%'}</button>`).join('')}<button class="tipbtn ${tipAmt!=null?'on':''}" onclick="setTipCustom()">Custom</button></div>`:''}
     <div class="co-tot"><span>Subtotal</span><span>$${sub.toFixed(2)}</span></div>
     ${disc>0?`<div class="co-tot"><span>Promo ${appliedPromo.code}</span><span style="color:var(--good);font-weight:700">−$${disc.toFixed(2)}</span></div>`:''}
     <div class="co-tot"><span>Estimated tax</span><span>$${tax.toFixed(2)}</span></div>
+    ${tip>0?`<div class="co-tot"><span>Tip</span><span>$${tip.toFixed(2)}</span></div>`:''}
     <div class="co-tot"><span>Delivery-app markup</span><span style="color:var(--good);font-weight:700">$0.00</span></div>
     <div class="co-tot"><span>Service / commission fee</span><span style="color:var(--good);font-weight:700">$0.00</span></div>
     <div class="co-tot big"><span>Total</span><span>$${total.toFixed(2)}</span></div>
     <div class="savecard">
-      <h4>✓ ${current.name} keeps <span class="big">$${(sub-disc).toFixed(2)}</span></h4>
-      <p>On a typical delivery app, this $${sub.toFixed(2)} order would cost the restaurant about <b>$${doordashCut.toFixed(2)}</b> in commission. On FullPlate they keep all of it. You pay honest menu prices, they keep their margin.</p>
+      <h4>✓ ${current.name} keeps <span class="big">$${(keptFood+tip).toFixed(2)}</span></h4>
+      <p>On a typical delivery app, this $${sub.toFixed(2)} order would cost the restaurant about <b>$${doordashCut.toFixed(2)}</b> in commission. On FullPlate they keep all of it, plus the full tip. You pay honest menu prices, they keep their margin.</p>
     </div>
     <button class="paybtn" onclick="placeOrder()">Place pickup order · $${total.toFixed(2)}</button>
     <div class="demo-note">Demo only — no card is charged.</div>`;
@@ -156,26 +221,26 @@ function openCheckout(){
   document.getElementById('backBtn').style.display='flex';
 }
 
-function changeQty(id,d){
-  const row=cart.find(c=>c.id===id); if(!row) return;
-  row.qty+=d; if(row.qty<=0) cart=cart.filter(c=>c.id!==id);
+function changeQty(lid,d){
+  const row=cart.find(c=>c.lid===lid); if(!row) return;
+  row.qty+=d; if(row.qty<=0) cart=cart.filter(c=>c.lid!==lid);
   updateCartBar();
-  if(cartTotals().count===0){ appliedPromo=null; goHome(); return; }
+  if(cartTotals().count===0){ appliedPromo=null; tipPct=0; tipAmt=null; goHome(); return; }
   openCheckout();
 }
 
 function placeOrder(){
-  const {sub}=cartTotals(); const disc=promoDiscount(sub); const kept=sub-disc; const cut=(sub*0.30).toFixed(2);
-  const items=cart.map(c=>({id:c.id,name:c.name,qty:c.qty,price:c.price}));
+  const {sub}=cartTotals(); const disc=promoDiscount(sub); const keptFood=Math.max(0,sub-disc); const tip=tipAmount(keptFood); const kept=keptFood+tip; const cut=(sub*0.30).toFixed(2);
+  const items=cart.map(c=>({id:c.id,name:c.name,qty:c.qty,price:c.price,mods:c.mods||null}));
   placedOrders.unshift({ id:current.id, names:cart.map(c=>c.qty+'× '+c.name), total:kept });
   ensureQueue(current);
   QUEUE[current.id].unshift({ oid:++__oid, items:items, total:kept, status:'new', mins:0, name:'You (demo)' });
   orderHistory.unshift({ id:current.id, name:current.name, items:items, total:kept, when:'Just now' });
-  loyaltyPts += Math.max(1, Math.round(kept));
+  loyaltyPts += Math.max(1, Math.round(keptFood));
   window.__lastRest=current.id;
   document.getElementById('doneMsg').innerHTML =
-    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${kept.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.<br><br>You earned <b>${Math.max(1,Math.round(kept))} FullPlate points</b>.`;
-  cart=[]; cartRest=null; appliedPromo=null; updateCartBar();
+    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${keptFood.toFixed(2)}</b>${tip>0?` plus a $${tip.toFixed(2)} tip`:''} and saved about $${cut} in delivery-app commission on this order alone.<br><br>You earned <b>${Math.max(1,Math.round(keptFood))} FullPlate points</b>.`;
+  cart=[]; cartRest=null; appliedPromo=null; tipPct=0; tipAmt=null; updateCartBar();
   document.getElementById('backBtn').style.display='none';
   window.scrollTo(0,0); show('view-done');
 }
@@ -201,12 +266,25 @@ function accountHTML(){
         <div class="lbar"><div class="lfill" style="width:${Math.round(have/goal*100)}%"></div></div>
         ${ready?`<button class="redeembtn" onclick="redeemReward()">Redeem 50 pts for $5 off</button>`:''}
       </div>
+      <div class="section-label" style="padding-left:0">Profile</div>
+      <div class="profcard">
+        <div class="profrow"><span class="pk">Name</span><span class="pv">${esc(profile.name)}</span><button class="ebtn" onclick="editProfile('name')">Edit</button></div>
+        <div class="profrow"><span class="pk">Phone</span><span class="pv">${profile.phone?esc(profile.phone):'Add a number for order texts'}</span><button class="ebtn" onclick="editProfile('phone')">Edit</button></div>
+        <div class="profrow"><span class="pk">Pickup</span><span class="pv">${esc(profile.pickup)}</span><button class="ebtn" onclick="editProfile('pickup')">Edit</button></div>
+        <div class="profrow"><span class="pk">Payment</span><span class="pv">${esc(profile.pay)}</span></div>
+      </div>
       <div class="section-label" style="padding-left:0">Favorites</div>
       ${favs.length?favs.map(r=>`<div class="orow" onclick="openRestaurant('${r.id}')" style="cursor:pointer"><div><b>${r.name}</b><span>${r.cuisine} · ${r.city}</span></div><div class="okept">★ ${r.rating}</div></div>`).join(''):'<div class="empty">Tap the heart on a restaurant to save it here.</div>'}
       <div class="section-label" style="padding-left:0">Order history</div>
       ${orderHistory.length?orderHistory.map((h,idx)=>`<div class="ocard"><div class="ohd"><b>${h.name}</b><span class="otime">${h.when}</span></div><div class="oitems">${h.items.map(i=>i.qty+'× '+i.name).join(', ')}</div><div class="ofoot"><span class="ocust">$${h.total.toFixed(2)} · kept by the restaurant</span><button class="oadv" onclick="reorder(${idx})">Reorder →</button></div></div>`).join(''):'<div class="empty">No orders yet. Your past orders show up here for one-tap reorder.</div>'}
       <div class="realnote" style="margin-top:14px">Loyalty, favorites, and reorder are what keep diners coming back to the restaurant directly — not the delivery app.</div>
     </div>`;
+}
+function editProfile(field){
+  const labels={name:'Your name',phone:'Mobile number (for order texts)',pickup:'Pickup note'};
+  const v=prompt(labels[field]||'Edit', profile[field]); if(v===null) return;
+  profile[field]=v.trim() || profile[field];
+  showToast('Profile updated'); openAccount();
 }
 function redeemReward(){
   if(loyaltyPts<50) return;
@@ -219,8 +297,8 @@ function redeemReward(){
 function reorder(idx){
   const h=orderHistory[idx]; if(!h) return;
   const r=RESTAURANTS.find(x=>x.id===h.id); if(!r) return;
-  current=r; cartRest=r.id; appliedPromo=null;
-  cart=h.items.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty}));
+  current=r; cartRest=r.id; appliedPromo=null; tipPct=0; tipAmt=null;
+  cart=h.items.map(i=>({lid:++__lid, id:i.id, name:i.name, price:i.price, qty:i.qty, mods:i.mods||null}));
   updateCartBar(); showToast('Reordered from '+r.name);
   openRestaurant(r.id);
 }
@@ -231,7 +309,7 @@ function goBack(){
   if(document.getElementById('view-checkout').style.display==='block' && current){ openRestaurant(current.id); updateCartBar(); return; }
   goHome();
 }
-function resetAll(){ cart=[]; cartRest=null; appliedPromo=null; updateCartBar(); goHome(); }
+function resetAll(){ cart=[]; cartRest=null; appliedPromo=null; tipPct=0; tipAmt=null; updateCartBar(); goHome(); }
 
 /* ASSISTANT — real Claude via /api/chat, with scripted fallback */
 let chatStarted=false;
