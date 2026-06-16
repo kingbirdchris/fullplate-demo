@@ -231,7 +231,6 @@
 </div>
 
 <script>
-/* Banner photos — true-to-life food shots from Wikimedia Commons (free license). Keyed by restaurant id. */
 const IMG = {
   chiwas:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/%28El_Flaco%29_Al_Pastor_Tacos.jpg/1280px-%28El_Flaco%29_Al_Pastor_Tacos.jpg",
   rosas:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Tacos_de_Carnitas_con_nopales.jpg/1280px-Tacos_de_Carnitas_con_nopales.jpg",
@@ -247,7 +246,6 @@ const IMG = {
   burger:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Cheeseburger_with_onions_at_Hatfield_Heath_Festival_2017.jpg/1280px-Cheeseburger_with_onions_at_Hatfield_Heath_Festival_2017.jpg",
   bella:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Spaghetti_Bolognese_-_Figaros%2C_Brighton_2023-10-06.jpg/1280px-Spaghetti_Bolognese_-_Figaros%2C_Brighton_2023-10-06.jpg"
 };
-/* Extra dish photos for menu items (Wikimedia Commons). */
 const PIX = {
   burrito:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Burrito_al_pastor_-_Bacalar_QR.jpg/960px-Burrito_al_pastor_-_Bacalar_QR.jpg",
   salad:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Bowtie_pasta_salad_bowl_close-up.jpg/960px-Bowtie_pasta_salad_bowl_close-up.jpg",
@@ -261,7 +259,6 @@ const PIX = {
   ceviche:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Tostada_de_ceviche_de_camar%C3%B3n_con_mango.jpg/960px-Tostada_de_ceviche_de_camar%C3%B3n_con_mango.jpg",
   springroll:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Vietnamese_fried_spring_rolls_in_Ho_Chi_Minh_City%2C_Vietnam.jpg/960px-Vietnamese_fried_spring_rolls_in_Ho_Chi_Minh_City%2C_Vietnam.jpg"
 };
-/* keyword -> photo, checked in order (specific first) */
 const PIC_ORDER = [
   ['shawarma',IMG.bashir],['gyro',PIX.gyro],['falafel',IMG.bashir],['hummus',PIX.guacamole],
   ['gyoza',PIX.dumpling],['rangoon',PIX.dumpling],['spring roll',PIX.springroll],
@@ -288,7 +285,6 @@ function bannerStyle(id, color, scrim){
 const CARD_SCRIM='linear-gradient(rgba(0,0,0,.34),rgba(0,0,0,0) 42%,rgba(0,0,0,0) 80%,rgba(0,0,0,.12))';
 const HEAD_SCRIM='linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,.06) 55%)';
 
-/* DATA — add a restaurant by appending one object. tags: gf, v, spicy. featured:true pins it first. kind drives the food-type filter. */
 const RESTAURANTS = [
   {
     id:'chiwas', city:'Phoenix', kind:'Mexican', featured:true, name:'Tacos Chiwas', cuisine:'Chihuahua-style Mexican', emoji:'🌮',
@@ -493,7 +489,7 @@ const RESTAURANTS = [
       ]},
       {cat:'Starters', items:[
         {id:'k4', name:'Pork Gyoza (5)', price:7.50, desc:'Pan-seared dumplings, ponzu', tags:[], emoji:'🥟'},
-        {id:'k5', name:'Edamame', price:5.00, desc:'Sea salt, steamed', tags:['gf','v'], emoji:'🫛'},
+        {id:'k5', name:'Edamame', price:5.00, desc:'Sea salt, steamed', tags:['gf','v'], emoji:'🫘'},
       ]},
       {cat:'Drinks', items:[
         {id:'k6', name:'Ramune Soda', price:3.50, desc:'Original marble soda', tags:['gf','v'], emoji:'🥤'},
@@ -561,6 +557,7 @@ const RESTAURANTS = [
 
 let current=null, cart=[], activeCity='Phoenix', activeKind='All', activeSearch='', cartRest=null;
 const placedOrders=[];
+let aiHistory=[];
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
 
 function setCity(c){ activeCity=c; activeKind='All'; activeSearch=''; var s=document.getElementById('searchBox'); if(s)s.value=''; renderHome(); window.scrollTo(0,0); }
@@ -602,7 +599,7 @@ function renderHome(){
 function openRestaurant(id){
   current = RESTAURANTS.find(r=>r.id===id);
   if(cart.length && cartRest!==id){ cart=[]; updateCartBar(); }
-  chatStarted=false; document.getElementById('chat').innerHTML='';
+  chatStarted=false; aiHistory=[]; document.getElementById('chat').innerHTML='';
   window.scrollTo(0,0);
   document.getElementById('view-restaurant').innerHTML = `
     <div class="rhead">
@@ -702,7 +699,6 @@ function placeOrder(){
   window.scrollTo(0,0); show('view-done');
 }
 
-/* OWNER DASHBOARD */
 function ownerStats(r){
   const items=r.menu.flatMap(c=>c.items);
   const avg=items.reduce((s,i)=>s+i.price,0)/items.length;
@@ -761,7 +757,7 @@ function goBack(){
 }
 function resetAll(){ cart=[]; cartRest=null; updateCartBar(); goHome(); }
 
-/* SCRIPTED AI ORDERING ASSISTANT */
+/* ASSISTANT — real Claude via /api/chat, with scripted fallback */
 let chatStarted=false;
 function openChat(){
   document.getElementById('backdrop').style.display='block';
@@ -775,14 +771,38 @@ function openChat(){
 }
 function closeChat(){ stopMic(); document.getElementById('sheet').classList.remove('open'); const b=document.getElementById('backdrop'); b.style.opacity='0'; setTimeout(()=>{b.style.display='none';},200); }
 function scrollChat(){const c=document.getElementById('chat');c.scrollTop=c.scrollHeight;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function botSay(html){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg bot';d.innerHTML=html;c.appendChild(d);scrollChat();}
 function meSay(t){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg me';d.textContent=t;c.appendChild(d);scrollChat();}
 function noteSay(t){const c=document.getElementById('chat');const d=document.createElement('div');d.className='msg note';d.textContent=t;c.appendChild(d);scrollChat();}
 function setChips(arr){document.getElementById('chips').innerHTML=(arr||[]).map(t=>`<button class="chip" onclick="sendUser('${t.replace(/'/g,"\\'")}')">${t}</button>`).join('');}
-function botThink(cb){const c=document.getElementById('chat');const t=document.createElement('div');t.className='typing';t.id='typing';t.innerHTML='<span></span><span></span><span></span>';c.appendChild(t);scrollChat();setTimeout(()=>{const e=document.getElementById('typing');if(e)e.remove();cb();},650);}
+function showTyping(){const c=document.getElementById('chat');const t=document.createElement('div');t.className='typing';t.id='typing';t.innerHTML='<span></span><span></span><span></span>';c.appendChild(t);scrollChat();}
+function hideTyping(){const e=document.getElementById('typing');if(e)e.remove();}
+function botThink(cb){showTyping();setTimeout(()=>{hideTyping();cb();},650);}
 function allItems(){ const a=[]; current.menu.forEach(c=>c.items.forEach(i=>a.push(i))); return a; }
 
-function sendUser(raw){ const text=(raw||'').trim(); if(!text) return; meSay(text); setChips([]); botThink(()=>handleIntent(text.toLowerCase())); }
+function sendUser(raw){ const text=(raw||'').trim(); if(!text) return; meSay(text); setChips([]); aiTurn(text); }
+
+function aiTurn(text){
+  showTyping();
+  const menu=allItems().map(i=>({id:i.id,name:i.name,price:i.price,desc:i.desc,tags:i.tags}));
+  const fallback=function(){ hideTyping(); handleIntent(text.toLowerCase()); };
+  let done=false;
+  const timer=setTimeout(function(){ if(!done){ done=true; fallback(); } }, 12000);
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({restaurant:current.name, menu:menu, message:text, history:aiHistory})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(done) return; done=true; clearTimeout(timer); hideTyping();
+      if(!d || d.configured===false || d.error || !d.reply){ handleIntent(text.toLowerCase()); return; }
+      aiHistory.push({role:'user',content:text}); aiHistory.push({role:'assistant',content:d.reply});
+      if(aiHistory.length>16) aiHistory=aiHistory.slice(-16);
+      (d.add||[]).forEach(function(a){ var it=findItem(a.id); if(it){ var n=Math.max(1,Math.min(parseInt(a.qty)||1,20)); for(var k=0;k<n;k++) addToCart(it.id); } });
+      botSay(esc(d.reply));
+      if(d.checkout && cartTotals().count>0){ setChips([]); setTimeout(openCheckout,800); }
+      else setChips(["What do you recommend?","Add a drink","That's it, checkout"]);
+    })
+    .catch(function(){ if(done) return; done=true; clearTimeout(timer); fallback(); });
+}
 
 function handleIntent(t){
   if(/(check\s?out|that'?s it|that is it|i'?m done|im done|finish|pay|place order|nothing else|^done|^checkout)/.test(t)){
