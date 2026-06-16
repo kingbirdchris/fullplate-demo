@@ -62,6 +62,7 @@ function renderHome(){
 
 function openRestaurant(id){
   current = RESTAURANTS.find(r=>r.id===id);
+  if(typeof ensureReviews==='function') ensureReviews(current);
   if(cart.length && cartRest!==id){ cart=[]; appliedPromo=null; tipPct=0; tipAmt=null; updateCartBar(); }
   chatStarted=false; aiHistory=[]; document.getElementById('chat').innerHTML='';
   window.scrollTo(0,0);
@@ -90,15 +91,29 @@ function openRestaurant(id){
           <div class="mthumb ${so?'dim':''}" style="${ph?`background-image:url('${ph}')`:`background:${current.color}`}">${ph?'':it.emoji}</div>
           <div class="minfo">
             <h4>${it.name} ${it.id===current.popular?'<span class="pop">★ Most ordered</span>':''} ${it.tags.map(t=>tagHTML(t)).join('')}</h4>
-            <p>${it.desc}${hasMods?' <span class="modhint">· customizable</span>':''}</p>
+            <p>${it.desc}</p>
           </div>
-          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span>${so?'<span class="soldtag">Sold out</span>':(open?`<button class="addbtn" onclick="addOrConfigure('${it.id}')" aria-label="Add ${it.name}">+</button>`:'')}</div>
+          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span>${so?'<span class="soldtag">Sold out</span>':(open?(hasMods?`<button class="custbtn" onclick="addOrConfigure('${it.id}')" aria-label="Customize ${it.name}">Customize</button>`:`<button class="addbtn" onclick="addOrConfigure('${it.id}')" aria-label="Add ${it.name}">+</button>`):'')}</div>
         </div>`;}).join('')}
     `).join('')}
+    ${reviewsSection(current)}
     <div style="height:10px"></div>`;
   show('view-restaurant');
   document.getElementById('backBtn').style.display='flex';
   document.getElementById('aiName').textContent = current.name + ' Assistant';
+}
+
+function reviewsSection(r){
+  if(typeof ensureReviews==='function') ensureReviews(r);
+  const rv=(reviews[r.id]||[]); if(!rv.length) return '';
+  const avg=(rv.reduce((s,x)=>s+x.stars,0)/rv.length).toFixed(1);
+  const rounded=Math.round(avg);
+  const top=rv.slice(0,3);
+  return `<div class="menucat">What diners say</div>
+    <div class="revstrip">
+      <div class="rvtop"><span class="rvavg">${avg}</span><span class="rvstars">${'★'.repeat(rounded)}${'☆'.repeat(5-rounded)}</span><span class="rvcount">${rv.length} review${rv.length>1?'s':''}</span></div>
+      ${top.map(x=>`<div class="revitem"><div class="rvname">${esc(x.name)}<span class="rvr">${'★'.repeat(x.stars)}${'☆'.repeat(5-x.stars)}</span></div><div class="rvtext">${esc(x.text)}</div>${x.reply?`<div class="rvreply"><b>${esc(r.name)}:</b> ${esc(x.reply)}</div>`:''}</div>`).join('')}
+    </div>`;
 }
 
 function tagHTML(t){ const map={gf:['gf','GF'],v:['v','VEG'],spicy:['spicy','🌶']}; const m=map[t]; return m?`<span class="tag ${m[0]}">${m[1]}</span>`:''; }
@@ -142,7 +157,7 @@ function modSheetRender(){
     <div class="modgroup">
       <div class="modglabel">${g.name}<span>${g.multi?('Choose up to '+(g.max||g.options.length)):'Choose one'}</span></div>
       ${g.options.map((o,oi)=>{const on=modSel[g.name].some(s=>s.name===o.name);return `
-        <div class="modopt ${on?'on':''}" onclick="modPick(${gi},${oi})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')modPick(${gi},${oi})">
+        <div class="modopt ${on?'on':''}" onclick="modPick(${gi},${oi})" role="button" tabindex="0" aria-pressed="${on}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();modPick(${gi},${oi})}">
           <span class="moname">${o.name}</span>
           <span class="moprice">${o.price>0?'+$'+o.price.toFixed(2):''}</span>
           <span class="modot"></span>
@@ -231,18 +246,43 @@ function changeQty(lid,d){
 
 function placeOrder(){
   const {sub}=cartTotals(); const disc=promoDiscount(sub); const keptFood=Math.max(0,sub-disc); const tip=tipAmount(keptFood); const kept=keptFood+tip; const cut=(sub*0.30).toFixed(2);
+  const pts=Math.max(1, Math.round(keptFood));
+  const prep=storeOf(current).prep || current.eta || '15-20 min';
+  const rid=current.id, rname=current.name, rcity=current.city;
   const items=cart.map(c=>({id:c.id,name:c.name,qty:c.qty,price:c.price,mods:c.mods||null}));
-  placedOrders.unshift({ id:current.id, names:cart.map(c=>c.qty+'× '+c.name), total:kept });
+  placedOrders.unshift({ id:rid, names:cart.map(c=>c.qty+'× '+c.name), total:kept });
   ensureQueue(current);
-  QUEUE[current.id].unshift({ oid:++__oid, items:items, total:kept, status:'new', mins:0, name:'You (demo)' });
-  orderHistory.unshift({ id:current.id, name:current.name, items:items, total:kept, when:'Just now' });
-  loyaltyPts += Math.max(1, Math.round(keptFood));
-  window.__lastRest=current.id;
+  QUEUE[rid].unshift({ oid:++__oid, items:items, total:kept, status:'new', mins:0, name:'You (demo)' });
+  orderHistory.unshift({ id:rid, name:rname, items:items, total:kept, when:'Just now' });
+  loyaltyPts += pts;
+  window.__lastRest=rid;
   document.getElementById('doneMsg').innerHTML =
-    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${keptFood.toFixed(2)}</b>${tip>0?` plus a $${tip.toFixed(2)} tip`:''} and saved about $${cut} in delivery-app commission on this order alone.<br><br>You earned <b>${Math.max(1,Math.round(keptFood))} FullPlate points</b>.`;
+    `${rname} got your order and is firing it up now.<br><br>
+     <div class="readyline">◷ <b>Estimated ready in ${prep}</b><br>Pickup at ${esc(rname)} · ${esc(rcity)}<br>We'll text you the moment it's ready.</div>
+     <b style="color:var(--good)">They kept the full $${keptFood.toFixed(2)}</b>${tip>0?` plus a $${tip.toFixed(2)} tip`:''} and saved about $${cut} in delivery-app commission on this order alone.<br><br>You earned <b>${pts} FullPlate points</b>.`;
+  document.getElementById('rateRow').innerHTML = rateWidget(rid);
   cart=[]; cartRest=null; appliedPromo=null; tipPct=0; tipAmt=null; updateCartBar();
   document.getElementById('backBtn').style.display='none';
   window.scrollTo(0,0); show('view-done');
+}
+
+function rateWidget(rid){
+  return `<div class="raterow" id="rwrap">
+    <div class="rlbl">How was your order? Leave the restaurant a review.</div>
+    <div class="ratestars" id="rstars">${[1,2,3,4,5].map(n=>`<span data-n="${n}" onmouseover="hoverStars(${n})" onclick="rateOrder('${rid}',${n})" role="button" tabindex="0" aria-label="${n} star${n>1?'s':''}" onkeydown="if(event.key==='Enter')rateOrder('${rid}',${n})">★</span>`).join('')}</div>
+  </div>`;
+}
+function hoverStars(n){ document.querySelectorAll('#rstars span').forEach(s=>s.classList.toggle('on', parseInt(s.getAttribute('data-n'))<=n)); }
+function rateOrder(rid,n){
+  const r=RESTAURANTS.find(x=>x.id===rid);
+  if(typeof ensureReviews==='function' && r) ensureReviews(r);
+  hoverStars(n);
+  reviews[rid]=reviews[rid]||[];
+  const who=(profile.name && profile.name!=='Guest')?profile.name:'You';
+  reviews[rid].unshift({name:who, stars:n, text:(n>=4?'Great pickup order through FullPlate — easy and fast.':'Thanks — feedback sent to the restaurant.'), reply:''});
+  const w=document.getElementById('rwrap');
+  if(w) w.innerHTML = `<div class="ratedone">✓ Thanks! Your ${n}-star review was sent to ${esc((r||{}).name||'the restaurant')} — it shows up in their owner inbox.</div>`;
+  showToast('Review submitted');
 }
 
 /* DINER ACCOUNT */
