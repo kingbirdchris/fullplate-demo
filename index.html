@@ -23,7 +23,7 @@
     .rcard:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
     .addbtn:hover,.paybtn:hover,.composer button:hover{background:var(--brand-dark)}
     .chip:hover{background:var(--brand);color:#fff}
-    .citytab:hover,.kindtab:hover,.ownerlink:hover,.otab:hover{border-color:var(--ink)}
+    .citytab:hover,.kindtab:hover,.ownerlink:hover,.otab:hover,.acct:hover{border-color:var(--ink)}
     .qstep button:hover,.back:hover,.close:hover,.again:hover{border-color:var(--ink)}
     .ai-launch:hover{box-shadow:var(--shadow-lg)}
   }
@@ -36,6 +36,7 @@
   .back{border:1px solid var(--line);background:#fff;border-radius:var(--r-sm);width:40px;height:40px;font-size:20px;display:none;align-items:center;justify-content:center}
   .tagline{margin-left:auto;font-size:var(--t-xs);color:var(--muted);text-align:right;line-height:1.3}
   .tagline b{color:var(--good)}
+  .acct{border:1px solid var(--line);background:#fff;width:38px;height:38px;border-radius:50%;font-size:15px;display:flex;align-items:center;justify-content:center;margin-left:8px;flex:0 0 auto}
   .hero{padding:22px 16px 8px}
   .hero h1{font-size:var(--t-2xl);line-height:1.15;margin:0 0 8px;letter-spacing:-.6px}
   .hero p{margin:0;color:var(--muted);font-size:var(--t-md);line-height:1.5}
@@ -63,7 +64,9 @@
   .rbadge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.96);color:var(--good);font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill);display:flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
   .feat{position:absolute;top:10px;right:10px;background:var(--ink);color:#fff;font-size:var(--t-xs);font-weight:800;padding:5px 9px;border-radius:var(--pill);box-shadow:0 2px 6px rgba(0,0,0,.2)}
   .rbody{padding:12px 14px 14px}
-  .rbody h3{margin:0 0 3px;font-size:var(--t-lg);letter-spacing:-.3px}
+  .rtop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .rtop h3{margin:0 0 3px;font-size:var(--t-lg);letter-spacing:-.3px}
+  .favbtn{border:none;background:transparent;color:var(--brand);font-size:22px;line-height:1;padding:0;flex:0 0 auto;margin-top:-2px}
   .rmeta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;flex-wrap:wrap}
   .rmeta .star{color:#B8740B}
   .rblurb{margin:8px 0 0;color:var(--muted);font-size:var(--t-sm);line-height:1.45}
@@ -153,7 +156,7 @@
   #view-done h2{margin:0 0 8px;font-size:24px}
   #view-done p{color:var(--muted);font-size:var(--t-md);line-height:1.5;margin:0 auto;max-width:300px}
   #view-done .again{margin-top:22px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 22px;font-weight:700}
-  #view-owner{display:none}
+  #view-owner,#view-account{display:none}
   .odash{padding:16px}
   .otabs{display:flex;gap:6px;margin:4px 0 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .otab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:var(--pill);padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
@@ -162,6 +165,13 @@
   .ohero .lbl{font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
   .ohero .amt{font-size:36px;font-weight:800;margin:4px 0 2px;letter-spacing:-.5px}
   .ohero .osub{font-size:12.5px;opacity:.92;line-height:1.5}
+  .loyalcard{background:linear-gradient(135deg,#5B3CC4,#7C5CD6);color:#fff;border-radius:var(--r-lg);padding:18px 18px 16px;box-shadow:var(--shadow)}
+  .loyalcard .lbl{font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .loyalcard .amt{font-size:32px;font-weight:800;margin:4px 0 2px}
+  .loyalcard .osub{font-size:12.5px;opacity:.92;line-height:1.5}
+  .lbar{height:8px;background:rgba(255,255,255,.28);border-radius:99px;margin-top:12px;overflow:hidden}
+  .lfill{height:100%;background:#fff;border-radius:99px;transition:width .3s}
+  .redeembtn{margin-top:12px;border:none;background:#fff;color:#5B3CC4;border-radius:10px;padding:10px 16px;font-weight:800;font-size:13px}
   .ostatrow{display:flex;gap:10px;margin:12px 0 4px}
   .ostat{flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 8px;text-align:center}
   .ostat b{display:block;font-size:18px}
@@ -216,6 +226,7 @@
     <button class="back" id="backBtn" onclick="goBack()" aria-label="Back">‹</button>
     <div class="logo" onclick="goHome()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goHome()"><span class="dot">◗</span> Full<b>Plate</b></div>
     <div class="tagline">Order local.<br><b>0% commission.</b></div>
+    <button class="acct" onclick="openAccount()" aria-label="Your account">👤</button>
   </header>
 
   <div id="view-home">
@@ -243,6 +254,7 @@
   <div id="view-restaurant"></div>
   <div id="view-checkout"></div>
   <div id="view-owner"></div>
+  <div id="view-account"></div>
 
   <div id="view-done">
     <div class="check">✓</div>
@@ -603,10 +615,10 @@ const RESTAURANTS = [
 ];
 
 let current=null, cart=[], activeCity='Phoenix', activeKind='All', activeSearch='', cartRest=null, appliedPromo=null;
-const placedOrders=[];
-let aiHistory=[];
+const placedOrders=[], orderHistory=[];
+let aiHistory=[], loyaltyPts=120;
 let ownerRest='chiwas', ownerTab='overview', __oid=1000, __toastT=null;
-const QUEUE={}, STORE={}, unavailable={}, photoOverride={}, reviews={};
+const QUEUE={}, STORE={}, unavailable={}, photoOverride={}, reviews={}, favorites={};
 const promos=[{code:'LOCAL10',type:'pct',value:10,label:'10% off your order'}];
 const ownerSettings={sound:true,autoprint:true,smsReady:true,dailyEmail:false,tips:true};
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
@@ -620,6 +632,12 @@ function runSearch(q){ activeSearch=(q||'').trim().toLowerCase(); renderHome(); 
 function matchSearch(r,q){
   if((r.name+' '+r.cuisine+' '+r.kind).toLowerCase().includes(q)) return true;
   return r.menu.some(c=>c.items.some(i=>i.name.toLowerCase().includes(q)||i.desc.toLowerCase().includes(q)));
+}
+function toggleFav(id){
+  if(favorites[id]) delete favorites[id]; else favorites[id]=true;
+  showToast(favorites[id]?'Saved to favorites':'Removed from favorites');
+  if(document.getElementById('view-home').style.display!=='none') renderHome();
+  else if(document.getElementById('view-account').style.display!=='none') openAccount();
 }
 
 function renderHome(){
@@ -643,7 +661,7 @@ function renderHome(){
     <div class="rcard ${r.featured?'is-feat':''}" onclick="openRestaurant('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRestaurant('${r.id}')" aria-label="${r.name}, ${r.cuisine}">
       <div class="rbanner" style="${bannerStyle(r.id, r.color, CARD_SCRIM)}">${IMG[r.id]?'':'<span class="bemoji">'+r.emoji+'</span>'}<div class="rbadge">● 0% commission</div>${r.featured?'<div class="feat">★ Featured</div>':''}</div>
       <div class="rbody">
-        <h3>${r.name}</h3>
+        <div class="rtop"><h3>${r.name}</h3><button class="favbtn" onclick="event.stopPropagation();toggleFav('${r.id}')" aria-label="Favorite ${r.name}">${favorites[r.id]?'♥':'♡'}</button></div>
         <div class="rmeta"><span class="star">★ ${r.rating}</span><span>(${r.reviews})</span>·<span>${r.cuisine}</span>·<span>${r.price}</span>·<span>◷ ${r.eta}</span></div>
         <p class="rblurb">${r.blurb}</p>
       </div>
@@ -759,16 +777,63 @@ function changeQty(id,d){
 
 function placeOrder(){
   const {sub}=cartTotals(); const disc=promoDiscount(sub); const kept=sub-disc; const cut=(sub*0.30).toFixed(2);
-  const items=cart.map(c=>({name:c.name,qty:c.qty,price:c.price}));
+  const items=cart.map(c=>({id:c.id,name:c.name,qty:c.qty,price:c.price}));
   placedOrders.unshift({ id:current.id, names:cart.map(c=>c.qty+'× '+c.name), total:kept });
   ensureQueue(current);
   QUEUE[current.id].unshift({ oid:++__oid, items:items, total:kept, status:'new', mins:0, name:'You (demo)' });
+  orderHistory.unshift({ id:current.id, name:current.name, items:items, total:kept, when:'Just now' });
+  loyaltyPts += Math.max(1, Math.round(kept));
   window.__lastRest=current.id;
   document.getElementById('doneMsg').innerHTML =
-    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${kept.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.`;
+    `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${kept.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.<br><br>You earned <b>${Math.max(1,Math.round(kept))} FullPlate points</b>.`;
   cart=[]; cartRest=null; appliedPromo=null; updateCartBar();
   document.getElementById('backBtn').style.display='none';
   window.scrollTo(0,0); show('view-done');
+}
+
+/* DINER ACCOUNT */
+function openAccount(){
+  document.getElementById('view-account').innerHTML = accountHTML();
+  show('view-account');
+  document.getElementById('cartbar').style.display = cartTotals().count>0 ? 'flex':'none';
+  document.getElementById('backBtn').style.display='flex';
+  window.scrollTo(0,0);
+}
+function accountHTML(){
+  const favs=RESTAURANTS.filter(r=>favorites[r.id]);
+  const goal=50; const have=loyaltyPts%goal; const toGo=goal-have; const ready=loyaltyPts>=goal;
+  return `
+    <div class="odash">
+      <div class="section-label" style="padding-left:0">Your account</div>
+      <div class="loyalcard">
+        <div class="lbl">FullPlate rewards</div>
+        <div class="amt">${loyaltyPts} pts</div>
+        <div class="osub">Earn 1 point per $1 spent. ${ready?'You have a $5 reward ready to redeem.':toGo+' more points to your next $5 reward.'}</div>
+        <div class="lbar"><div class="lfill" style="width:${Math.round(have/goal*100)}%"></div></div>
+        ${ready?`<button class="redeembtn" onclick="redeemReward()">Redeem 50 pts for $5 off</button>`:''}
+      </div>
+      <div class="section-label" style="padding-left:0">Favorites</div>
+      ${favs.length?favs.map(r=>`<div class="orow" onclick="openRestaurant('${r.id}')" style="cursor:pointer"><div><b>${r.name}</b><span>${r.cuisine} · ${r.city}</span></div><div class="okept">★ ${r.rating}</div></div>`).join(''):'<div class="empty">Tap the heart on a restaurant to save it here.</div>'}
+      <div class="section-label" style="padding-left:0">Order history</div>
+      ${orderHistory.length?orderHistory.map((h,idx)=>`<div class="ocard"><div class="ohd"><b>${h.name}</b><span class="otime">${h.when}</span></div><div class="oitems">${h.items.map(i=>i.qty+'× '+i.name).join(', ')}</div><div class="ofoot"><span class="ocust">$${h.total.toFixed(2)} · kept by the restaurant</span><button class="oadv" onclick="reorder(${idx})">Reorder →</button></div></div>`).join(''):'<div class="empty">No orders yet. Your past orders show up here for one-tap reorder.</div>'}
+      <div class="realnote" style="margin-top:14px">Loyalty, favorites, and reorder are what keep diners coming back to the restaurant directly — not the delivery app.</div>
+    </div>`;
+}
+function redeemReward(){
+  if(loyaltyPts<50) return;
+  loyaltyPts-=50;
+  const code='REWARD'+Math.floor(Math.random()*900+100);
+  promos.push({code,type:'amt',value:5,label:'$5 loyalty reward'});
+  showToast('Reward unlocked! Use code '+code+' at checkout');
+  openAccount();
+}
+function reorder(idx){
+  const h=orderHistory[idx]; if(!h) return;
+  const r=RESTAURANTS.find(x=>x.id===h.id); if(!r) return;
+  current=r; cartRest=r.id; appliedPromo=null;
+  cart=h.items.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty}));
+  updateCartBar(); showToast('Reordered from '+r.name);
+  openRestaurant(r.id);
 }
 
 /* OWNER CONSOLE */
@@ -983,7 +1048,7 @@ function settingsTab(r){
 }
 function toggleSetting(k){ ownerSettings[k]=!ownerSettings[k]; showToast(k+' '+(ownerSettings[k]?'on':'off')); openOwner(ownerRest,'settings'); }
 
-function show(id){ ['view-home','view-restaurant','view-checkout','view-done','view-owner'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
+function show(id){ ['view-home','view-restaurant','view-checkout','view-done','view-owner','view-account'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
 function goHome(){ closeChat(); show('view-home'); document.getElementById('backBtn').style.display='none'; updateCartBar(); window.scrollTo(0,0); }
 function goBack(){
   if(document.getElementById('view-checkout').style.display==='block' && current){ openRestaurant(current.id); updateCartBar(); return; }
