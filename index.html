@@ -10,7 +10,6 @@
     --cream:#FBF6EF; --card:#FFFFFF; --line:#EFE6DA; --good:#2E7D52; --focus:#2563A8;
     --shadow:0 6px 24px rgba(42,33,28,.08); --shadow-lg:0 18px 50px rgba(42,33,28,.18);
     --r-sm:10px; --r-md:14px; --r-lg:18px; --pill:999px;
-    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px;
     --t-xs:11px; --t-sm:13px; --t-md:14px; --t-lg:17px; --t-xl:23px; --t-2xl:26px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -24,7 +23,7 @@
     .rcard:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
     .addbtn:hover,.paybtn:hover,.composer button:hover{background:var(--brand-dark)}
     .chip:hover{background:var(--brand);color:#fff}
-    .citytab:hover,.kindtab:hover{border-color:var(--ink)}
+    .citytab:hover,.kindtab:hover,.ownerlink:hover{border-color:var(--ink)}
     .qstep button:hover,.back:hover,.close:hover,.again:hover{border-color:var(--ink)}
     .ai-launch:hover{box-shadow:var(--shadow-lg)}
   }
@@ -43,6 +42,9 @@
   .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
   .pill{background:#fff;border:1px solid var(--line);border-radius:var(--pill);padding:7px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
   .pill .ic{color:var(--brand)}
+  .searchwrap{padding:14px 16px 0}
+  .searchbox{width:100%;border:1px solid var(--line);border-radius:var(--pill);padding:12px 16px;font-size:14px;background:#fff;outline:none}
+  .searchbox:focus{border-color:var(--brand)}
   .section-label{padding:18px 16px 6px;font-size:var(--t-sm);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
   .citytabs{display:flex;gap:8px;padding:14px 16px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .citytab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:var(--pill);padding:10px 15px;font-size:var(--t-sm);font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px}
@@ -74,7 +76,7 @@
   .realnote{margin:8px 0 0;font-size:12px;color:var(--muted);background:#F3ECE2;border-radius:var(--r-sm);padding:8px 11px;line-height:1.45}
   .menucat{padding:18px 16px 4px;font-size:15px;font-weight:800;letter-spacing:-.2px}
   .mitem{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);margin:8px 16px;padding:10px 12px}
-  .mthumb{width:54px;height:54px;border-radius:11px;display:grid;place-items:center;font-size:26px;flex:0 0 auto}
+  .mthumb{width:58px;height:58px;border-radius:11px;display:grid;place-items:center;font-size:26px;flex:0 0 auto;background-size:cover;background-position:center;overflow:hidden}
   .minfo{flex:1;min-width:0}
   .minfo h4{margin:0 0 2px;font-size:14.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .minfo p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.4}
@@ -142,9 +144,24 @@
   #view-done .check{width:84px;height:84px;border-radius:var(--pill);background:var(--good);color:#fff;font-size:46px;display:grid;place-items:center;margin:0 auto 18px}
   #view-done h2{margin:0 0 8px;font-size:24px}
   #view-done p{color:var(--muted);font-size:var(--t-md);line-height:1.5;margin:0 auto;max-width:300px}
-  #view-done .again{margin-top:26px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 22px;font-weight:700}
-  .footer{padding:26px 16px 14px;text-align:center;color:var(--muted);font-size:var(--t-xs);line-height:1.6}
+  #view-done .again{margin-top:22px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 22px;font-weight:700}
+  #view-owner{display:none}
+  .odash{padding:16px}
+  .ohero{background:linear-gradient(135deg,#1F6B43,#2E7D52);color:#fff;border-radius:var(--r-lg);padding:20px 18px;box-shadow:var(--shadow)}
+  .ohero .lbl{font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .ohero .amt{font-size:36px;font-weight:800;margin:4px 0 2px;letter-spacing:-.5px}
+  .ohero .osub{font-size:12.5px;opacity:.92;line-height:1.5}
+  .ostatrow{display:flex;gap:10px;margin:12px 0 4px}
+  .ostat{flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 8px;text-align:center}
+  .ostat b{display:block;font-size:18px}
+  .ostat span{font-size:10.5px;color:var(--muted)}
+  .orow{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;margin:8px 0;gap:10px}
+  .orow b{display:block;font-size:13px}
+  .orow span{font-size:11px;color:var(--muted)}
+  .okept{color:var(--good);font-weight:800;font-size:13px;white-space:nowrap}
+  .footer{padding:24px 16px 14px;text-align:center;color:var(--muted);font-size:var(--t-xs);line-height:1.6}
   .footer b{color:var(--brand)}
+  .ownerlink{display:inline-block;margin:14px auto 0;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:var(--pill);padding:10px 16px;font-size:12.5px;font-weight:700}
   .empty{padding:30px 24px;text-align:center;color:var(--muted);font-size:var(--t-sm)}
 </style>
 </head>
@@ -166,24 +183,28 @@
         <div class="pill"><span class="ic">◷</span> Pickup ready</div>
       </div>
     </div>
+    <div class="searchwrap"><input class="searchbox" id="searchBox" placeholder="Search restaurants or dishes..." oninput="runSearch(this.value)" aria-label="Search restaurants or dishes"></div>
     <div class="citytabs" id="cityTabs"></div>
     <div class="kindrow" id="kindTabs"></div>
     <div class="section-label" id="rlistLabel">Restaurants near you</div>
     <div id="rlist"></div>
     <div class="footer">
       <b>FullPlate</b> · a Kingbird Solutions concept demo<br>
-      Listings are illustrative; the featured spot is built from public info. Photos via Wikimedia Commons. Checkout is simulated.
+      Listings are illustrative; the featured spot is built from public info. Photos via Wikimedia Commons. Checkout is simulated.<br>
+      <button class="ownerlink" onclick="openOwner('chiwas')">Run a restaurant? Peek at the owner view →</button>
     </div>
   </div>
 
   <div id="view-restaurant"></div>
   <div id="view-checkout"></div>
+  <div id="view-owner"></div>
 
   <div id="view-done">
     <div class="check">✓</div>
     <h2>Order confirmed</h2>
     <p id="doneMsg"></p>
-    <button class="again" onclick="resetAll()">Back to FullPlate</button>
+    <div><button class="ownerlink" onclick="openOwner(window.__lastRest||'chiwas')">See the restaurant's view of this →</button></div>
+    <div><button class="again" onclick="resetAll()">Back to FullPlate</button></div>
   </div>
 </div>
 
@@ -226,6 +247,39 @@ const IMG = {
   burger:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Cheeseburger_with_onions_at_Hatfield_Heath_Festival_2017.jpg/1280px-Cheeseburger_with_onions_at_Hatfield_Heath_Festival_2017.jpg",
   bella:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Spaghetti_Bolognese_-_Figaros%2C_Brighton_2023-10-06.jpg/1280px-Spaghetti_Bolognese_-_Figaros%2C_Brighton_2023-10-06.jpg"
 };
+/* Extra dish photos for menu items (Wikimedia Commons). */
+const PIX = {
+  burrito:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Burrito_al_pastor_-_Bacalar_QR.jpg/960px-Burrito_al_pastor_-_Bacalar_QR.jpg",
+  salad:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Bowtie_pasta_salad_bowl_close-up.jpg/960px-Bowtie_pasta_salad_bowl_close-up.jpg",
+  coffee:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/A_cup_of_coffee_in_Mohk.jpg/960px-A_cup_of_coffee_in_Mohk.jpg",
+  dumpling:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Missgyoza_production_gyoza_dumpling_Manufacturer.jpg/960px-Missgyoza_production_gyoza_dumpling_Manufacturer.jpg",
+  fries:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/McDonald%27s_French_Fries%2C_Canada%2C_2026-04-04.jpg/960px-McDonald%27s_French_Fries%2C_Canada%2C_2026-04-04.jpg",
+  eggs:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Liat_Portal_for_Foodie_Disorder_-_Israeli_breakfast_plate_with_fried_egg_and_avocado.jpg/960px-Liat_Portal_for_Foodie_Disorder_-_Israeli_breakfast_plate_with_fried_egg_and_avocado.jpg",
+  guacamole:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Guacamole_IMGP1303.jpg/960px-Guacamole_IMGP1303.jpg",
+  tamale:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Tamales_Mexicanos_sweet_corn_tamales_05.jpg/960px-Tamales_Mexicanos_sweet_corn_tamales_05.jpg",
+  gyro:"https://upload.wikimedia.org/wikipedia/commons/b/b7/Shawarma_closeup.png",
+  ceviche:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Tostada_de_ceviche_de_camar%C3%B3n_con_mango.jpg/960px-Tostada_de_ceviche_de_camar%C3%B3n_con_mango.jpg",
+  springroll:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Vietnamese_fried_spring_rolls_in_Ho_Chi_Minh_City%2C_Vietnam.jpg/960px-Vietnamese_fried_spring_rolls_in_Ho_Chi_Minh_City%2C_Vietnam.jpg"
+};
+/* keyword -> photo, checked in order (specific first) */
+const PIC_ORDER = [
+  ['shawarma',IMG.bashir],['gyro',PIX.gyro],['falafel',IMG.bashir],['hummus',PIX.guacamole],
+  ['gyoza',PIX.dumpling],['rangoon',PIX.dumpling],['spring roll',PIX.springroll],
+  ['fish taco',PIX.ceviche],['ceviche',PIX.ceviche],['tostada',PIX.ceviche],['shrimp',PIX.ceviche],
+  ['burrito',PIX.burrito],['tamale',PIX.tamale],['guacamole',PIX.guacamole],['chips',PIX.guacamole],
+  ['caesar',PIX.salad],['salad',PIX.salad],['tabbouleh',PIX.salad],['bruschetta',PIX.salad],
+  ['chilaquiles',PIX.eggs],['avocado toast',PIX.eggs],['egg',PIX.eggs],['pancake',IMG.sunrise],
+  ['latte',PIX.coffee],['coffee',PIX.coffee],['cold brew',PIX.coffee],
+  ['fries',PIX.fries],
+  ['pho',IMG.pho],['ramen',IMG.sakura],['pizza',IMG.slice],['margherita',IMG.slice],['funghi',IMG.slice],
+  ['brisket',IMG.smoke],['pulled pork',IMG.smoke],['smoked',IMG.smoke],
+  ['club',IMG.harbor],['sandwich',IMG.harbor],['melt',IMG.harbor],
+  ['smash',IMG.burger],['burger',IMG.burger],
+  ['bolognese',IMG.bella],['spaghetti',IMG.bella],['tagliatelle',IMG.bella],['cacio',IMG.bella],['parmigiana',IMG.bella],
+  ['poke',IMG.poke],['ahi',IMG.poke],['salmon',IMG.poke],
+  ['taco',IMG.chiwas]
+];
+function itemPhoto(name){ const n=name.toLowerCase(); for(const p of PIC_ORDER){ if(n.includes(p[0])) return p[1]; } return null; }
 function bannerStyle(id, color, scrim){
   return IMG[id]
     ? `background-image:${scrim},url('${IMG[id]}')`
@@ -234,7 +288,7 @@ function bannerStyle(id, color, scrim){
 const CARD_SCRIM='linear-gradient(rgba(0,0,0,.34),rgba(0,0,0,0) 42%,rgba(0,0,0,0) 80%,rgba(0,0,0,.12))';
 const HEAD_SCRIM='linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,.06) 55%)';
 
-/* DATA — add a restaurant by appending one object. tags: gf, v, spicy. featured:true pins it first. kind drives the food-type filter. Add a banner photo by putting its id in IMG above. */
+/* DATA — add a restaurant by appending one object. tags: gf, v, spicy. featured:true pins it first. kind drives the food-type filter. */
 const RESTAURANTS = [
   {
     id:'chiwas', city:'Phoenix', kind:'Mexican', featured:true, name:'Tacos Chiwas', cuisine:'Chihuahua-style Mexican', emoji:'🌮',
@@ -505,11 +559,17 @@ const RESTAURANTS = [
   },
 ];
 
-let current=null, cart=[], activeCity='Phoenix', activeKind='All', cartRest=null;
+let current=null, cart=[], activeCity='Phoenix', activeKind='All', activeSearch='', cartRest=null;
+const placedOrders=[];
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
 
-function setCity(c){ activeCity=c; activeKind='All'; renderHome(); window.scrollTo(0,0); }
+function setCity(c){ activeCity=c; activeKind='All'; activeSearch=''; var s=document.getElementById('searchBox'); if(s)s.value=''; renderHome(); window.scrollTo(0,0); }
 function setKind(k){ activeKind=k; renderHome(); }
+function runSearch(q){ activeSearch=(q||'').trim().toLowerCase(); renderHome(); }
+function matchSearch(r,q){
+  if((r.name+' '+r.cuisine+' '+r.kind).toLowerCase().includes(q)) return true;
+  return r.menu.some(c=>c.items.some(i=>i.name.toLowerCase().includes(q)||i.desc.toLowerCase().includes(q)));
+}
 
 function renderHome(){
   document.getElementById('cityTabs').innerHTML = cities().map(c=>`
@@ -518,10 +578,16 @@ function renderHome(){
   const kinds = ['All', ...[...new Set(inCity.map(r=>r.kind))].sort()];
   document.getElementById('kindTabs').innerHTML = kinds.map(k=>`
     <button class="kindtab ${k===activeKind?'on':''}" onclick="setKind('${k}')">${k==='All'?'All food':k}</button>`).join('');
-  const list = inCity.filter(r=>activeKind==='All'||r.kind===activeKind)
-    .sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
-  document.getElementById('rlistLabel').textContent =
-    `${list.length} ${activeKind==='All'?'restaurants':activeKind.toLowerCase()+' spots'} in ${activeCity}`;
+  let list;
+  if(activeSearch){
+    list = inCity.filter(r=>matchSearch(r,activeSearch));
+    document.getElementById('rlistLabel').textContent = `${list.length} result${list.length===1?'':'s'} for "${activeSearch}"`;
+  } else {
+    list = inCity.filter(r=>activeKind==='All'||r.kind===activeKind);
+    document.getElementById('rlistLabel').textContent =
+      `${list.length} ${activeKind==='All'?'restaurants':activeKind.toLowerCase()+' spots'} in ${activeCity}`;
+  }
+  list = list.sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
   document.getElementById('rlist').innerHTML = list.length ? list.map(r=>`
     <div class="rcard ${r.featured?'is-feat':''}" onclick="openRestaurant('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRestaurant('${r.id}')" aria-label="${r.name}, ${r.cuisine}">
       <div class="rbanner" style="${bannerStyle(r.id, r.color, CARD_SCRIM)}">${IMG[r.id]?'':'<span class="bemoji">'+r.emoji+'</span>'}<div class="rbadge">● 0% commission</div>${r.featured?'<div class="feat">★ Featured</div>':''}</div>
@@ -530,7 +596,7 @@ function renderHome(){
         <div class="rmeta"><span class="star">★ ${r.rating}</span><span>(${r.reviews})</span>·<span>${r.cuisine}</span>·<span>${r.price}</span>·<span>◷ ${r.eta}</span></div>
         <p class="rblurb">${r.blurb}</p>
       </div>
-    </div>`).join('') : '<div class="empty">No spots in this category yet.</div>';
+    </div>`).join('') : '<div class="empty">No matches. Try another search or category.</div>';
 }
 
 function openRestaurant(id){
@@ -555,15 +621,15 @@ function openRestaurant(id){
     </div>
     ${current.menu.map(cat=>`
       <div class="menucat">${cat.cat}</div>
-      ${cat.items.map(it=>`
+      ${cat.items.map(it=>{const ph=itemPhoto(it.name);return `
         <div class="mitem">
-          <div class="mthumb" style="background:${current.color}">${it.emoji}</div>
+          <div class="mthumb" style="${ph?`background-image:url('${ph}')`:`background:${current.color}`}">${ph?'':it.emoji}</div>
           <div class="minfo">
             <h4>${it.name} ${it.id===current.popular?'<span class="pop">★ Most ordered</span>':''} ${it.tags.map(t=>tagHTML(t)).join('')}</h4>
             <p>${it.desc}</p>
           </div>
           <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span><button class="addbtn" onclick="addToCart('${it.id}')" aria-label="Add ${it.name}">+</button></div>
-        </div>`).join('')}
+        </div>`;}).join('')}
     `).join('')}
     <div style="height:10px"></div>`;
   show('view-restaurant');
@@ -627,6 +693,8 @@ function changeQty(id,d){
 
 function placeOrder(){
   const {sub}=cartTotals(); const cut=(sub*0.30).toFixed(2);
+  placedOrders.unshift({ id:current.id, names:cart.map(c=>c.qty+'× '+c.name), total:sub });
+  window.__lastRest=current.id;
   document.getElementById('doneMsg').innerHTML =
     `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${sub.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.`;
   cart=[]; cartRest=null; updateCartBar();
@@ -634,11 +702,62 @@ function placeOrder(){
   window.scrollTo(0,0); show('view-done');
 }
 
-function show(id){ ['view-home','view-restaurant','view-checkout','view-done'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
+/* OWNER DASHBOARD */
+function ownerStats(r){
+  const items=r.menu.flatMap(c=>c.items);
+  const avg=items.reduce((s,i)=>s+i.price,0)/items.length;
+  const monthlyOrders=Math.round(r.reviews*1.6);
+  const aov=+(avg*2.4).toFixed(2);
+  const revenue=Math.round(monthlyOrders*aov);
+  const saved=Math.round(revenue*0.30);
+  return {monthlyOrders,aov,revenue,saved};
+}
+function seedFeed(r){
+  const items=r.menu.flatMap(c=>c.items);
+  const g=(i)=>items[i%items.length];
+  return [
+    {names:[g(0).name,g(2).name], total:g(0).price+g(2).price, ago:'6 min ago'},
+    {names:[g(1).name], total:g(1).price, ago:'23 min ago'},
+    {names:[g(3).name,g(0).name,g(4).name], total:g(3).price+g(0).price+g(4).price, ago:'51 min ago'},
+    {names:[g(2).name,g(1).name], total:g(2).price+g(1).price, ago:'1 hr ago'},
+  ];
+}
+function openOwner(id){
+  const r=RESTAURANTS.find(x=>x.id===id)||RESTAURANTS.find(x=>x.featured)||RESTAURANTS[0];
+  current=r;
+  const st=ownerStats(r);
+  const sess=placedOrders.filter(o=>o.id===r.id);
+  const sessSaved=Math.round(sess.reduce((s,o)=>s+o.total,0)*0.30);
+  const totalSaved=st.saved+sessSaved;
+  const feed=sess.map(o=>({names:o.names, total:o.total, ago:'just now'})).concat(seedFeed(r));
+  document.getElementById('view-owner').innerHTML=`
+    <div class="odash">
+      <div class="section-label" style="padding-left:0">Owner dashboard · ${r.name}</div>
+      <div class="ohero">
+        <div class="lbl">Commission saved this month</div>
+        <div class="amt">$${totalSaved.toLocaleString()}</div>
+        <div class="osub">${st.monthlyOrders.toLocaleString()} orders · $${st.revenue.toLocaleString()} kept · $0 paid to delivery apps</div>
+      </div>
+      <div class="ostatrow">
+        <div class="ostat"><b>$${st.aov.toFixed(2)}</b><span>avg order</span></div>
+        <div class="ostat"><b>0%</b><span>commission</span></div>
+        <div class="ostat"><b>${sess.length}</b><span>orders this session</span></div>
+      </div>
+      <div class="section-label" style="padding-left:0">Recent orders</div>
+      ${feed.map(o=>`<div class="orow"><div><b>${o.names.join(', ')}</b><span>${o.ago} · pickup</span></div><div class="okept">+$${o.total.toFixed(2)} kept</div></div>`).join('')}
+      <div class="realnote" style="margin-top:14px">Illustrative figures based on this restaurant's activity. In a live FullPlate account this updates from real orders. Place an order in the demo and it appears here as "just now".</div>
+    </div>`;
+  show('view-owner');
+  document.getElementById('cartbar').style.display = cartTotals().count>0 ? 'flex':'none';
+  document.getElementById('backBtn').style.display='flex';
+  window.scrollTo(0,0);
+}
+
+function show(id){ ['view-home','view-restaurant','view-checkout','view-done','view-owner'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
 function goHome(){ closeChat(); show('view-home'); document.getElementById('backBtn').style.display='none'; updateCartBar(); window.scrollTo(0,0); }
 function goBack(){
-  if(document.getElementById('view-checkout').style.display==='block' && current){ openRestaurant(current.id); updateCartBar(); }
-  else goHome();
+  if(document.getElementById('view-checkout').style.display==='block' && current){ openRestaurant(current.id); updateCartBar(); return; }
+  goHome();
 }
 function resetAll(){ cart=[]; cartRest=null; updateCartBar(); goHome(); }
 
