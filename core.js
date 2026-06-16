@@ -1,5 +1,5 @@
 /* FullPlate core: shared app state + diner storefront, cart, checkout,
-   account, and the ordering assistant. Loaded after data.js, before owner.js. */
+   account, and the ordering assistant. Loaded after data.js + platform.js, before owner.js. */
 
 let current=null, cart=[], activeCity='Phoenix', activeKind='All', activeSearch='', cartRest=null, appliedPromo=null;
 const placedOrders=[], orderHistory=[];
@@ -15,7 +15,7 @@ let modItem=null, modSel={};
 function photoFor(it){ return photoOverride[it.id] || itemPhoto(it.name); }
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
 function storeOf(r){ if(!STORE[r.id]) STORE[r.id]={open:true,paused:false,prep:r.eta}; return STORE[r.id]; }
-function orderingOpen(r){ const s=storeOf(r); return s.open && !s.paused; }
+function orderingOpen(r){ const s=storeOf(r); return s.open && !s.paused && (r.type!=='truck' || r.live); }
 function showToast(msg){ const el=document.getElementById('toast'); if(!el) return; el.textContent=msg; el.classList.add('show'); clearTimeout(__toastT); __toastT=setTimeout(function(){el.classList.remove('show');},2600); }
 
 function setCity(c){ activeCity=c; activeKind='All'; activeSearch=''; var s=document.getElementById('searchBox'); if(s)s.value=''; renderHome(); window.scrollTo(0,0); }
@@ -36,28 +36,78 @@ function renderHome(){
   document.getElementById('cityTabs').innerHTML = cities().map(c=>`
     <button class="citytab ${c===activeCity?'on':''}" onclick="setCity('${c}')"><span class="cpin">◉</span> ${c}</button>`).join('');
   const inCity = RESTAURANTS.filter(r=>r.city===activeCity);
-  const kinds = ['All', ...[...new Set(inCity.map(r=>r.kind))].sort()];
-  document.getElementById('kindTabs').innerHTML = kinds.map(k=>`
-    <button class="kindtab ${k===activeKind?'on':''}" onclick="setKind('${k}')">${k==='All'?'All food':k}</button>`).join('');
-  let list;
+  const cuis = [...new Set(inCity.filter(r=>r.type!=='truck').map(r=>r.kind))].sort();
+  const hasTrucks = inCity.some(r=>r.type==='truck');
+  let kindHTML = ['All', ...cuis].map(k=>`<button class="kindtab ${k===activeKind?'on':''}" onclick="setKind('${k}')">${k==='All'?'All food':k}</button>`).join('');
+  if(hasTrucks) kindHTML += `<button class="kindtab trucktab ${activeKind==='__trucks__'?'on':''}" onclick="setKind('__trucks__')">🚚 Trucks</button>`;
+  document.getElementById('kindTabs').innerHTML = kindHTML;
+
+  // one card per fixed brand (primary location in this city) + trucks as their own cards
+  const seen={}, fixedCards=[];
+  inCity.filter(r=>r.type!=='truck').forEach(r=>{
+    const bk=r.brand||r.id; if(seen[bk]) return; seen[bk]=1;
+    const locs=inCity.filter(x=>(x.brand||x.id)===bk && x.type!=='truck');
+    fixedCards.push(locs.find(x=>x.featured)||locs[0]);
+  });
+  const trucks=inCity.filter(r=>r.type==='truck');
+
+  let display, label;
   if(activeSearch){
-    list = inCity.filter(r=>matchSearch(r,activeSearch));
-    document.getElementById('rlistLabel').textContent = `${list.length} result${list.length===1?'':'s'} for "${activeSearch}"`;
+    display=fixedCards.filter(r=>matchSearch(r,activeSearch)).concat(trucks.filter(r=>matchSearch(r,activeSearch)));
+    label=`${display.length} result${display.length===1?'':'s'} for "${activeSearch}"`;
+  } else if(activeKind==='__trucks__'){
+    display=trucks.slice();
+    label=`${trucks.length} food truck${trucks.length===1?'':'s'} in ${activeCity}`;
+  } else if(activeKind==='All'){
+    const live=trucks.filter(truckLive);
+    display=live.concat(fixedCards);
+    label=`${display.length} places in ${activeCity}`;
   } else {
-    list = inCity.filter(r=>activeKind==='All'||r.kind===activeKind);
-    document.getElementById('rlistLabel').textContent =
-      `${list.length} ${activeKind==='All'?'restaurants':activeKind.toLowerCase()+' spots'} in ${activeCity}`;
+    display=fixedCards.filter(r=>r.kind===activeKind).concat(trucks.filter(r=>r.kind===activeKind && truckLive(r)));
+    label=`${display.length} ${activeKind.toLowerCase()} spots in ${activeCity}`;
   }
-  list = list.sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
-  document.getElementById('rlist').innerHTML = list.length ? list.map(r=>`
-    <div class="rcard ${r.featured?'is-feat':''}" onclick="openRestaurant('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRestaurant('${r.id}')" aria-label="${r.name}, ${r.cuisine}">
-      <div class="rbanner" style="${bannerStyle(r.id, r.color, CARD_SCRIM)}">${IMG[r.id]?'':'<span class="bemoji">'+r.emoji+'</span>'}<div class="rbadge">● 0% commission</div>${r.featured?'<div class="feat">★ Featured</div>':''}</div>
+  document.getElementById('rlistLabel').textContent=label;
+  document.getElementById('rlist').innerHTML = display.length ? display.map(r=>cardHTML(r)).join('') : '<div class="empty">No matches. Try another search or category.</div>';
+}
+
+function cardHTML(r){
+  const bk=r.brand||r.id;
+  const locCount=RESTAURANTS.filter(x=>(x.brand||x.id)===bk && x.type!=='truck' && x.city===r.city).length;
+  const isTruck=r.type==='truck', live=truckLive(r);
+  const meta = `<div class="rmeta"><span class="star">★ ${r.rating}</span><span>(${r.reviews})</span>·<span>${r.cuisine}</span>·<span>${r.price}</span>${isTruck?'':`·<span>◷ ${r.eta}</span>`}</div>`;
+  const truckLine = isTruck
+    ? (live ? `<div class="liveline">🚚 Live now · 📍 ${esc(r.spot)} · until ${esc(r.until)}</div>`
+            : `<div class="offline">🚚 Off now · Next: ${esc(r.nextStop||'TBA')}</div>`)
+    : '';
+  const locChip = (!isTruck && locCount>1) ? `<div class="loccount">📍 ${locCount} locations · pick one inside</div>` : '';
+  const badge = isTruck ? `<div class="rbadge truck">🚚 Food truck</div>` : `<div class="rbadge">● 0% commission</div>`;
+  const flag = r.featured ? '<div class="feat">★ Featured</div>' : (live?'<div class="feat live">● Live now</div>':'');
+  return `
+    <div class="rcard ${r.featured?'is-feat':''} ${isTruck?'is-truck':''}" onclick="openRestaurant('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRestaurant('${r.id}')" aria-label="${r.name}, ${r.cuisine}">
+      <div class="rbanner" style="${bannerStyle(r.id, r.color, CARD_SCRIM)}">${IMG[r.id]?'':'<span class="bemoji">'+r.emoji+'</span>'}${badge}${flag}</div>
       <div class="rbody">
         <div class="rtop"><h3>${r.name}</h3><button class="favbtn" onclick="event.stopPropagation();toggleFav('${r.id}')" aria-label="Favorite ${r.name}">${favorites[r.id]?'♥':'♡'}</button></div>
-        <div class="rmeta"><span class="star">★ ${r.rating}</span><span>(${r.reviews})</span>·<span>${r.cuisine}</span>·<span>${r.price}</span>·<span>◷ ${r.eta}</span></div>
+        ${meta}
+        ${truckLine}
+        ${locChip}
         <p class="rblurb">${r.blurb}</p>
       </div>
-    </div>`).join('') : '<div class="empty">No matches. Try another search or category.</div>';
+    </div>`;
+}
+
+function locPicker(r){
+  const locs=RESTAURANTS.filter(x=>(x.brand||x.id)===(r.brand||r.id) && x.type!=='truck');
+  if(locs.length<2) return '';
+  return `<div class="locpick">
+      <div class="lplabel">📍 ${locs.length} locations — choose where to pick up</div>
+      <div class="lprow">${locs.map(l=>`<button class="lpbtn ${l.id===r.id?'on':''}" onclick="openRestaurant('${l.id}')">${esc(l.loc||l.name)}<span>◷ ${l.eta}</span></button>`).join('')}</div>
+    </div>`;
+}
+function truckStatus(r){
+  if(r.type!=='truck') return '';
+  return r.live
+    ? `<div class="truckstatus live">🚚 <b>Live now</b> · 📍 ${esc(r.spot)}<br>Open until ${esc(r.until)} · pickup at the truck</div>`
+    : `<div class="truckstatus off">🚚 <b>Not serving right now</b><br>Next stop: ${esc(r.nextStop||'TBA')}</div>`;
 }
 
 function openRestaurant(id){
@@ -66,8 +116,10 @@ function openRestaurant(id){
   if(cart.length && cartRest!==id){ cart=[]; appliedPromo=null; tipPct=0; tipAmt=null; updateCartBar(); }
   chatStarted=false; aiHistory=[]; document.getElementById('chat').innerHTML='';
   window.scrollTo(0,0);
-  const s=storeOf(current); const open=s.open && !s.paused;
-  const banner = open ? '' : `<div class="dinerbanner">${s.open?'⏸ Pausing new orders — the kitchen is catching up. Check back in a few minutes.':'🚫 Currently closed — browse the menu; ordering resumes when they reopen.'}</div>`;
+  const s=storeOf(current);
+  const liveOk = current.type!=='truck' || current.live;
+  const open = s.open && !s.paused && liveOk;
+  const banner = (open || current.type==='truck') ? '' : `<div class="dinerbanner">${s.open?'⏸ Pausing new orders — the kitchen is catching up. Check back in a few minutes.':'🚫 Currently closed — browse the menu; ordering resumes when they reopen.'}</div>`;
   document.getElementById('view-restaurant').innerHTML = `
     <div class="rhead">
       <div class="rhead-banner" style="${bannerStyle(current.id, current.color, HEAD_SCRIM)}">${IMG[current.id]?'':'<span class="bemoji">'+current.emoji+'</span>'}</div>
@@ -78,6 +130,8 @@ function openRestaurant(id){
         ${current.realNote?`<div class="realnote">${current.realNote}</div>`:''}
       </div>
     </div>
+    ${truckStatus(current)}
+    ${locPicker(current)}
     ${banner}
     ${open?`<div class="ai-launch" onclick="openChat()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openChat()">
       <div class="spark">✦</div>
@@ -248,7 +302,9 @@ function placeOrder(){
   const {sub}=cartTotals(); const disc=promoDiscount(sub); const keptFood=Math.max(0,sub-disc); const tip=tipAmount(keptFood); const kept=keptFood+tip; const cut=(sub*0.30).toFixed(2);
   const pts=Math.max(1, Math.round(keptFood));
   const prep=storeOf(current).prep || current.eta || '15-20 min';
-  const rid=current.id, rname=current.name, rcity=current.city;
+  const isTruck=current.type==='truck';
+  const pickupLine=isTruck ? `Pickup at the truck · 📍 ${esc(current.spot||current.loc||current.city)}` : `Pickup at ${esc(current.name)} · ${esc(current.loc||current.city)}`;
+  const rid=current.id, rname=current.name;
   const items=cart.map(c=>({id:c.id,name:c.name,qty:c.qty,price:c.price,mods:c.mods||null}));
   placedOrders.unshift({ id:rid, names:cart.map(c=>c.qty+'× '+c.name), total:kept });
   ensureQueue(current);
@@ -258,7 +314,7 @@ function placeOrder(){
   window.__lastRest=rid;
   document.getElementById('doneMsg').innerHTML =
     `${rname} got your order and is firing it up now.<br><br>
-     <div class="readyline">◷ <b>Estimated ready in ${prep}</b><br>Pickup at ${esc(rname)} · ${esc(rcity)}<br>We'll text you the moment it's ready.</div>
+     <div class="readyline">◷ <b>Estimated ready in ${prep}</b><br>${pickupLine}<br>We'll text you the moment it's ready.</div>
      <b style="color:var(--good)">They kept the full $${keptFood.toFixed(2)}</b>${tip>0?` plus a $${tip.toFixed(2)} tip`:''} and saved about $${cut} in delivery-app commission on this order alone.<br><br>You earned <b>${pts} FullPlate points</b>.`;
   document.getElementById('rateRow').innerHTML = rateWidget(rid);
   cart=[]; cartRest=null; appliedPromo=null; tipPct=0; tipAmt=null; updateCartBar();
