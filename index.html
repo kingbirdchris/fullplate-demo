@@ -23,7 +23,7 @@
     .rcard:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
     .addbtn:hover,.paybtn:hover,.composer button:hover{background:var(--brand-dark)}
     .chip:hover{background:var(--brand);color:#fff}
-    .citytab:hover,.kindtab:hover,.ownerlink:hover{border-color:var(--ink)}
+    .citytab:hover,.kindtab:hover,.ownerlink:hover,.otab:hover{border-color:var(--ink)}
     .qstep button:hover,.back:hover,.close:hover,.again:hover{border-color:var(--ink)}
     .ai-launch:hover{box-shadow:var(--shadow-lg)}
   }
@@ -74,9 +74,11 @@
   .rstory{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin:12px 0 4px;font-size:var(--t-sm);color:var(--muted);line-height:1.5}
   .rstory b{color:var(--ink)}
   .realnote{margin:8px 0 0;font-size:12px;color:var(--muted);background:#F3ECE2;border-radius:var(--r-sm);padding:8px 11px;line-height:1.45}
+  .dinerbanner{margin:0 16px 4px;background:#FBEAE5;border:1px solid #E8C7BD;color:#8A3A22;border-radius:var(--r-md);padding:10px 13px;font-size:13px;font-weight:600;line-height:1.4}
   .menucat{padding:18px 16px 4px;font-size:15px;font-weight:800;letter-spacing:-.2px}
   .mitem{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);margin:8px 16px;padding:10px 12px}
   .mthumb{width:58px;height:58px;border-radius:11px;display:grid;place-items:center;font-size:26px;flex:0 0 auto;background-size:cover;background-position:center;overflow:hidden}
+  .mthumb.dim{opacity:.45;filter:grayscale(.5)}
   .minfo{flex:1;min-width:0}
   .minfo h4{margin:0 0 2px;font-size:14.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .minfo p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.4}
@@ -86,6 +88,7 @@
   .tag.spicy{background:#FBEAEA;color:#A8301F}
   .madd{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
   .mprice{font-weight:700;font-size:var(--t-md)}
+  .soldtag{font-size:11px;font-weight:800;color:#C44A28;background:#FBEAE5;padding:5px 9px;border-radius:8px}
   .addbtn{border:none;background:var(--brand);color:#fff;width:40px;height:40px;border-radius:11px;font-size:22px;line-height:1;font-weight:600}
   .addbtn:active{background:var(--brand-dark)}
   .ai-launch{margin:16px;background:linear-gradient(135deg,#2A211C,#43342B);color:#fff;border-radius:var(--r-md);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--shadow)}
@@ -147,6 +150,9 @@
   #view-done .again{margin-top:22px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 22px;font-weight:700}
   #view-owner{display:none}
   .odash{padding:16px}
+  .otabs{display:flex;gap:6px;margin:4px 0 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .otab{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:var(--pill);padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .otab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .ohero{background:linear-gradient(135deg,#1F6B43,#2E7D52);color:#fff;border-radius:var(--r-lg);padding:20px 18px;box-shadow:var(--shadow)}
   .ohero .lbl{font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
   .ohero .amt{font-size:36px;font-weight:800;margin:4px 0 2px;letter-spacing:-.5px}
@@ -159,10 +165,37 @@
   .orow b{display:block;font-size:13px}
   .orow span{font-size:11px;color:var(--muted)}
   .okept{color:var(--good);font-weight:800;font-size:13px;white-space:nowrap}
+  .oqsum{font-size:12.5px;color:var(--muted);margin:0 0 8px;font-weight:600}
+  .ocard{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin:8px 0}
+  .ohd{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+  .ostatus{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:var(--pill);text-transform:uppercase;letter-spacing:.4px}
+  .st-new{background:#FBEAE5;color:#C44A28}
+  .st-prep{background:#FCEFD9;color:#9C6206}
+  .st-ready{background:#EAF5EE;color:#1F6B43}
+  .otime{font-size:11px;color:var(--muted)}
+  .oitems{font-size:13.5px;font-weight:600;margin-bottom:9px}
+  .ofoot{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .ocust{font-size:12px;color:var(--muted)}
+  .oadv{border:none;background:var(--brand);color:#fff;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;white-space:nowrap}
+  .mrow{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;margin:8px 0;gap:10px}
+  .mrow b{font-size:13.5px}.mrow .mp{font-size:12.5px;color:var(--muted)}
+  .soldbtn{flex:0 0 auto;border:1px solid #BFE0CC;background:#EAF5EE;color:#1F6B43;border-radius:var(--pill);padding:7px 13px;font-size:12px;font-weight:700;white-space:nowrap}
+  .soldbtn.off{border-color:#E1B8AD;background:#FBEAE5;color:#C44A28}
+  .hrow{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;margin:8px 0;gap:12px}
+  .hrow.col{flex-direction:column;align-items:stretch}
+  .hrow b{font-size:14px;display:block;margin-bottom:2px}.hrow span{font-size:11.5px;color:var(--muted)}
+  .tgl{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--pill);padding:9px 16px;font-size:13px;font-weight:800;min-width:86px}
+  .tgl.on{background:var(--good);color:#fff;border-color:var(--good)}
+  .tgl.warn{background:var(--brand-dark);color:#fff;border-color:var(--brand-dark)}
+  .prepwrap{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .prepbtn{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:var(--pill);padding:8px 12px;font-size:12px;font-weight:600}
+  .prepbtn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
   .footer{padding:24px 16px 14px;text-align:center;color:var(--muted);font-size:var(--t-xs);line-height:1.6}
   .footer b{color:var(--brand)}
   .ownerlink{display:inline-block;margin:14px auto 0;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:var(--pill);padding:10px 16px;font-size:12.5px;font-weight:700}
   .empty{padding:30px 24px;text-align:center;color:var(--muted);font-size:var(--t-sm)}
+  .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(18px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:var(--pill);font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s ease;z-index:80;max-width:88%;text-align:center;box-shadow:var(--shadow-lg)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -191,7 +224,7 @@
     <div class="footer">
       <b>FullPlate</b> · a Kingbird Solutions concept demo<br>
       Listings are illustrative; the featured spot is built from public info. Photos via Wikimedia Commons. Checkout is simulated.<br>
-      <button class="ownerlink" onclick="openOwner('chiwas')">Run a restaurant? Peek at the owner view →</button>
+      <button class="ownerlink" onclick="openOwner('chiwas','overview')">Run a restaurant? Open the owner console →</button>
     </div>
   </div>
 
@@ -203,7 +236,7 @@
     <div class="check">✓</div>
     <h2>Order confirmed</h2>
     <p id="doneMsg"></p>
-    <div><button class="ownerlink" onclick="openOwner(window.__lastRest||'chiwas')">See the restaurant's view of this →</button></div>
+    <div><button class="ownerlink" onclick="openOwner(window.__lastRest||'chiwas','orders')">See it land in the restaurant's order queue →</button></div>
     <div><button class="again" onclick="resetAll()">Back to FullPlate</button></div>
   </div>
 </div>
@@ -229,6 +262,7 @@
     <button class="send" onclick="var i=document.getElementById('chatInput');sendUser(i.value);i.value=''" aria-label="Send">➤</button>
   </div>
 </div>
+<div id="toast" class="toast"></div>
 
 <script>
 const IMG = {
@@ -489,7 +523,7 @@ const RESTAURANTS = [
       ]},
       {cat:'Starters', items:[
         {id:'k4', name:'Pork Gyoza (5)', price:7.50, desc:'Pan-seared dumplings, ponzu', tags:[], emoji:'🥟'},
-        {id:'k5', name:'Edamame', price:5.00, desc:'Sea salt, steamed', tags:['gf','v'], emoji:'🫘'},
+        {id:'k5', name:'Edamame', price:5.00, desc:'Sea salt, steamed', tags:['gf','v'], emoji:'🫛'},
       ]},
       {cat:'Drinks', items:[
         {id:'k6', name:'Ramune Soda', price:3.50, desc:'Original marble soda', tags:['gf','v'], emoji:'🥤'},
@@ -558,7 +592,12 @@ const RESTAURANTS = [
 let current=null, cart=[], activeCity='Phoenix', activeKind='All', activeSearch='', cartRest=null;
 const placedOrders=[];
 let aiHistory=[];
+let ownerRest='chiwas', ownerTab='overview', __oid=1000, __toastT=null;
+const QUEUE={}, STORE={}, unavailable={};
 function cities(){ return [...new Set(RESTAURANTS.map(r=>r.city))]; }
+function storeOf(r){ if(!STORE[r.id]) STORE[r.id]={open:true,paused:false,prep:r.eta}; return STORE[r.id]; }
+function orderingOpen(r){ const s=storeOf(r); return s.open && !s.paused; }
+function showToast(msg){ const el=document.getElementById('toast'); if(!el) return; el.textContent=msg; el.classList.add('show'); clearTimeout(__toastT); __toastT=setTimeout(function(){el.classList.remove('show');},2600); }
 
 function setCity(c){ activeCity=c; activeKind='All'; activeSearch=''; var s=document.getElementById('searchBox'); if(s)s.value=''; renderHome(); window.scrollTo(0,0); }
 function setKind(k){ activeKind=k; renderHome(); }
@@ -601,31 +640,34 @@ function openRestaurant(id){
   if(cart.length && cartRest!==id){ cart=[]; updateCartBar(); }
   chatStarted=false; aiHistory=[]; document.getElementById('chat').innerHTML='';
   window.scrollTo(0,0);
+  const s=storeOf(current); const open=s.open && !s.paused;
+  const banner = open ? '' : `<div class="dinerbanner">${s.open?'⏸ Pausing new orders — the kitchen is catching up. Check back in a few minutes.':'🚫 Currently closed — browse the menu; ordering resumes when they reopen.'}</div>`;
   document.getElementById('view-restaurant').innerHTML = `
     <div class="rhead">
       <div class="rhead-banner" style="${bannerStyle(current.id, current.color, HEAD_SCRIM)}">${IMG[current.id]?'':'<span class="bemoji">'+current.emoji+'</span>'}</div>
       <div class="rhead-info">
         <h2>${current.name}</h2>
-        <div class="rmeta"><span class="star">★ ${current.rating}</span><span>(${current.reviews})</span>·<span>${current.cuisine}</span>·<span>${current.price}</span>·<span>◷ ${current.eta} pickup</span></div>
+        <div class="rmeta"><span class="star">★ ${current.rating}</span><span>(${current.reviews})</span>·<span>${current.cuisine}</span>·<span>${current.price}</span>·<span>◷ ${s.prep} pickup</span></div>
         <div class="rstory">${current.story}</div>
         ${current.realNote?`<div class="realnote">${current.realNote}</div>`:''}
       </div>
     </div>
-    <div class="ai-launch" onclick="openChat()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openChat()">
+    ${banner}
+    ${open?`<div class="ai-launch" onclick="openChat()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openChat()">
       <div class="spark">✦</div>
       <div class="t"><b>Order by chatting</b><span>Say or type what you want. Ask anything about the menu.</span></div>
       <div class="go">›</div>
-    </div>
+    </div>`:''}
     ${current.menu.map(cat=>`
       <div class="menucat">${cat.cat}</div>
-      ${cat.items.map(it=>{const ph=itemPhoto(it.name);return `
+      ${cat.items.map(it=>{const ph=itemPhoto(it.name);const so=unavailable[it.id];return `
         <div class="mitem">
-          <div class="mthumb" style="${ph?`background-image:url('${ph}')`:`background:${current.color}`}">${ph?'':it.emoji}</div>
+          <div class="mthumb ${so?'dim':''}" style="${ph?`background-image:url('${ph}')`:`background:${current.color}`}">${ph?'':it.emoji}</div>
           <div class="minfo">
             <h4>${it.name} ${it.id===current.popular?'<span class="pop">★ Most ordered</span>':''} ${it.tags.map(t=>tagHTML(t)).join('')}</h4>
             <p>${it.desc}</p>
           </div>
-          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span><button class="addbtn" onclick="addToCart('${it.id}')" aria-label="Add ${it.name}">+</button></div>
+          <div class="madd"><span class="mprice">$${it.price.toFixed(2)}</span>${so?'<span class="soldtag">Sold out</span>':(open?`<button class="addbtn" onclick="addToCart('${it.id}')" aria-label="Add ${it.name}">+</button>`:'')}</div>
         </div>`;}).join('')}
     `).join('')}
     <div style="height:10px"></div>`;
@@ -639,6 +681,8 @@ function tagHTML(t){ const map={gf:['gf','GF'],v:['v','VEG'],spicy:['spicy','�
 function findItem(id){ for(const r of RESTAURANTS) for(const c of r.menu) for(const it of c.items) if(it.id===id) return it; }
 function addToCart(id){
   const it=findItem(id); if(!it) return;
+  if(unavailable[id]) return;
+  if(current && !orderingOpen(current)) return;
   cartRest=current?current.id:cartRest;
   const row=cart.find(c=>c.id===id);
   if(row) row.qty++; else cart.push({id:it.id,name:it.name,price:it.price,qty:1});
@@ -690,7 +734,10 @@ function changeQty(id,d){
 
 function placeOrder(){
   const {sub}=cartTotals(); const cut=(sub*0.30).toFixed(2);
+  const items=cart.map(c=>({name:c.name,qty:c.qty,price:c.price}));
   placedOrders.unshift({ id:current.id, names:cart.map(c=>c.qty+'× '+c.name), total:sub });
+  ensureQueue(current);
+  QUEUE[current.id].unshift({ oid:++__oid, items:items, total:sub, status:'new', mins:0, name:'You (demo)' });
   window.__lastRest=current.id;
   document.getElementById('doneMsg').innerHTML =
     `${current.name} got your order and is firing it up now. You will get a text when it is ready for pickup.<br><br><b style="color:var(--good)">They kept the full $${sub.toFixed(2)}</b> and saved about $${cut} in delivery-app commission on this order alone.`;
@@ -699,6 +746,7 @@ function placeOrder(){
   window.scrollTo(0,0); show('view-done');
 }
 
+/* OWNER CONSOLE */
 function ownerStats(r){
   const items=r.menu.flatMap(c=>c.items);
   const avg=items.reduce((s,i)=>s+i.price,0)/items.length;
@@ -718,35 +766,137 @@ function seedFeed(r){
     {names:[g(2).name,g(1).name], total:g(2).price+g(1).price, ago:'1 hr ago'},
   ];
 }
-function openOwner(id){
-  const r=RESTAURANTS.find(x=>x.id===id)||RESTAURANTS.find(x=>x.featured)||RESTAURANTS[0];
-  current=r;
-  const st=ownerStats(r);
-  const sess=placedOrders.filter(o=>o.id===r.id);
-  const sessSaved=Math.round(sess.reduce((s,o)=>s+o.total,0)*0.30);
-  const totalSaved=st.saved+sessSaved;
-  const feed=sess.map(o=>({names:o.names, total:o.total, ago:'just now'})).concat(seedFeed(r));
-  document.getElementById('view-owner').innerHTML=`
+function ensureQueue(r){
+  if(QUEUE[r.id]) return;
+  const it=r.menu.flatMap(c=>c.items);
+  const g=i=>it[i%it.length];
+  const mk=(idxs,status,mins,name)=>{const items=idxs.map(i=>({name:g(i).name,qty:1,price:g(i).price}));return {oid:++__oid,items,total:items.reduce((s,x)=>s+x.price,0),status,mins,name};};
+  QUEUE[r.id]=[
+    mk([1],'new',1,'Devin R.'),
+    mk([3,0],'new',2,'Sam P.'),
+    mk([0,2],'preparing',5,'Maria G.'),
+    mk([2,1,4],'ready',9,'Alex T.'),
+  ];
+}
+function openOwner(id, tab){
+  ownerRest = id || ownerRest;
+  if(tab) ownerTab = tab;
+  const r = RESTAURANTS.find(x=>x.id===ownerRest) || RESTAURANTS.find(x=>x.featured) || RESTAURANTS[0];
+  current = r; ensureQueue(r); storeOf(r);
+  const tabs=[['overview','Overview'],['orders','Orders'],['menu','Menu'],['hours','Hours'],['payouts','Payouts']];
+  document.getElementById('view-owner').innerHTML = `
     <div class="odash">
-      <div class="section-label" style="padding-left:0">Owner dashboard · ${r.name}</div>
-      <div class="ohero">
-        <div class="lbl">Commission saved this month</div>
-        <div class="amt">$${totalSaved.toLocaleString()}</div>
-        <div class="osub">${st.monthlyOrders.toLocaleString()} orders · $${st.revenue.toLocaleString()} kept · $0 paid to delivery apps</div>
-      </div>
-      <div class="ostatrow">
-        <div class="ostat"><b>$${st.aov.toFixed(2)}</b><span>avg order</span></div>
-        <div class="ostat"><b>0%</b><span>commission</span></div>
-        <div class="ostat"><b>${sess.length}</b><span>orders this session</span></div>
-      </div>
-      <div class="section-label" style="padding-left:0">Recent orders</div>
-      ${feed.map(o=>`<div class="orow"><div><b>${o.names.join(', ')}</b><span>${o.ago} · pickup</span></div><div class="okept">+$${o.total.toFixed(2)} kept</div></div>`).join('')}
-      <div class="realnote" style="margin-top:14px">Illustrative figures based on this restaurant's activity. In a live FullPlate account this updates from real orders. Place an order in the demo and it appears here as "just now".</div>
+      <div class="section-label" style="padding-left:0">Owner console · ${r.name}</div>
+      <div class="otabs">${tabs.map(t=>`<button class="otab ${t[0]===ownerTab?'on':''}" onclick="openOwner('${r.id}','${t[0]}')">${t[1]}</button>`).join('')}</div>
+      <div id="ownerBody">${ownerBody(r)}</div>
     </div>`;
   show('view-owner');
   document.getElementById('cartbar').style.display = cartTotals().count>0 ? 'flex':'none';
   document.getElementById('backBtn').style.display='flex';
   window.scrollTo(0,0);
+}
+function ownerBody(r){
+  if(ownerTab==='orders') return ordersTab(r);
+  if(ownerTab==='menu') return menuTab(r);
+  if(ownerTab==='hours') return hoursTab(r);
+  if(ownerTab==='payouts') return payoutsTab(r);
+  return overviewTab(r);
+}
+function overviewTab(r){
+  const st=ownerStats(r);
+  const sess=placedOrders.filter(o=>o.id===r.id);
+  const sessSaved=Math.round(sess.reduce((s,o)=>s+o.total,0)*0.30);
+  const totalSaved=st.saved+sessSaved;
+  const active=(QUEUE[r.id]||[]).filter(o=>o.status!=='done').length;
+  const feed=sess.map(o=>({names:o.names,total:o.total,ago:'just now'})).concat(seedFeed(r));
+  return `
+    <div class="ohero">
+      <div class="lbl">Commission saved this month</div>
+      <div class="amt">$${totalSaved.toLocaleString()}</div>
+      <div class="osub">${st.monthlyOrders.toLocaleString()} orders · $${st.revenue.toLocaleString()} kept · $0 paid to delivery apps</div>
+    </div>
+    <div class="ostatrow">
+      <div class="ostat"><b>$${st.aov.toFixed(2)}</b><span>avg order</span></div>
+      <div class="ostat"><b>${active}</b><span>active orders</span></div>
+      <div class="ostat"><b>${sess.length}</b><span>this session</span></div>
+    </div>
+    <div class="section-label" style="padding-left:0">Latest orders</div>
+    ${feed.slice(0,5).map(o=>`<div class="orow"><div><b>${o.names.join(', ')}</b><span>${o.ago} · pickup</span></div><div class="okept">+$${o.total.toFixed(2)} kept</div></div>`).join('')}
+    <div class="realnote" style="margin-top:14px">Illustrative figures based on this restaurant's activity. Place an order in the demo and it lands in Orders as a new ticket.</div>`;
+}
+function ordersTab(r){
+  const q=QUEUE[r.id]||[];
+  const active=q.filter(o=>o.status!=='done');
+  const done=q.filter(o=>o.status==='done').length;
+  const label={new:'New',preparing:'Preparing',ready:'Ready for pickup'};
+  const nextlbl={new:'Start preparing',preparing:'Mark ready',ready:'Mark picked up'};
+  const cls={new:'st-new',preparing:'st-prep',ready:'st-ready'};
+  return `
+    <div class="oqsum">${active.length} active · ${done} completed today</div>
+    ${active.length ? active.map(o=>`
+      <div class="ocard">
+        <div class="ohd"><span class="ostatus ${cls[o.status]}">${label[o.status]}</span><span class="otime">#${o.oid} · ${o.mins} min ago</span></div>
+        <div class="oitems">${o.items.map(i=>i.qty+'× '+i.name).join(', ')}</div>
+        <div class="ofoot"><span class="ocust">${o.name} · $${o.total.toFixed(2)}</span><button class="oadv" onclick="advanceOrder(${o.oid})">${nextlbl[o.status]} →</button></div>
+      </div>`).join('') : '<div class="empty">No active orders right now. New tickets appear here the moment a diner orders.</div>'}
+    ${done?`<div class="realnote" style="margin-top:10px">${done} order${done===1?'':'s'} completed today. On a live account, new orders also trigger a sound + receipt print.</div>`:''}`;
+}
+function advanceOrder(oid){
+  const q=QUEUE[ownerRest]||[]; const o=q.find(x=>x.oid===oid); if(!o) return;
+  const flow={new:'preparing',preparing:'ready',ready:'done'};
+  o.status=flow[o.status]||'done'; o.mins=0;
+  if(o.status==='ready') showToast('📲 '+(o.name||'Customer')+' texted: your order is ready for pickup');
+  else if(o.status==='done') showToast('Order marked picked up');
+  openOwner(ownerRest,'orders');
+}
+function menuTab(r){
+  return r.menu.map(c=>`<div class="section-label" style="padding-left:0">${c.cat}</div>`+
+    c.items.map(i=>{const so=unavailable[i.id];return `
+    <div class="mrow">
+      <div><b>${i.name}</b> <span class="mp">$${i.price.toFixed(2)}</span></div>
+      <button class="soldbtn ${so?'off':''}" onclick="toggleSold('${i.id}')">${so?'Sold out':'Available'}</button>
+    </div>`;}).join('')).join('')
+    + '<div class="realnote" style="margin-top:14px">Tap an item to 86 it. Sold-out items hide instantly on the live menu and the AI stops offering them. Price and item edits work the same way in a full account.</div>';
+}
+function toggleSold(id){
+  if(unavailable[id]) delete unavailable[id]; else unavailable[id]=true;
+  const it=findItem(id); showToast((it?it.name:'Item')+(unavailable[id]?' marked sold out':' back available'));
+  openOwner(ownerRest,'menu');
+}
+function hoursTab(r){
+  const s=storeOf(r);
+  const preps=['10–20 min','15–25 min','20–30 min','30–45 min'];
+  return `
+    <div class="hrow"><div><b>Store status</b><span>${s.open?'Diners can order now':'Diners can browse but not order'}</span></div>
+      <button class="tgl ${s.open?'on':''}" onclick="toggleOpen('${r.id}')">${s.open?'Open':'Closed'}</button></div>
+    <div class="hrow"><div><b>Pause new orders</b><span>Kitchen slammed? Stop the queue without closing</span></div>
+      <button class="tgl ${s.paused?'warn':''}" onclick="togglePause('${r.id}')">${s.paused?'Paused':'Live'}</button></div>
+    <div class="hrow col"><div><b>Pickup prep time</b><span>Shown to diners as the wait</span></div>
+      <div class="prepwrap">${preps.map(p=>`<button class="prepbtn ${s.prep===p?'on':''}" onclick="setPrep('${r.id}','${p}')">${p}</button>`).join('')}</div></div>
+    <div class="realnote" style="margin-top:6px">These flip the live storefront instantly. Closing or pausing shows diners a banner and turns off ordering.</div>`;
+}
+function toggleOpen(id){ const s=storeOf(RESTAURANTS.find(r=>r.id===id)); s.open=!s.open; showToast('Store '+(s.open?'opened':'closed')); openOwner(id,'hours'); }
+function togglePause(id){ const s=storeOf(RESTAURANTS.find(r=>r.id===id)); s.paused=!s.paused; showToast(s.paused?'New orders paused':'Orders live again'); openOwner(id,'hours'); }
+function setPrep(id,p){ const s=storeOf(RESTAURANTS.find(r=>r.id===id)); s.prep=p; showToast('Prep time set to '+p); openOwner(id,'hours'); }
+function payoutsTab(r){
+  const st=ownerStats(r);
+  const week=Math.round(st.revenue/4.3);
+  const wkSaved=Math.round(week*0.30);
+  const rows=[['This Monday','$'+week.toLocaleString(),'Scheduled'],['Last Monday','$'+Math.round(week*0.94).toLocaleString(),'Paid'],['Two weeks ago','$'+Math.round(week*1.06).toLocaleString(),'Paid']];
+  return `
+    <div class="ohero">
+      <div class="lbl">Next payout</div>
+      <div class="amt">$${week.toLocaleString()}</div>
+      <div class="osub">Deposits to your bank in 2 days · you keep 100%, FullPlate takes 0% commission</div>
+    </div>
+    <div class="ostatrow">
+      <div class="ostat"><b>$${st.revenue.toLocaleString()}</b><span>sales this month</span></div>
+      <div class="ostat"><b>$${wkSaved.toLocaleString()}</b><span>saved per week</span></div>
+      <div class="ostat"><b>2.9%+30¢</b><span>card processing</span></div>
+    </div>
+    <div class="section-label" style="padding-left:0">Payout history</div>
+    ${rows.map(p=>`<div class="orow"><div><b>${p[1]}</b><span>${p[0]} · direct deposit</span></div><div class="okept">${p[2]}</div></div>`).join('')}
+    <div class="realnote" style="margin-top:14px">In a live account, payouts run through Stripe Connect straight to the restaurant's bank. FullPlate never holds your money and charges no commission — only standard card processing is passed through at cost.</div>`;
 }
 
 function show(id){ ['view-home','view-restaurant','view-checkout','view-done','view-owner'].forEach(v=>{ document.getElementById(v).style.display=(v===id)?'block':'none'; }); }
@@ -785,7 +935,7 @@ function sendUser(raw){ const text=(raw||'').trim(); if(!text) return; meSay(tex
 
 function aiTurn(text){
   showTyping();
-  const menu=allItems().map(i=>({id:i.id,name:i.name,price:i.price,desc:i.desc,tags:i.tags}));
+  const menu=allItems().filter(i=>!unavailable[i.id]).map(i=>({id:i.id,name:i.name,price:i.price,desc:i.desc,tags:i.tags}));
   const fallback=function(){ hideTyping(); handleIntent(text.toLowerCase()); };
   let done=false;
   const timer=setTimeout(function(){ if(!done){ done=true; fallback(); } }, 12000);
@@ -796,7 +946,7 @@ function aiTurn(text){
       if(!d || d.configured===false || d.error || !d.reply){ handleIntent(text.toLowerCase()); return; }
       aiHistory.push({role:'user',content:text}); aiHistory.push({role:'assistant',content:d.reply});
       if(aiHistory.length>16) aiHistory=aiHistory.slice(-16);
-      (d.add||[]).forEach(function(a){ var it=findItem(a.id); if(it){ var n=Math.max(1,Math.min(parseInt(a.qty)||1,20)); for(var k=0;k<n;k++) addToCart(it.id); } });
+      (d.add||[]).forEach(function(a){ var it=findItem(a.id); if(it && !unavailable[a.id]){ var n=Math.max(1,Math.min(parseInt(a.qty)||1,20)); for(var k=0;k<n;k++) addToCart(it.id); } });
       botSay(esc(d.reply));
       if(d.checkout && cartTotals().count>0){ setChips([]); setTimeout(openCheckout,800); }
       else setChips(["What do you recommend?","Add a drink","That's it, checkout"]);
@@ -838,7 +988,7 @@ function handleIntent(t){
     return;
   }
   if(/(hour|open|close|when|location|where|address|pickup time)/.test(t)){
-    botSay(`${current.name} is set up for pickup with about a ${current.eta} wait. In a live FullPlate listing this is where the real hours, address, and pickup time would show.`);
+    botSay(`${current.name} is set up for pickup with about a ${storeOf(current).prep} wait. In a live FullPlate listing this is where the real hours, address, and pickup time would show.`);
     setChips(["What do you recommend?","See full menu"]); return;
   }
   if(/(menu|what do you have|do you have|what else do you|see more|options|see (the )?menu|\blist\b)/.test(t)){
@@ -870,7 +1020,7 @@ function parseQty(t){
 }
 const STOP=['the','and','with','plate','of','for','add','some','a','an','bowl'];
 function matchItems(t){
-  const items=allItems();
+  const items=allItems().filter(i=>!unavailable[i.id]);
   const exact=items.filter(it=>t.includes(it.name.toLowerCase()));
   if(exact.length) return exact;
   let best=null,bestScore=0;
