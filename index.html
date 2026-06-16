@@ -72,6 +72,17 @@
     <button class="send" onclick="var i=document.getElementById('chatInput');sendUser(i.value);i.value=''" aria-label="Send">➤</button>
   </div>
 </div>
+
+<div class="sheet-backdrop" id="modback" onclick="closeModSheet()"></div>
+<div class="sheet modsheet" id="modsheet" role="dialog" aria-label="Customize item">
+  <div class="sheet-head">
+    <div class="ht"><b id="modTitle">Customize</b><span id="modSub"></span></div>
+    <button class="close" onclick="closeModSheet()" aria-label="Close">✕</button>
+  </div>
+  <div class="modbody" id="modBody"></div>
+  <div class="modfoot"><button class="paybtn" id="modAddBtn" onclick="modConfirm()">Add to order</button></div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="data.js"></script>
