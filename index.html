@@ -5,6 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>FullPlate — order local, keep your margin</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+.revstrip{margin:14px 16px 4px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:16px}
+.revstrip .rvtop{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.revstrip .rvavg{font-size:20px;font-weight:800;line-height:1}
+.revstrip .rvstars{color:#E8A317;letter-spacing:1px}
+.revstrip .rvcount{color:var(--muted);font-size:13px}
+.revitem{padding:9px 0;border-top:1px solid var(--line)}
+.revitem .rvname{font-weight:700;font-size:13.5px}
+.revitem .rvr{color:#E8A317;font-size:11.5px;letter-spacing:1px;margin-left:4px}
+.revitem .rvtext{font-size:13.5px;color:#444;margin-top:2px}
+.revitem .rvreply{font-size:12.5px;color:var(--muted);margin-top:5px;padding-left:10px;border-left:2px solid var(--line)}
+.custbtn{border:1px solid var(--brand);color:var(--brand);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.custbtn:hover{background:var(--brand);color:#fff}
+.readyline{margin:4px 0 16px;padding:13px 15px;background:#F4FBF4;border:1px solid #CDEBD0;border-radius:14px;font-size:13.5px;text-align:left;line-height:1.5}
+.readyline b{color:var(--good)}
+.raterow{margin-top:18px}
+.raterow .rlbl{font-size:14px;font-weight:700;margin-bottom:8px}
+.ratestars{font-size:30px;letter-spacing:7px;cursor:pointer;color:#E8A317;user-select:none}
+.ratestars span{opacity:.3;transition:opacity .12s}
+.ratestars span.on{opacity:1}
+.ratedone{font-size:13.5px;color:var(--good);font-weight:700;margin-top:6px}
+</style>
 </head>
 <body>
 <div class="app">
@@ -44,6 +66,7 @@
     <div class="check">✓</div>
     <h2>Order confirmed</h2>
     <p id="doneMsg"></p>
+    <div id="rateRow"></div>
     <div><button class="ownerlink" onclick="openOwner(window.__lastRest||'chiwas','orders')">See it land in the restaurant's order queue →</button></div>
     <div><button class="again" onclick="resetAll()">Back to FullPlate</button></div>
   </div>
