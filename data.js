@@ -29,6 +29,9 @@ const PIX = {
   ceviche:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Tostada_de_ceviche_de_camar%C3%B3n_con_mango.jpg/960px-Tostada_de_ceviche_de_camar%C3%B3n_con_mango.jpg",
   springroll:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Vietnamese_fried_spring_rolls_in_Ho_Chi_Minh_City%2C_Vietnam.jpg/960px-Vietnamese_fried_spring_rolls_in_Ho_Chi_Minh_City%2C_Vietnam.jpg"
 };
+/* Austin banners reuse existing cuisine photos */
+IMG.lonestar=IMG.chiwas; IMG.hillbbq=IMG.smoke; IMG.greenbelt=IMG.poke; IMG.congress=IMG.burger; IMG.saigon=IMG.pho;
+
 const PIC_ORDER = [
   ['shawarma',IMG.bashir],['gyro',PIX.gyro],['falafel',IMG.bashir],['hummus',PIX.guacamole],
   ['gyoza',PIX.dumpling],['rangoon',PIX.dumpling],['spring roll',PIX.springroll],
@@ -39,11 +42,11 @@ const PIC_ORDER = [
   ['latte',PIX.coffee],['coffee',PIX.coffee],['cold brew',PIX.coffee],
   ['fries',PIX.fries],
   ['pho',IMG.pho],['ramen',IMG.sakura],['pizza',IMG.slice],['margherita',IMG.slice],['funghi',IMG.slice],
-  ['brisket',IMG.smoke],['pulled pork',IMG.smoke],['smoked',IMG.smoke],
-  ['club',IMG.harbor],['sandwich',IMG.harbor],['melt',IMG.harbor],
+  ['brisket',IMG.smoke],['pulled pork',IMG.smoke],['ribs',IMG.smoke],['smoked',IMG.smoke],
+  ['banh mi',IMG.harbor],['club',IMG.harbor],['sandwich',IMG.harbor],['melt',IMG.harbor],
   ['smash',IMG.burger],['burger',IMG.burger],
   ['bolognese',IMG.bella],['spaghetti',IMG.bella],['tagliatelle',IMG.bella],['cacio',IMG.bella],['parmigiana',IMG.bella],
-  ['poke',IMG.poke],['ahi',IMG.poke],['salmon',IMG.poke],
+  ['poke',IMG.poke],['ahi',IMG.poke],['salmon',IMG.poke],['bowl',IMG.poke],
   ['taco',IMG.chiwas]
 ];
 function itemPhoto(name){ const n=name.toLowerCase(); for(const p of PIC_ORDER){ if(n.includes(p[0])) return p[1]; } return null; }
@@ -75,7 +78,8 @@ const RESTAURANTS = [
         {id:'tc7', name:'Rajas Gordita', price:5.00, desc:'Roasted poblanos, Anaheim peppers, onion, asadero, beans', tags:['v'], emoji:'🌶️'},
       ]},
       {cat:'Burritos (organic flour tortillas)', items:[
-        {id:'tc8', name:'Asada Burrito', price:11.00, desc:'Beef, lettuce, cilantro, tomato, pickled red onion, beans, asadero', tags:[], emoji:'🌯'},
+        {id:'tc8', name:'Asada Burrito', price:11.00, desc:'Beef, lettuce, cilantro, tomato, pickled red onion, beans, asadero', tags:[], emoji:'🌯',
+          mods:[{name:'Make it a meal', multi:true, max:2, options:[{name:'Chips & salsa',price:2.50},{name:'Add guacamole',price:1.50},{name:'Horchata',price:3.00}]}]},
         {id:'tc9', name:'Deshebrada Roja Burrito', price:10.00, desc:'Red shredded beef, potato, beans', tags:[], emoji:'🌯'},
       ]},
       {cat:'More', items:[
@@ -253,7 +257,8 @@ const RESTAURANTS = [
     story:"Kenji trained in Fukuoka and brings that broth home to Orange. The pork bones simmer for 18 hours and the noodles are made fresh in-house every day.",
     menu:[
       {cat:'Ramen', items:[
-        {id:'k1', name:'Tonkotsu Ramen', price:15.00, desc:'18-hour pork broth, chashu, soft egg, scallion', tags:[], emoji:'🍜'},
+        {id:'k1', name:'Tonkotsu Ramen', price:15.00, desc:'18-hour pork broth, chashu, soft egg, scallion', tags:[], emoji:'🍜',
+          mods:[{name:'Add extras', multi:true, max:3, options:[{name:'Extra chashu',price:3.00},{name:'Extra soft egg',price:1.50},{name:'Corn',price:1.00},{name:'Garlic oil',price:0.50}]}]},
         {id:'k2', name:'Spicy Miso Ramen', price:15.50, desc:'Miso-chili broth, ground pork, corn', tags:['spicy'], emoji:'🌶️'},
         {id:'k3', name:'Veggie Shoyu Ramen', price:13.50, desc:'Kombu-shiitake broth, tofu, greens', tags:['v'], emoji:'🍲'},
       ]},
@@ -273,7 +278,9 @@ const RESTAURANTS = [
     story:"Kai grew up in Oahu and missed real poke after moving to Orange, so he built a counter around daily-delivered ahi and his grandmother's shoyu recipe.",
     menu:[
       {cat:'Signature Bowls', items:[
-        {id:'j1', name:'Classic Ahi Bowl', price:13.50, desc:'Ahi tuna, shoyu, sweet onion, rice, seaweed', tags:['gf'], emoji:'🍣'},
+        {id:'j1', name:'Classic Ahi Bowl', price:13.50, desc:'Ahi tuna, shoyu, sweet onion, rice, seaweed', tags:['gf'], emoji:'🍣',
+          mods:[{name:'Choose a base', options:[{name:'White rice',price:0},{name:'Brown rice',price:0},{name:'Mixed greens',price:0}]},
+                {name:'Add-ons', multi:true, max:4, options:[{name:'Extra ahi',price:3.00},{name:'Avocado',price:1.50},{name:'Edamame',price:1.00},{name:'Spicy mayo',price:0.50}]}]},
         {id:'j2', name:'Spicy Salmon Bowl', price:13.50, desc:'Salmon, spicy mayo, cucumber, edamame', tags:['spicy'], emoji:'🐟'},
         {id:'j3', name:'Tofu Veggie Bowl', price:11.50, desc:'Marinated tofu, avocado, mango, greens', tags:['gf','v'], emoji:'🥑'},
       ]},
@@ -293,7 +300,8 @@ const RESTAURANTS = [
     story:"A walk-up window run by two line cooks who wanted to make one thing perfectly. Local beef, smashed to order, never frozen.",
     menu:[
       {cat:'Burgers', items:[
-        {id:'u1', name:'Classic Smash', price:9.00, desc:'Two patties, American, onion, house sauce', tags:[], emoji:'🍔'},
+        {id:'u1', name:'Classic Smash', price:9.00, desc:'Two patties, American, onion, house sauce', tags:[], emoji:'🍔',
+          mods:[{name:'Add-ons', multi:true, max:3, options:[{name:'Extra patty',price:2.50},{name:'Bacon',price:2.00},{name:'Avocado',price:1.50},{name:'Fried egg',price:1.50}]}]},
         {id:'u2', name:'Bacon Cheddar Smash', price:11.00, desc:'Double patty, bacon, aged cheddar', tags:[], emoji:'🥓'},
         {id:'u3', name:'Crispy Veggie Burger', price:9.50, desc:'Black bean patty, lettuce, chipotle aioli', tags:['v'], emoji:'🥬'},
       ]},
@@ -320,6 +328,101 @@ const RESTAURANTS = [
       ]},
       {cat:'Drinks', items:[
         {id:'e6', name:'San Pellegrino', price:3.50, desc:'Sparkling, chilled', tags:['gf','v'], emoji:'🥤'},
+      ]},
+    ]
+  },
+  {
+    id:'lonestar', city:'Austin, TX', kind:'Mexican', featured:true, name:'Lone Star Tacos', cuisine:'Tex-Mex & Breakfast Tacos', emoji:'🌮',
+    color:'#FBE6DA', rating:4.8, reviews:721, eta:'10–20 min', price:'$', popular:'ls1',
+    blurb:'Breakfast tacos and street tacos on a South Austin corner.',
+    story:"A taco trailer that grew into a corner shop. The flour tortillas are pressed every morning and the salsa roja has a quiet kick that regulars swear by.",
+    menu:[
+      {cat:'Breakfast Tacos (served all day)', items:[
+        {id:'ls1', name:'Bacon, Egg & Cheese Taco', price:3.75, desc:'Crispy bacon, scrambled egg, cheddar, flour tortilla', tags:[], emoji:'🌮'},
+        {id:'ls2', name:'Migas Taco', price:3.95, desc:'Egg, crispy tortilla strips, pico, cheese', tags:['v'], emoji:'🌮'},
+        {id:'ls3', name:'Potato & Egg Taco', price:3.50, desc:'Egg, crispy potato, salsa verde', tags:['v'], emoji:'🥔'},
+      ]},
+      {cat:'Street Tacos', items:[
+        {id:'ls4', name:'Al Pastor Taco', price:4.25, desc:'Marinated pork, pineapple, onion, cilantro', tags:['gf'], emoji:'🌮'},
+        {id:'ls5', name:'Brisket Taco', price:4.75, desc:'Chopped smoked brisket, pickled onion', tags:['gf'], emoji:'🌮'},
+      ]},
+      {cat:'Sides & Drinks', items:[
+        {id:'ls6', name:'Queso & Chips', price:6.50, desc:'House queso, warm tortilla chips', tags:['gf','v'], emoji:'🧀'},
+        {id:'ls7', name:'Topo Chico', price:3.00, desc:'Mineral water, lime', tags:['gf','v'], emoji:'🥤'},
+      ]},
+    ]
+  },
+  {
+    id:'hillbbq', city:'Austin, TX', kind:'BBQ', name:'Hill Country Smokehouse', cuisine:'Central Texas BBQ', emoji:'🍖',
+    color:'#F3E4DC', rating:4.9, reviews:884, eta:'20–35 min', price:'$$$', popular:'hb1',
+    blurb:'Post-oak brisket and house sausage, sold by the pound.',
+    story:"A pit master who learned in Lockhart and brought it to Austin. Brisket smokes overnight; when it runs out, the doors close. No sauce needed, but it is there if you want it.",
+    menu:[
+      {cat:'By the Pound & Plate', items:[
+        {id:'hb1', name:'Brisket Plate', price:19.00, desc:'Half pound moist or lean brisket, two sides, bread', tags:['gf'], emoji:'🥩'},
+        {id:'hb2', name:'Pork Ribs (3)', price:16.00, desc:'Pecan-smoked spare ribs, dry rub', tags:['gf'], emoji:'🍖'},
+        {id:'hb3', name:'House Sausage Link', price:8.00, desc:'Coarse-ground beef and pork, snappy casing', tags:['gf'], emoji:'🌭'},
+      ]},
+      {cat:'Sides', items:[
+        {id:'hb4', name:'Potato Salad', price:4.00, desc:'Mustard-style, dill', tags:['gf','v'], emoji:'🥔'},
+        {id:'hb5', name:'Pinto Beans', price:4.00, desc:'Slow-cooked with brisket trimmings', tags:['gf'], emoji:'🫘'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'hb6', name:'Sweet Tea', price:3.00, desc:'Brewed by the gallon', tags:['gf','v'], emoji:'🧊'},
+      ]},
+    ]
+  },
+  {
+    id:'greenbelt', city:'Austin, TX', kind:'Healthy', name:'Greenbelt Bowls', cuisine:'Bowls & Smoothies', emoji:'🥗',
+    color:'#E8F2E6', rating:4.6, reviews:402, eta:'10–20 min', price:'$$', popular:'gb1',
+    blurb:'Grain bowls, açaí, and cold-pressed juice near Barton Springs.',
+    story:"Two trail runners who wanted real food after a hike. Everything is built fresh, the greens are local, and the açaí is the unsweetened good stuff.",
+    menu:[
+      {cat:'Grain Bowls', items:[
+        {id:'gb1', name:'Greenbelt Power Bowl', price:12.50, desc:'Quinoa, kale, sweet potato, chickpeas, tahini', tags:['gf','v'], emoji:'🥗',
+          mods:[{name:'Add a protein', options:[{name:'None',price:0},{name:'Grilled chicken',price:3.00},{name:'Tofu',price:2.00},{name:'Salmon',price:4.50}]},
+                {name:'Top it off', multi:true, max:3, options:[{name:'Avocado',price:1.50},{name:'Extra greens',price:1.00},{name:'Pepitas',price:0.75}]}]},
+        {id:'gb2', name:'Citrus Salmon Bowl', price:14.50, desc:'Brown rice, salmon, cucumber, citrus vinaigrette', tags:['gf'], emoji:'🐟'},
+      ]},
+      {cat:'Açaí & Smoothies', items:[
+        {id:'gb3', name:'Açaí Bowl', price:9.50, desc:'Açaí, banana, granola, berries, honey', tags:['v'], emoji:'🍓'},
+        {id:'gb4', name:'Green Machine Smoothie', price:7.50, desc:'Spinach, mango, banana, almond milk', tags:['gf','v'], emoji:'🥤'},
+      ]},
+    ]
+  },
+  {
+    id:'congress', city:'Austin, TX', kind:'Burgers', name:'Congress Burgers', cuisine:'Smash Burgers', emoji:'🍔',
+    color:'#FBE9DA', rating:4.7, reviews:559, eta:'15–25 min', price:'$$', popular:'cb1',
+    blurb:'Griddle smash burgers downtown, off Congress Ave.',
+    story:"A late-night window that takes its patties seriously: local beef, smashed thin and crispy, on a buttered potato bun.",
+    menu:[
+      {cat:'Burgers', items:[
+        {id:'cb1', name:'Congress Double', price:9.50, desc:'Two smashed patties, American, onion, house sauce', tags:[], emoji:'🍔',
+          mods:[{name:'Add-ons', multi:true, max:3, options:[{name:'Extra patty',price:2.50},{name:'Green chile',price:1.50},{name:'Bacon',price:2.00},{name:'Fried egg',price:1.50}]}]},
+        {id:'cb2', name:'Mushroom Swiss', price:11.00, desc:'Double patty, swiss, sautéed mushrooms', tags:[], emoji:'🍄'},
+      ]},
+      {cat:'Sides', items:[
+        {id:'cb3', name:'Crinkle Fries', price:4.00, desc:'Salted, crispy', tags:['gf','v'], emoji:'🍟'},
+        {id:'cb4', name:'Chocolate Shake', price:5.50, desc:'Thick, real cocoa', tags:['v'], emoji:'🥤'},
+      ]},
+    ]
+  },
+  {
+    id:'saigon', city:'Austin, TX', kind:'Asian', name:'Saigon Sister', cuisine:'Vietnamese', emoji:'🥖',
+    color:'#E7F0E9', rating:4.8, reviews:476, eta:'15–25 min', price:'$$', popular:'sg1',
+    blurb:'Banh mi and pho on East Sixth, family-run.',
+    story:"The sisters bake their baguettes daily and grind their own pâté. The pho broth simmers from before dawn, the way their mother taught them.",
+    menu:[
+      {cat:'Banh Mi', items:[
+        {id:'sg1', name:'Classic Pork Banh Mi', price:8.50, desc:'Grilled pork, pâté, pickled veg, cilantro, jalapeño', tags:[], emoji:'🥖'},
+        {id:'sg2', name:'Lemongrass Tofu Banh Mi', price:8.00, desc:'Lemongrass tofu, pickled veg, herbs', tags:['v'], emoji:'🥖'},
+      ]},
+      {cat:'Noodles', items:[
+        {id:'sg3', name:'Pho Bo (Beef)', price:13.50, desc:'12-hour broth, rice noodles, herbs on the side', tags:['gf'], emoji:'🍜'},
+        {id:'sg4', name:'Lemongrass Vermicelli', price:12.00, desc:'Grilled pork, vermicelli, herbs, nuoc cham', tags:[], emoji:'🍜'},
+      ]},
+      {cat:'Drinks', items:[
+        {id:'sg5', name:'Vietnamese Iced Coffee', price:4.50, desc:'Condensed milk, strong drip', tags:['v'], emoji:'☕'},
       ]},
     ]
   },
