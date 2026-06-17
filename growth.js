@@ -1,8 +1,9 @@
-/* FullPlate growth layer: auto-onboarding wizard, live Google rating + recent
-   reviews, and a post-order Google-review nudge. Loaded LAST (after owner.js).
-   Wraps openRestaurant / show / rateOrder so it needs no edits to core.js.
-   All Google data here is demo/mock; in production it comes from the Google
-   Places + Business Profile APIs (read + attribution), never by posting reviews. */
+/* FullPlate growth layer: auto-onboarding (any location), multi-location and
+   multi-brand setup, an embed-on-your-site preview, live Google rating + reviews,
+   and a post-order Google-review nudge. Loaded LAST (after owner.js). Wraps
+   openRestaurant / show / rateOrder so it needs no edits to core.js.
+   Google data is demo/mock; production uses Google Places + Business Profile
+   APIs (read + attribution only), never posting reviews. */
 (function(){
   if(window.__fpGrowth) return; window.__fpGrowth = true;
 
@@ -37,9 +38,12 @@
   + '.obeyebrow{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);margin-bottom:6px}'
   + '.obh{font-size:22px;font-weight:900;line-height:1.15;margin-bottom:8px}'
   + '.obsub{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}'
+  + '.obctx{font-size:12px;background:#F4F1EE;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:12px}'
+  + '.obctx b{color:var(--ink)}'
   + '.oblabel{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:12px 0 5px}'
   + '.obinput,.obselect{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:14px;background:#fff;color:var(--ink)}'
   + '.obrow2{display:flex;gap:10px}.obrow2>div{flex:1;min-width:0}'
+  + '.obrow3{display:flex;gap:10px}.obrow3 .c1{flex:2;min-width:0}.obrow3 .c2{flex:1;min-width:0}.obrow3 .c3{flex:1.2;min-width:0}'
   + '.obbtn{width:100%;margin-top:16px;background:var(--brand);color:#fff;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer}'
   + '.obbtn2{width:100%;margin-top:9px;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer}'
   + '.obtiny{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.45}'
@@ -56,7 +60,29 @@
   + '.obmenu{border:1px solid var(--line);border-radius:14px;padding:4px 14px}'
   + '.obmi{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}'
   + '.obmi:last-child{border-bottom:0}'
-  + '.obmp{font-weight:800;color:var(--ink);padding-left:10px}';
+  + '.obmp{font-weight:800;color:var(--ink);padding-left:10px}'
+  + '.obsuccess{text-align:center;padding:22px 6px 8px}'
+  + '.obmark{width:58px;height:58px;border-radius:50%;background:var(--good);color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}'
+  + '.obsuccess h2{font-size:21px;font-weight:900;margin-bottom:6px}'
+  + '.obsuccess .obsp{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5}'
+  + '.obactions{display:flex;flex-direction:column;gap:9px;text-align:left}'
+  + '.obact{display:block;border:1px solid var(--line);border-radius:13px;padding:13px 14px;background:#fff;cursor:pointer;font-size:14px;font-weight:800;color:var(--ink);width:100%;text-align:left}'
+  + '.obact .obad{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:3px}'
+  + '.obact.primary{background:var(--brand);color:#fff;border-color:var(--brand)}'
+  + '.obact.primary .obad{color:rgba(255,255,255,.85)}'
+  + '.embframe{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;margin:10px 0 16px;box-shadow:0 8px 24px rgba(13,14,15,.08)}'
+  + '.emburl{display:flex;align-items:center;gap:8px;background:#ECE7DE;padding:8px 12px;font-size:11.5px;color:var(--muted)}'
+  + '.emburl .d3{display:flex;gap:4px}.emburl .d3 i{width:8px;height:8px;border-radius:50%;background:#C9C0B4}'
+  + '.emburl .ub{flex:1;background:#fff;border-radius:6px;padding:4px 9px;color:#444;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}'
+  + '.embsite{padding:16px 15px}'
+  + '.embsite .emblogo{font-size:16px;font-weight:900}'
+  + '.embsite .embtag{font-size:11.5px;color:var(--muted);margin:2px 0 12px}'
+  + '.embwidget{border:2px dashed var(--brand);border-radius:12px;padding:12px;background:#FFF8F4}'
+  + '.embwidget .ewh{font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-bottom:8px;display:flex;justify-content:space-between}'
+  + '.embwidget .ewi{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px solid #F0E2D8}'
+  + '.embwidget .ewbtn{width:100%;margin-top:10px;background:var(--brand);color:#fff;border:0;border-radius:9px;padding:11px;font-size:13px;font-weight:800;cursor:pointer}'
+  + '.embsnippet{background:var(--ink);color:#E8E2D8;border-radius:11px;padding:12px 13px;font-family:ui-monospace,Menlo,monospace;font-size:11px;line-height:1.55;white-space:pre-wrap;word-break:break-word}'
+  + '.embcopybtn{margin-top:9px;width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   /* ---------------- onboarding view container ---------------- */
@@ -108,7 +134,7 @@
   }
   window.fpGoogleBlock = gBlock; window.fpGoogleData = gData;
 
-  /* ---------------- wrap openRestaurant: inject the Google card ---------------- */
+  /* ---------------- wrap openRestaurant: inject Google card ---------------- */
   var _openRestaurant = window.openRestaurant;
   window.openRestaurant = function(id){
     _openRestaurant(id);
@@ -123,7 +149,7 @@
     }catch(e){}
   };
 
-  /* ---------------- wrap show(): manage the onboarding view ---------------- */
+  /* ---------------- wrap show(): manage onboarding view ---------------- */
   var _show = window.show;
   window.show = function(id){
     _show(id);
@@ -151,7 +177,7 @@
     }catch(e){}
   };
 
-  /* ---------------- AUTO-ONBOARDING WIZARD ---------------- */
+  /* ---------------- AUTO-ONBOARDING (any location, multi-location/brand) ---------------- */
   var MENU_TEMPLATES = {
     'Tacos / Mexican': { cuisine:'Mexican Taqueria', kind:'Mexican', emoji:'🌮', color:'#FBE3DA', rating:4.6, gcount:540, img:'chiwas', menu:[
       {cat:'Tacos', items:[
@@ -159,9 +185,7 @@
         {id:'t2', name:'Al Pastor Taco', price:3.50, desc:'Marinated pork, pineapple, onion', tags:['gf'], emoji:'🌮'},
         {id:'t3', name:'Veggie Taco', price:3.25, desc:'Grilled vegetables, avocado crema', tags:['gf','v'], emoji:'🌮'}
       ]},
-      {cat:'Burritos', items:[
-        {id:'t4', name:'Carne Asada Burrito', price:11.00, desc:'Steak, rice, beans, pico, guacamole', tags:[], emoji:'🌯'}
-      ]},
+      {cat:'Burritos', items:[ {id:'t4', name:'Carne Asada Burrito', price:11.00, desc:'Steak, rice, beans, pico, guacamole', tags:[], emoji:'🌯'} ]},
       {cat:'Sides', items:[
         {id:'t5', name:'Chips & Guacamole', price:5.50, desc:'Made to order', tags:['gf','v'], emoji:'🥑'},
         {id:'t6', name:'Horchata', price:3.50, desc:'House cinnamon rice milk', tags:['gf','v'], emoji:'🥛'}
@@ -173,12 +197,8 @@
         {id:'c2', name:'Cold Brew', price:5.00, desc:'Slow-steeped 18 hours', tags:['v'], emoji:'☕'},
         {id:'c3', name:'Cappuccino', price:4.75, desc:'Espresso, foam', tags:['v'], emoji:'☕'}
       ]},
-      {cat:'Tea', items:[
-        {id:'c4', name:'Matcha Latte', price:5.75, desc:'Ceremonial matcha, oat milk', tags:['v'], emoji:'🍵'}
-      ]},
-      {cat:'Pastries', items:[
-        {id:'c5', name:'Butter Croissant', price:3.95, desc:'Baked fresh daily', tags:['v'], emoji:'🥐'}
-      ]}
+      {cat:'Tea', items:[ {id:'c4', name:'Matcha Latte', price:5.75, desc:'Ceremonial matcha, oat milk', tags:['v'], emoji:'🍵'} ]},
+      {cat:'Pastries', items:[ {id:'c5', name:'Butter Croissant', price:3.95, desc:'Baked fresh daily', tags:['v'], emoji:'🥐'} ]}
     ]},
     'Pizza': { cuisine:'Pizzeria', kind:'Pizza', emoji:'🍕', color:'#FBE7DA', rating:4.6, gcount:610, img:'slice', menu:[
       {cat:'Pizzas', items:[
@@ -214,7 +234,7 @@
     'Other': { cuisine:'Local Kitchen', kind:'Local', emoji:'🍽️', color:'#F2EAE0', rating:4.6, gcount:300, img:'harbor', menu:[
       {cat:'Mains', items:[
         {id:'o1', name:'House Special', price:13.50, desc:'Our signature plate', tags:[], emoji:'🍽️'},
-        {id:'o2', name:'Daily Plate', price:12.00, desc:'Ask about today’s special', tags:[], emoji:'🍽️'}
+        {id:'o2', name:'Daily Plate', price:12.00, desc:'Ask about the special', tags:[], emoji:'🍽️'}
       ]},
       {cat:'Sides & Drinks', items:[
         {id:'o3', name:'Side Salad', price:5.00, desc:'Greens, house vinaigrette', tags:['v'], emoji:'🥗'},
@@ -224,55 +244,83 @@
   };
   function imgFor(key){ return (typeof IMG!=='undefined' && IMG[key]) || (typeof PIX!=='undefined' && PIX[key]) || (typeof IMG!=='undefined' && IMG.chiwas) || ''; }
 
-  var draft = null;
+  var draft = null, pendingBrand = null, pendingOp = null;
+
+  window.fpStartListing = function(){ pendingBrand = null; pendingOp = null; openOnboard(); };
 
   window.openOnboard = function(){
     draft = null;
-    var cities = [].concat.apply([], (function(){ var seen={},out=[]; RESTAURANTS.forEach(function(r){ if(!seen[r.city]){seen[r.city]=1;out.push(r.city);} }); return out; })());
+    var mode = pendingBrand ? 'location' : (pendingOp ? 'brand' : 'new');
+    var ctx = '';
+    if(mode === 'location') ctx = '<div class="obctx">Adding a location to <b>' + esc(pendingBrand.name) + '</b>. It shares the same menu and prices; just tell us where.</div>';
+    else if(mode === 'brand') ctx = '<div class="obctx">Adding a new brand under <b>' + esc(pendingOp.name) + '</b>. Same owner account, separate storefront.</div>';
     var cz = Object.keys(MENU_TEMPLATES);
-    document.getElementById('view-onboard').innerHTML = '<div class="obwrap">'
-      + '<div class="obeyebrow">Restaurant onboarding</div>'
-      + '<h2 class="obh">Build your page from your website</h2>'
-      + '<p class="obsub">Paste your website and FullPlate pulls in your menu, prices, photos, hours, location, and Google rating. Review the draft, then publish. In real life this takes about a day; in this demo it takes a few seconds.</p>'
-      + '<label class="oblabel">Your website</label>'
-      + '<input id="obUrl" class="obinput" value="https://" placeholder="https://yourrestaurant.com">'
-      + '<label class="oblabel">Restaurant name</label>'
-      + '<input id="obName" class="obinput" placeholder="e.g. Sunrise Taqueria">'
-      + '<div class="obrow2">'
-      +   '<div><label class="oblabel">City</label><select id="obCity" class="obselect">' + cities.map(function(c){ return '<option' + (c===activeCity?' selected':'') + '>' + c + '</option>'; }).join('') + '</select></div>'
-      +   '<div><label class="oblabel">Cuisine</label><select id="obCuisine" class="obselect">' + cz.map(function(k){ return '<option>' + k + '</option>'; }).join('') + '</select></div>'
+    var html = '<div class="obwrap">'
+      + '<div class="obeyebrow">' + (mode==='location' ? 'Add a location' : (mode==='brand' ? 'Add a brand' : 'Restaurant onboarding')) + '</div>'
+      + '<h2 class="obh">' + (mode==='location' ? 'Set up another location' : (mode==='brand' ? 'Set up another brand' : 'Build your page from your website')) + '</h2>'
+      + (mode==='new' ? '<p class="obsub">Paste your website and FullPlate pulls in your menu, prices, photos, hours, location, and Google rating. You can be in any city; we will create your area in the marketplace. In this demo the import takes a few seconds.</p>' : '')
+      + ctx;
+    if(mode !== 'location'){
+      html += '<label class="oblabel">Your website</label><input id="obUrl" class="obinput" value="https://" placeholder="https://yourrestaurant.com">'
+        + '<label class="oblabel">' + (mode==='brand' ? 'New brand name' : 'Restaurant name') + '</label><input id="obName" class="obinput" placeholder="e.g. Sunrise Taqueria">'
+        + '<label class="oblabel">Cuisine</label><select id="obCuisine" class="obselect">' + cz.map(function(k){ return '<option>' + k + '</option>'; }).join('') + '</select>';
+    } else {
+      html += '<label class="oblabel">Location label</label><input id="obLoc" class="obinput" placeholder="e.g. Downtown, Eastside, 5th Ave">';
+    }
+    html += '<div class="obrow3">'
+      + '<div class="c1"><label class="oblabel">City</label><input id="obCity" class="obinput" placeholder="City"></div>'
+      + '<div class="c2"><label class="oblabel">State</label><input id="obState" class="obinput" placeholder="ST" maxlength="2"></div>'
+      + '<div class="c3"><label class="oblabel">ZIP</label><input id="obZip" class="obinput" placeholder="ZIP" inputmode="numeric"></div>'
       + '</div>'
-      + '<button class="obbtn" onclick="onboardScan()">✦ Scan my website</button>'
-      + '<div class="obtiny">Demo note: we simulate the AI import here. In production FullPlate reads your real site, menus (including PDFs and photos), and your Google Business listing, then asks you to confirm.</div>'
+      + '<button class="obbtn" onclick="onboardScan()">' + (mode==='location' ? 'Set up this location ›' : '✦ Scan my website') + '</button>'
+      + '<div class="obtiny">' + (mode==='new'
+          ? 'Any city works. Your City and State become your marketplace area; the ZIP helps nearby diners find you. Demo note: the AI import is simulated; in production it reads your real site, menus (including PDFs and photos), and Google listing for you to confirm.'
+          : 'You can run as many locations and brands as you like from one owner account.') + '</div>'
       + '</div>';
+    document.getElementById('view-onboard').innerHTML = html;
     show('view-onboard');
     document.getElementById('backBtn').style.display = 'flex';
     var cb = document.getElementById('cartbar'); if(cb) cb.style.display = 'none';
     window.scrollTo(0, 0);
   };
 
-  window.onboardScan = function(){
-    var url = (document.getElementById('obUrl').value || '').trim();
-    var name = (document.getElementById('obName').value || '').trim() || 'Your Restaurant';
-    var city = document.getElementById('obCity').value;
-    var czk = document.getElementById('obCuisine').value;
-    var tpl = MENU_TEMPLATES[czk] || MENU_TEMPLATES['Other'];
-    var id = 'new_' + Date.now();
-    var menu = tpl.menu.map(function(c){
-      return { cat: c.cat, items: c.items.map(function(it){
-        return { id: id + '_' + it.id, name: it.name, price: it.price, desc: it.desc, tags: it.tags || [], emoji: it.emoji, mods: it.mods };
-      }) };
-    });
-    draft = { id:id, url:url, name:name, city:city, cuisine:tpl.cuisine, kind:tpl.kind, emoji:tpl.emoji,
-      color:tpl.color, rating:tpl.rating, gcount:tpl.gcount, img:tpl.img, loc:(city.split(',')[0]),
-      hours:'Mon to Sun, 11:00am to 9:00pm', menu:menu };
+  function readArea(){
+    var c = (document.getElementById('obCity').value || '').trim();
+    var s = (document.getElementById('obState').value || '').trim().toUpperCase().slice(0,2);
+    var z = (document.getElementById('obZip').value || '').trim();
+    if(!c) c = 'Your City';
+    return { city: (s ? (c + ', ' + s) : c), area: c, zip: z };
+  }
 
-    var labels = ['Reading your website', 'Detecting menu items and prices', 'Importing your photos', 'Pulling your hours and location', 'Fetching your Google rating'];
+  window.onboardScan = function(){
+    var mode = pendingBrand ? 'location' : (pendingOp ? 'brand' : 'new');
+    var a = readArea();
+    var id = (mode==='location' ? 'loc_' : 'new_') + Date.now();
+    if(mode === 'location'){
+      var locLabel = (document.getElementById('obLoc').value || '').trim() || a.area;
+      draft = { id:id, url:'', name:pendingBrand.name, city:a.city, zip:a.zip, loc:locLabel,
+        cuisine:pendingBrand.cuisine, kind:pendingBrand.kind, emoji:pendingBrand.emoji, color:pendingBrand.color,
+        rating:pendingBrand.rating, gcount:pendingBrand.gcount, imgUrl:pendingBrand.imgUrl,
+        brand:pendingBrand.id, brandName:pendingBrand.name, operator:pendingBrand.operator, operatorName:pendingBrand.operatorName,
+        menu:pendingBrand.menu, shared:true };
+    } else {
+      var name = (document.getElementById('obName').value || '').trim() || (mode==='brand' ? 'New Brand' : 'Your Restaurant');
+      var url = (document.getElementById('obUrl').value || '').trim();
+      var czk = document.getElementById('obCuisine').value;
+      var tpl = MENU_TEMPLATES[czk] || MENU_TEMPLATES['Other'];
+      var menu = tpl.menu.map(function(c){ return { cat:c.cat, items:c.items.map(function(it){
+        return { id:id + '_' + it.id, name:it.name, price:it.price, desc:it.desc, tags:it.tags || [], emoji:it.emoji, mods:it.mods };
+      }) }; });
+      draft = { id:id, url:url, name:name, city:a.city, zip:a.zip, loc:a.area, cuisine:tpl.cuisine, kind:tpl.kind,
+        emoji:tpl.emoji, color:tpl.color, rating:tpl.rating, gcount:tpl.gcount, imgUrl:imgFor(tpl.img), menu:menu,
+        operator: pendingOp ? pendingOp.id : null, operatorName: pendingOp ? pendingOp.name : null };
+    }
+    var labels = (mode === 'location')
+      ? ['Linking to your FullPlate account', 'Cloning your menu and prices', 'Setting this location’s hours', 'Pulling location and Google rating']
+      : ['Reading your website', 'Detecting menu items and prices', 'Importing your photos', 'Pulling your hours and location', 'Fetching your Google rating'];
     document.getElementById('view-onboard').innerHTML = '<div class="obwrap">'
-      + '<div class="obeyebrow">Importing</div>'
-      + '<h2 class="obh">Building your FullPlate page…</h2>'
-      + '<div class="obscan">' + labels.map(function(s, i){ return '<div class="obcheck" id="obc' + i + '"><span class="obspin">◷</span> ' + s + '</div>'; }).join('') + '</div>'
-      + '</div>';
+      + '<div class="obeyebrow">Setting up</div><h2 class="obh">Building your FullPlate page…</h2>'
+      + '<div class="obscan">' + labels.map(function(s, i){ return '<div class="obcheck" id="obc' + i + '"><span class="obspin">◷</span> ' + s + '</div>'; }).join('') + '</div></div>';
     window.scrollTo(0, 0);
     labels.forEach(function(s, i){
       setTimeout(function(){
@@ -293,15 +341,15 @@
     }).join('');
     document.getElementById('view-onboard').innerHTML = '<div class="obwrap">'
       + '<div class="obeyebrow">Draft ready · review and publish</div>'
-      + '<h2 class="obh">' + esc(d.name) + '</h2>'
-      + '<div class="obmeta">' + esc(d.cuisine) + ' · ' + esc(d.loc) + ' · ' + esc(d.hours) + '</div>'
-      + '<div class="obkv">✓ Imported from ' + esc(d.url || 'your website') + '</div>'
+      + '<h2 class="obh">' + esc(d.name) + (d.shared ? ' · ' + esc(d.loc) : '') + '</h2>'
+      + '<div class="obmeta">' + esc(d.cuisine) + ' · ' + esc(d.city) + (d.zip ? ' ' + esc(d.zip) : '') + ' · Mon to Sun, 11:00am to 9:00pm</div>'
+      + (d.url ? '<div class="obkv">✓ Imported from ' + esc(d.url) + '</div>' : '<div class="obkv">✓ Cloned from your existing FullPlate menu</div>')
       + gBlock({ id:'__draft', name:d.name, loc:d.loc, city:d.city, rating:d.rating, reviews:d.gcount })
-      + '<div class="obcardlabel">Detected menu (' + nItems + ' items)</div>'
+      + '<div class="obcardlabel">' + (d.shared ? 'Shared menu' : 'Detected menu') + ' (' + nItems + ' items)</div>'
       + '<div class="obmenu">' + menuHtml + '</div>'
       + '<button class="obbtn" onclick="onboardPublish()">Publish to FullPlate ›</button>'
       + '<button class="obbtn2" onclick="openOnboard()">Start over</button>'
-      + '<div class="obtiny">After publishing you can fine-tune everything in the owner console: edit items, prices, photos, hours, and modifiers.</div>'
+      + '<div class="obtiny">After publishing you can fine-tune everything in the owner console: items, prices, photos, hours, modifiers, and which POS or printer it routes to.</div>'
       + '</div>';
     window.scrollTo(0, 0);
   }
@@ -309,23 +357,92 @@
   window.onboardPublish = function(){
     var d = draft; if(!d) return;
     if(!RESTAURANTS.find(function(r){ return r.id === d.id; })){
-      var rest = { id:d.id, city:d.city, kind:d.kind, featured:true, name:d.name,
-        brand:d.id, brandName:d.name, operator:d.id, operatorName:d.name + ' (you)', type:'fixed', loc:d.loc,
-        cuisine:d.cuisine, emoji:d.emoji, color:d.color, rating:d.rating, reviews:Math.max(20, Math.round(d.gcount / 6)),
-        eta:'15–25 min', price:'$$', popular:d.menu[0].items[0].id,
-        blurb:'Commission-free ordering, imported from your website and ready to go.',
-        story:'This FullPlate page was built automatically from the ' + d.name + ' website in this demo: menu, prices, hours, location, and Google rating, ready for the owner to confirm.',
-        realNote:'Demo listing generated by FullPlate auto-onboarding. In production, FullPlate imports your real menu, prices, photos, hours, and Google rating from your website and Google Business listing for you to confirm before going live.',
+      var rest = { id:d.id, city:d.city, kind:d.kind, featured: !d.shared, name: d.shared ? (d.name + ' (' + d.loc + ')') : d.name,
+        brand: d.brand || d.id, brandName: d.brandName || d.name,
+        operator: d.operator || d.id, operatorName: d.operatorName || (d.name + ' (you)'),
+        type:'fixed', loc:d.loc, cuisine:d.cuisine, emoji:d.emoji, color:d.color,
+        rating:d.rating, reviews:Math.max(20, Math.round(d.gcount / 6)), eta:'15–25 min', price:'$$',
+        popular:d.menu[0].items[0].id,
+        blurb: d.shared ? ('Another location of ' + d.brandName + ', commission-free.') : 'Commission-free ordering, imported from your website and ready to go.',
+        story: d.shared ? ('A location of ' + d.brandName + ' set up on FullPlate in this demo. It shares the brand menu and prices.') : ('This FullPlate page was built automatically from the ' + d.name + ' website in this demo: menu, prices, hours, location, and Google rating, ready for the owner to confirm.'),
+        realNote:'Demo listing generated by FullPlate onboarding. In production, FullPlate imports your real menu, prices, photos, hours, and Google rating, and syncs orders to your POS or kitchen.',
         menu:d.menu };
       var at = RESTAURANTS.findIndex(function(r){ return r.city === d.city; });
       if(at < 0) at = RESTAURANTS.length;
       RESTAURANTS.splice(at, 0, rest);
-      IMG[d.id] = imgFor(d.img);
+      IMG[d.id] = d.imgUrl || imgFor('chiwas');
     }
     activeCity = d.city;
-    showToast('Your FullPlate page is live');
-    openRestaurant(d.id);
+    showToast(d.shared ? 'Location added' : 'Your FullPlate page is live');
+    onboardSuccess(d.id);
   };
+
+  function onboardSuccess(restId){
+    var r = RESTAURANTS.find(function(x){ return x.id === restId; }) || {};
+    var brandLocs = (typeof brandLocations === 'function') ? brandLocations(r.brand || r.id).length : 1;
+    var opBrands = (typeof operatorBrands === 'function') ? operatorBrands(r.operator || r.id).length : 1;
+    document.getElementById('view-onboard').innerHTML = '<div class="obwrap"><div class="obsuccess">'
+      + '<div class="obmark">✓</div>'
+      + '<h2>' + esc(r.name || 'Your page') + ' is live</h2>'
+      + '<div class="obsp">It is on FullPlate now at <b>fullplate.app/r/' + esc(r.id) + '</b>, commission-free. '
+      + 'Your account has ' + opBrands + ' brand' + (opBrands>1?'s':'') + ' and ' + brandLocs + ' location' + (brandLocs>1?'s':'') + '.</div>'
+      + '<div class="obactions">'
+      + '<button class="obact primary" onclick="onboardView(\'' + r.id + '\')">View my FullPlate page<span class="obad">See exactly what diners see and can order</span></button>'
+      + '<button class="obact" onclick="onboardEmbed(\'' + r.id + '\')">Embed ordering on my own website<span class="obad">Keep diners on your site, no third party taking a cut</span></button>'
+      + '<button class="obact" onclick="onboardAddLocation(\'' + r.id + '\')">Add another location<span class="obad">Same brand and menu, a new address. Adds a location picker</span></button>'
+      + '<button class="obact" onclick="onboardAddBrand(\'' + r.id + '\')">Add another brand<span class="obad">A separate storefront under the same owner account</span></button>'
+      + '<button class="obact" onclick="goHome()">Done, back to the marketplace<span class="obad">Find your new area in the city tabs</span></button>'
+      + '</div></div></div>';
+    window.scrollTo(0, 0);
+  }
+  window.onboardView = function(id){ openRestaurant(id); };
+  window.onboardAddLocation = function(id){
+    var r = RESTAURANTS.find(function(x){ return x.id === id; }); if(!r) return;
+    pendingBrand = { id:r.brand || r.id, name:r.brandName || r.name, operator:r.operator || r.id, operatorName:r.operatorName,
+      cuisine:r.cuisine, kind:r.kind, emoji:r.emoji, color:r.color, rating:r.rating, gcount:Math.round((r.reviews||200)*2.3)+140,
+      imgUrl:(typeof IMG!=='undefined' ? IMG[r.id] : ''), menu:r.menu };
+    pendingOp = null; openOnboard();
+  };
+  window.onboardAddBrand = function(id){
+    var r = RESTAURANTS.find(function(x){ return x.id === id; }); if(!r) return;
+    pendingOp = { id:r.operator || r.id, name:r.operatorName || r.name };
+    pendingBrand = null; openOnboard();
+  };
+
+  /* ---------------- EMBED-ON-YOUR-SITE preview ---------------- */
+  window.onboardEmbed = function(id){
+    var r = RESTAURANTS.find(function(x){ return x.id === id; }); if(!r) return;
+    var domain = (r.name || 'yourrestaurant').toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,18) + '.com';
+    var items = [];
+    (r.menu || []).forEach(function(c){ c.items.forEach(function(i){ items.push(i); }); });
+    items = items.slice(0, 3);
+    var snippet = '<!-- FullPlate commission-free ordering -->\n<div data-fullplate="' + r.id + '"></div>\n<script src="https://embed.fullplate.app/v1.js" async></scr' + 'ipt>';
+    window.__embSnippet = snippet;
+    document.getElementById('view-onboard').innerHTML = '<div class="obwrap">'
+      + '<div class="obeyebrow">Embed on your website</div>'
+      + '<h2 class="obh">Your ordering, on your own site</h2>'
+      + '<p class="obsub">FullPlate is your storefront in the marketplace, and the same ordering drops right into your existing website. Diners learn your menu and check out without leaving your site, and no middle service takes a cut. Here is how it looks embedded on ' + esc(domain) + ':</p>'
+      + '<div class="embframe">'
+      +   '<div class="emburl"><span class="d3"><i></i><i></i><i></i></span><span class="ub">https://www.' + esc(domain) + '/order</span></div>'
+      +   '<div class="embsite">'
+      +     '<div class="emblogo">' + esc(r.name) + '</div>'
+      +     '<div class="embtag">' + esc(r.cuisine || 'Local restaurant') + ' · Order pickup</div>'
+      +     '<div class="embwidget">'
+      +       '<div class="ewh"><span>Order with FullPlate</span><span>0% commission</span></div>'
+      +       items.map(function(i){ return '<div class="ewi"><span>' + esc(i.name) + '</span><span>$' + i.price.toFixed(2) + '</span></div>'; }).join('')
+      +       '<button class="ewbtn" onclick="openRestaurant(\'' + r.id + '\')">Start your order ›</button>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="obcardlabel">Add this to your site</div>'
+      + '<div class="embsnippet">' + esc(snippet) + '</div>'
+      + '<button class="embcopybtn" onclick="(navigator.clipboard&&navigator.clipboard.writeText(window.__embSnippet));showToast(\'Embed code copied\')">Copy embed code</button>'
+      + '<div class="obtiny">One source of truth: your menu, prices, hours, and sold-out items stay in sync between your FullPlate page and the embed automatically. Update once, it changes everywhere.</div>'
+      + '<button class="obbtn2" onclick="onboardSuccessBack(\'' + r.id + '\')">Back</button>'
+      + '</div>';
+    window.scrollTo(0, 0);
+  };
+  window.onboardSuccessBack = function(id){ onboardSuccess(id); };
 
   /* ---------------- entry banner on the home screen ---------------- */
   function injectBanner(){
@@ -334,8 +451,8 @@
     var hero = home && home.querySelector('.hero');
     if(!home) return;
     var b = document.createElement('div'); b.className = 'obbanner';
-    b.innerHTML = '<div class="obb-t"><b>Own a restaurant?</b> Build your FullPlate page from your website in seconds.</div>'
-      + '<button class="obb-btn" onclick="openOnboard()">List your restaurant ›</button>';
+    b.innerHTML = '<div class="obb-t"><b>Own a restaurant?</b> Build your FullPlate page from your website, in any city.</div>'
+      + '<button class="obb-btn" onclick="fpStartListing()">List your restaurant ›</button>';
     if(hero && hero.parentNode){ hero.parentNode.insertBefore(b, hero.nextSibling); }
     else { home.insertBefore(b, home.firstChild); }
   }
