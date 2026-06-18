@@ -8,9 +8,9 @@
    (2) Inline form sheets that replace the browser prompt() dialogs in the owner
        console (add item, edit price, add category, add modifier group, set
        photo, create promo, update truck spot) so the console looks finished.
-   (3) An indicative pricing card on the onboarding success screen and a
-       "Connect your POS" + plan card in owner Settings — the two things a
-       restaurant owner asks about in a pitch. */
+   (3) Owner Settings build-out: POS connect, kitchen printer connect, editable
+       diner tip presets (wired to the checkout), and indicative pricing.
+   (4) Payouts build-out: connect-your-bank via simulated Stripe Connect. */
 (function(){
   if(window.__fpPitch) return; window.__fpPitch = true;
 
@@ -207,19 +207,131 @@
   }
   window.fpConnectPOS = function(name){ showToast(name.replace(/&amp;/g,'&') + ': POS connection is set up during onboarding in production'); };
 
-  /* wrap openOwner (outermost, since this file loads last) to inject into Settings */
+  /* --- shared state for the build-out cards --- */
+  window.fpTips    = window.fpTips    || { presets:[15, 18, 20] };
+  window.fpPrinter = window.fpPrinter || { connected:false, name:'' };
+  window.fpBank    = window.fpBank    || { connected:false, bankName:'', mask:'' };
+  var GREENBADGE = ' style="background:#EAF5EE;color:#1F6B43;border:1px solid #CDEBD0"';
+
+  /* --- kitchen printer (simulated; production = cloud print, no drivers) --- */
+  function printerCardHTML(){
+    if(fpPrinter.connected){
+      return '<div class="fppos">'
+        + '<div class="fppos-h">Kitchen printer <span' + GREENBADGE + '>Connected</span></div>'
+        + '<div class="fppos-row"><div class="pn">' + esc(fpPrinter.name) + '<small>New orders auto-print and chime</small></div>'
+        + '<button class="fppos-btn" onclick="fpTestPrint()">Send test print</button></div>'
+        + '<div class="fppos-row"><div class="pn">Remove this device</div><button class="fppos-btn" onclick="fpDisconnectPrinter()">Disconnect</button></div>'
+        + '<div class="fppos-note">Production prints through the cloud (PrintNode, Star CloudPRNT, or Epson ePOS) — no drivers, prints from anywhere the order lands.</div>'
+        + '</div>';
+    }
+    return '<div class="fppos">'
+      + '<div class="fppos-h">Kitchen printer <span>optional</span></div>'
+      + '<div class="fppos-row"><div class="pn">No printer connected<small>Pair a receipt printer, or use the FullPlate tablet app</small></div>'
+      + '<button class="fppos-btn" onclick="fpConnectPrinter()">Connect</button></div>'
+      + '<div class="fppos-note">Live in days with no new hardware — the tablet app shows and chimes every order. Add a receipt printer any time; production prints via the cloud (PrintNode / Star CloudPRNT / Epson ePOS), no drivers.</div>'
+      + '</div>';
+  }
+  window.fpConnectPrinter = function(){
+    fpForm({ title:'Connect a printer', sub:'Pair a receipt printer or the tablet app', fields:[
+      { key:'type', label:'Device', type:'select', options:[
+        { label:'FullPlate tablet app (no hardware)', value:'FullPlate Tablet app' },
+        { label:'Star Micronics receipt printer', value:'Star TSP143 · kitchen' },
+        { label:'Epson receipt printer', value:'Epson TM-m30 · kitchen' },
+        { label:'Other receipt printer', value:'Receipt printer · kitchen' }
+      ], value:'Star TSP143 · kitchen' },
+      { key:'code', label:'Pairing code (shown on the device)', type:'text', value:('FP-' + Math.floor(1000 + Math.random()*9000)) }
+    ]}, function(v){
+      fpPrinter.connected = true; fpPrinter.name = v.type || 'Receipt printer';
+      try{ ownerSettings.autoprint = true; }catch(e){}
+      showToast('Printer connected · ' + fpPrinter.name);
+      openOwner(ownerRest, 'settings');
+    });
+  };
+  window.fpTestPrint = function(){ showToast('🖨 Test ticket sent to ' + (fpPrinter.name || 'your printer')); };
+  window.fpDisconnectPrinter = function(){ fpPrinter.connected = false; fpPrinter.name = ''; showToast('Printer removed'); openOwner(ownerRest, 'settings'); };
+
+  /* --- diner tip presets (owner-editable, wired to the checkout) --- */
+  function tipsCardHTML(){
+    var on = (typeof ownerSettings !== 'undefined') ? ownerSettings.tips : true;
+    var sub = on ? ('Shown at checkout: ' + fpTips.presets.map(function(p){ return p + '%'; }).join(' · ')) : 'Tips are turned off (Accept tips toggle above)';
+    return '<div class="fppos">'
+      + '<div class="fppos-h">Diner tip options</div>'
+      + '<div class="fppos-row"><div class="pn">Suggested tips<small>' + sub + '</small></div>'
+      + '<button class="fppos-btn" onclick="fpEditTips()">Edit</button></div>'
+      + '<div class="fppos-note">Diners always also see “No tip” and a custom amount, and 100% of every tip goes to you. Turn tips on or off with “Accept tips” above.</div>'
+      + '</div>';
+  }
+  window.fpEditTips = function(){
+    fpForm({ title:'Suggested tip amounts', sub:'Three presets diners see at checkout', fields:[
+      { key:'t1', label:'Preset 1 (%)', type:'number', min:'0', value:fpTips.presets[0] },
+      { key:'t2', label:'Preset 2 (%)', type:'number', min:'0', value:fpTips.presets[1] },
+      { key:'t3', label:'Preset 3 (%)', type:'number', min:'0', value:fpTips.presets[2] }
+    ]}, function(v){
+      var arr = [v.t1, v.t2, v.t3].map(function(x){ var n = parseInt(x, 10); return Math.max(0, Math.min(100, isFinite(n) ? n : 0)); });
+      fpTips.presets = arr; showToast('Tip options updated'); openOwner(ownerRest, 'settings');
+    });
+  };
+  /* rebuild the checkout tip row from the owner's presets */
+  var _openCheckout = window.openCheckout;
+  window.openCheckout = function(){
+    if(typeof _openCheckout === 'function') _openCheckout.apply(this, arguments);
+    try{
+      var row = document.querySelector('#view-checkout .tiprow');
+      if(row){
+        var ps = [0].concat(fpTips.presets);
+        row.innerHTML = ps.map(function(p){
+          var sel = (typeof tipAmt !== 'undefined' && tipAmt == null && tipPct === p) ? 'on' : '';
+          return '<button class="tipbtn ' + sel + '" onclick="setTip(' + p + ')">' + (p === 0 ? 'No tip' : p + '%') + '</button>';
+        }).join('')
+        + '<button class="tipbtn ' + ((typeof tipAmt !== 'undefined' && tipAmt != null) ? 'on' : '') + '" onclick="setTipCustom()">Custom</button>';
+      }
+    }catch(e){}
+  };
+
+  /* --- bank / payouts (simulated Stripe Connect; no real bank is linked) --- */
+  function bankCardHTML(){
+    if(fpBank.connected){
+      return '<div class="fppos" style="margin:0 0 12px">'
+        + '<div class="fppos-h">Payouts <span' + GREENBADGE + '>Enabled</span></div>'
+        + '<div class="fppos-row"><div class="pn">' + esc(fpBank.bankName || 'Bank account') + ' ••••' + esc(fpBank.mask) + '<small>Daily deposits · you keep 100%, 0% commission</small></div>'
+        + '<button class="fppos-btn" onclick="fpManageBank()">Manage</button></div>'
+        + '<div class="fppos-note">Demo only — no real bank is connected. Production uses Stripe Connect Express: each location is its own connected account and merchant of record, so FullPlate never holds your money.</div>'
+        + '</div>';
+    }
+    return '<div class="fppos" style="margin:0 0 12px">'
+      + '<div class="fppos-h">Get paid <span>action needed</span></div>'
+      + '<div class="fppos-row"><div class="pn">Connect your bank to enable payouts<small>Secure setup through Stripe · about 2 minutes</small></div>'
+      + '<button class="fppos-btn" onclick="fpConnectBank()">Connect bank</button></div>'
+      + '<div class="fppos-note">Demo only — this simulates Stripe Connect onboarding and collects no real bank details. In production each location connects its own Stripe account and is its own merchant of record.</div>'
+      + '</div>';
+  }
+  window.fpConnectBank = function(){
+    showToast('Opening secure Stripe onboarding…');
+    setTimeout(function(){ showToast('Verifying your business and linking your bank…'); }, 700);
+    setTimeout(function(){
+      fpBank.connected = true; fpBank.bankName = 'Business Checking'; fpBank.mask = '4321';
+      showToast('✓ Payouts enabled — first deposit in ~2 days');
+      if(typeof ownerRest !== 'undefined') openOwner(ownerRest, 'payouts');
+    }, 1600);
+  };
+  window.fpManageBank = function(){ showToast('Demo: in production this opens your Stripe Express dashboard'); };
+
+  /* wrap openOwner (outermost, since this file loads last) to inject per tab */
   var _openOwner = window.openOwner;
   window.openOwner = function(){
     if(typeof _openOwner === 'function') _openOwner.apply(this, arguments);
     try{
-      if(typeof ownerTab !== 'undefined' && ownerTab === 'settings'){
-        var body = document.getElementById('ownerBody');
-        if(body && !document.getElementById('fpPlanCard')){
-          var holder = document.createElement('div');
-          holder.innerHTML = posCardHTML() + planCardHTML();
-          holder.firstChild.id = 'fpPlanCard';
-          while(holder.firstChild){ body.appendChild(holder.firstChild); }
-        }
+      var t = (typeof ownerTab !== 'undefined') ? ownerTab : null;
+      var body = document.getElementById('ownerBody');
+      if(!body) return;
+      if(t === 'settings' && !document.getElementById('fpSettingsCards')){
+        var h = document.createElement('div'); h.id = 'fpSettingsCards';
+        h.innerHTML = posCardHTML() + printerCardHTML() + tipsCardHTML() + planCardHTML();
+        body.appendChild(h);
+      }
+      if(t === 'payouts' && !document.getElementById('fpBankCard')){
+        var b = document.createElement('div'); b.id = 'fpBankCard'; b.innerHTML = bankCardHTML();
+        body.insertBefore(b, body.firstChild);
       }
     }catch(e){}
   };
