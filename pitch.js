@@ -36,7 +36,7 @@
      — including the bottom nav — always fits and never clips. A floating toggle
      switches between phone and tablet widths. Mobile screens are untouched. */
   var frameCss = ''
-    + '#fpDeviceToggle{display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:300;gap:3px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 6px 20px rgba(0,0,0,.22)}'
+    + '#fpDeviceToggle{display:none;position:fixed;top:18px;left:18px;z-index:300;gap:3px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 6px 20px rgba(0,0,0,.22)}'
     + '#fpDeviceToggle button{border:0;background:transparent;border-radius:999px;padding:6px 15px;font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit}'
     + '#fpDeviceToggle button.on{background:var(--ink);color:#fff}'
     + '@media(min-width:760px){'
