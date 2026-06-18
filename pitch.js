@@ -1,10 +1,10 @@
 /* FullPlate pitch layer — owner-first demo helpers. Loaded LAST (after
    ownerbar.js), so it can wrap any global without touching the other files.
    Adds: deep-link entry; inline form sheets replacing prompt(); Settings
-   build-out (POS, printer, business hours, team/roles, tips inline under
-   Accept tips, pricing); Payouts connect-bank (simulated Stripe Connect);
-   Grow (actionable cards + real QR); Customers (segments, detail, CSV);
-   buyer-conversion (savings calculator, comparison, proof stats, go-live
+   build-out (POS, printer, business hours, holiday hours, team/roles, tips
+   inline under Accept tips, pricing); Payouts connect-bank (simulated Stripe
+   Connect); Grow (actionable cards + real QR); Customers (segments, detail,
+   CSV); buyer-conversion (savings calculator, comparison, proof stats, go-live
    checklist + test-order, sales-trend chart); diner order-ahead pickup.
    All demo-only; resets on refresh. */
 (function(){
@@ -198,7 +198,7 @@
       + row('Square', 'Direct two-way menu &amp; order sync', '', 'Connect')
       + row('Clover', 'Direct two-way menu &amp; order sync', '', 'Connect')
       + row('Toast &amp; others', 'Via one integration partner', '', 'Connect')
-      + '<div class="fppos-note">Live in days with no new hardware — orders print to a tablet. Square and Clover connect directly; Toast and the long tail come through a single integration partner. Payments always run on your own Stripe account, so FullPlate never holds your money.</div>'
+      + '<div class="fppos-note">No POS required — orders chime and print to a tablet and receipt printer, so you can go live in days with no new hardware. Square and Clover connect directly; Toast and the rest come through one integration partner. Payments always run on your own Stripe account, so FullPlate never holds your money.</div>'
       + '</div>';
   }
   window.fpConnectPOS = function(name){ showToast(name.replace(/&amp;/g,'&') + ': POS connection is set up during onboarding in production'); };
@@ -224,7 +224,7 @@
       + '<div class="fppos-h">Kitchen printer <span>optional</span></div>'
       + '<div class="fppos-row"><div class="pn">No printer connected<small>Pair a receipt printer, or use the FullPlate tablet app</small></div>'
       + '<button class="fppos-btn" onclick="fpConnectPrinter()">Connect</button></div>'
-      + '<div class="fppos-note">Live in days with no new hardware — the tablet app shows and chimes every order. Add a receipt printer any time; production prints via the cloud (PrintNode / Star CloudPRNT / Epson ePOS), no drivers.</div>'
+      + '<div class="fppos-note">No printer? The FullPlate tablet app shows and chimes every order, so you’re live in days with no new hardware. Add a receipt printer any time; production prints via the cloud (PrintNode / Star CloudPRNT / Epson ePOS), no drivers.</div>'
       + '</div>';
   }
   window.fpConnectPrinter = function(){
@@ -328,7 +328,7 @@
       if(t === 'settings'){
         if(!document.getElementById('fpSettingsCards')){
           var h = document.createElement('div'); h.id = 'fpSettingsCards';
-          h.innerHTML = posCardHTML() + printerCardHTML() + hoursCardHTML() + teamCardHTML() + planCardHTML();
+          h.innerHTML = posCardHTML() + printerCardHTML() + hoursCardHTML() + holidayCardHTML() + teamCardHTML() + planCardHTML();
           body.appendChild(h);
         }
         if(typeof ownerSettings !== 'undefined' && ownerSettings.tips && !document.getElementById('fpTipInline')){
@@ -399,6 +399,53 @@
       var e = (v.email || '').trim(); if(!e) return; showToast('Invite sent to ' + e + ' (' + role + ')');
     });
   };
+
+  /* ================= Settings: holiday hours (set & forget) ================= */
+  window.fpHoliday = window.fpHoliday || {};
+  function holidayDefaults(){
+    return [
+      { name:'New Year’s Day', date:'Jan 1', status:'closed' },
+      { name:'Easter Sunday', date:'Spring', status:'closed' },
+      { name:'Memorial Day', date:'Late May', status:'open' },
+      { name:'Independence Day', date:'Jul 4', status:'open' },
+      { name:'Labor Day', date:'Early Sep', status:'open' },
+      { name:'Thanksgiving', date:'Late Nov', status:'closed' },
+      { name:'Christmas Eve', date:'Dec 24', status:'custom', hours:'11:00am–4:00pm' },
+      { name:'Christmas Day', date:'Dec 25', status:'closed' },
+      { name:'New Year’s Eve', date:'Dec 31', status:'custom', hours:'11:00am–6:00pm' }
+    ];
+  }
+  function holidaysOf(r){ if(!fpHoliday[r.id]) fpHoliday[r.id] = holidayDefaults(); return fpHoliday[r.id]; }
+  function holidayPill(h){
+    if(h.status === 'closed') return '<span class="fppos-tag" style="color:#C44A28;background:#FBEAE5;border-color:#E1B8AD">Closed</span>';
+    if(h.status === 'custom') return '<span class="fppos-tag" style="color:#9C6206;background:#FCEFD9;border-color:#EAD3A0">' + esc(h.hours || 'Reduced') + '</span>';
+    return '<span class="fppos-tag" style="color:var(--muted);background:#F3ECE2;border-color:var(--line)">Open</span>';
+  }
+  function holidayCardHTML(){
+    var r = R(ownerRest) || { id:ownerRest }; var hs = holidaysOf(r);
+    var closed = hs.filter(function(h){ return h.status === 'closed'; }).length;
+    return '<div class="fppos"><div class="fppos-h">Holiday hours <span' + GREENBADGE + '>set &amp; forget</span></div>'
+      + hs.map(function(h, i){ return '<div class="fppos-row" style="cursor:pointer" onclick="fpHolidayEdit(\'' + r.id + '\',' + i + ')"><div class="pn">' + esc(h.name) + '<small>' + esc(h.date) + '</small></div>' + holidayPill(h) + '</div>'; }).join('')
+      + '<div class="fppos-row" style="border-top:0;padding-top:12px"><div class="pn" style="color:var(--muted);font-weight:600;font-size:12px">' + closed + ' days closed · pre-filled with what most restaurants do</div><button class="fppos-btn" onclick="fpHolidayReset(\'' + r.id + '\')">Reset to typical</button></div>'
+      + '<div class="fppos-note">Set these once and forget them. On each holiday your page automatically shows closed or your holiday hours, and ordering pauses for that day. Tap any holiday to change it.</div>'
+      + '</div>';
+  }
+  window.fpHolidayEdit = function(rid, idx){
+    var r = R(rid); if(!r) return; var h = holidaysOf(r)[idx]; if(!h) return;
+    fpForm({ title:h.name, sub:'Holiday hours', fields:[
+      { key:'status', label:'On this day', type:'select', options:[
+        { label:'Open — normal hours', value:'open' },
+        { label:'Closed', value:'closed' },
+        { label:'Custom hours', value:'custom' }
+      ], value:h.status },
+      { key:'hours', label:'Custom hours (used if “Custom” above)', type:'text', value:(h.hours || '11:00am–4:00pm'), placeholder:'e.g. 11:00am–4:00pm' }
+    ]}, function(v){
+      h.status = v.status || 'open';
+      if(h.status === 'custom') h.hours = (v.hours || '').trim() || h.hours || 'Reduced hours';
+      showToast(h.name + ' updated'); openOwner(ownerRest, 'settings');
+    });
+  };
+  window.fpHolidayReset = function(rid){ fpHoliday[rid] = holidayDefaults(); showToast('Holiday hours reset to typical'); openOwner(ownerRest, 'settings'); };
 
   /* ================= Grow build-out: actionable cards + real QR ================= */
   function growHTML2(r){
