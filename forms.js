@@ -38,7 +38,15 @@
   var scheduled = false;
   function scan(){ scheduled = false; segmentize(document.getElementById('fpFormBody')); segmentize(document.getElementById('rfBody')); }
   try{
-    var obs = new MutationObserver(function(){ if(!scheduled){ scheduled = true; (window.requestAnimationFrame || function(f){ setTimeout(f, 0); })(scan); } });
+    var obs = new MutationObserver(function(){ if(!scheduled){ scheduled = true; setTimeout(scan, 0); } });
     obs.observe(document.body, { childList:true, subtree:true });
+  }catch(e){}
+
+  /* belt and suspenders: hook the fpForm opener directly */
+  try{
+    if(typeof window.fpForm === 'function'){
+      var _fpForm = window.fpForm;
+      window.fpForm = function(){ var r = _fpForm.apply(this, arguments); setTimeout(scan, 0); setTimeout(scan, 60); return r; };
+    }
   }catch(e){}
 })();
