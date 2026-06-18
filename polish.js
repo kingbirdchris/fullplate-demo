@@ -3,6 +3,7 @@
    Reports tab, lift the menu above secondary blocks on the restaurant page
    (with an inline "Why FullPlate" line), put fulfillment before time at
    checkout and drop the $0 clutter rows, and tidy the consumer Account.
+   Also handles ?view=owner / ?view=why deep links for the marketing embed.
    All by overriding globals; no core files edited. Demo-only. */
 (function(){
   if(window.__fpPolish) return; window.__fpPolish = true;
@@ -50,15 +51,13 @@
     if(typeof _openRestaurant === 'function') _openRestaurant.apply(this, arguments);
     try{
       var v = document.getElementById('view-restaurant'); if(!v || v.style.display === 'none') return;
-      /* anchor = the "What diners say" heading (FullPlate reviews) or the revstrip */
       var anchor = null;
       Array.prototype.forEach.call(v.querySelectorAll('.menucat'), function(c){ if(/What diners say/i.test(c.textContent)) anchor = c; });
       if(!anchor) anchor = v.querySelector('.revstrip');
-      var g = v.querySelector('.gcard');           /* the expanded Google reviews block */
-      var chips = document.getElementById('cpChips'); /* Reserve / Catering / Gift / Group */
+      var g = v.querySelector('.gcard');
+      var chips = document.getElementById('cpChips');
       if(g){ if(anchor && anchor.parentNode){ anchor.parentNode.insertBefore(g, anchor); } else v.appendChild(g); }
       if(chips){ if(g && g.parentNode){ g.parentNode.insertBefore(chips, g); } else if(anchor && anchor.parentNode){ anchor.parentNode.insertBefore(chips, anchor); } else v.appendChild(chips); }
-      /* inline "why order direct" microcopy under the order-by-chatting bar */
       var ai = v.querySelector('.ai-launch');
       if(ai && ai.parentNode && !document.getElementById('rfWhyLine')){
         var w = document.createElement('div'); w.id = 'rfWhyLine';
@@ -75,7 +74,6 @@
     if(typeof _openCheckout === 'function') _openCheckout.apply(this, arguments);
     try{
       var view = document.getElementById('view-checkout'); if(!view || view.style.display === 'none') return;
-      /* lift the Pickup/Delivery choice to the top of the order (before time + items) */
       var ful = document.getElementById('cpFulfill');
       if(ful){
         var pt = null;
@@ -88,7 +86,6 @@
         var target = pt || view.querySelector('.co-line');
         if(target && target.parentNode) target.parentNode.insertBefore(ful, target);
       }
-      /* hide the $0 line items; the savings card already makes the point */
       Array.prototype.forEach.call(view.querySelectorAll('.co-tot'), function(row){
         if(row.classList.contains('big')) return;
         if(/Delivery-app markup|Service fee|commission fee/i.test(row.textContent || '')) row.style.display = 'none';
@@ -107,4 +104,12 @@
       });
     }catch(e){}
   };
+
+  /* ============ deep links: ?view=owner / ?view=why (for the website embed) ============ */
+  try{
+    var vw = new URLSearchParams(location.search).get('view');
+    if(vw === 'owner' || vw === 'why'){
+      setTimeout(function(){ try{ if(vw === 'owner') openOwner('chiwas', 'overview'); else if(window.goWhy) goWhy(); }catch(e){} }, 80);
+    }
+  }catch(e){}
 })();
