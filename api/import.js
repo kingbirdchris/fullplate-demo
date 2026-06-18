@@ -62,6 +62,7 @@ export default async function handler(req, res) {
     'You extract structured restaurant data from the raw text of a restaurant website, to build an online-ordering listing. ' +
     'Use ONLY information present in the text. Never invent dishes, prices, hours, ratings, or reviews. ' +
     'If something is not present, use null (or an empty array). Prices must be plain numbers in dollars (no symbols). ' +
+    'Pull a price for an item whenever a number appears near it on the page; if no price is shown for an item, use 0. ' +
     'Tags may only come from this set, and only when the text clearly indicates it: "gf" (gluten free), "v" (vegetarian or vegan), "spicy". ' +
     'Return AT MOST 6 categories and AT MOST 8 items per category. Keep each description under 90 characters. ' +
     'kind must be one short word such as Mexican, Pizza, Burgers, Cafe, BBQ, Asian, Bakery, Seafood, Sandwiches, or Local. ' +
@@ -123,8 +124,14 @@ function sanitize(p) {
     let s = parseInt(rv && rv.stars, 10); if (!isFinite(s) || s < 1 || s > 5) s = 5;
     return { name: str(rv && rv.name, 40) || 'Guest', stars: s, text: str(rv && rv.text, 220) };
   }).filter((rv) => rv.text);
+  // Only keep an imported menu if it actually carries prices. A site that lists
+  // dish names without prices (or an image/PDF menu) yields an all-$0 menu that
+  // looks broken in a pitch, so we drop it and let the front end keep its
+  // realistic cuisine template — the real name, cuisine, rating still import.
+  const pricedItems = menu.reduce((n, c) => n + c.items.filter((it) => it.price > 0).length, 0);
+  const finalMenu = pricedItems > 0 ? menu : [];
   return {
     name: str(p.name, 120), cuisine: str(p.cuisine, 60), kind: str(p.kind, 24),
-    hours: str(p.hours, 120), rating: rating, reviewCount: rc, menu: menu, reviews: reviews
+    hours: str(p.hours, 120), rating: rating, reviewCount: rc, menu: finalMenu, reviews: reviews
   };
 }
