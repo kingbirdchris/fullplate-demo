@@ -6,7 +6,7 @@
    Grow (actionable cards + real QR); Customers (segments, detail, CSV);
    buyer-conversion (savings calculator, comparison, proof stats, go-live
    checklist + test-order, sales-trend chart); diner order-ahead pickup; and a
-   desktop phone-frame. All demo-only; resets on refresh. */
+   desktop device frame with a phone/tablet toggle. All demo-only; resets on refresh. */
 (function(){
   if(window.__fpPitch) return; window.__fpPitch = true;
 
@@ -31,15 +31,41 @@
   + '.fppos-note{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.45}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
-  /* ---------------- desktop: render the app inside a phone frame ---------------- */
-  var frameCss = '@media(min-width:760px){'
-    + 'html{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 0}'
-    + 'body{width:438px;max-width:94vw;height:880px;max-height:94vh;margin:0;overflow:hidden;position:relative;border-radius:34px;border:1px solid rgba(42,33,28,.14);box-shadow:0 0 0 11px #14100c,0 0 0 12px #2a2320,0 40px 90px rgba(0,0,0,.45)}'
-    + '.app{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}'
-    + '.cartbar,.bottomnav,.sheet,.sheet-backdrop,#backdrop,#sheet,#modback,#modsheet,#fpFormBack,#fpFormSheet{position:absolute}'
-    + '.toast{position:absolute}'
+  /* ---------------- desktop: render the app inside a device frame (phone/tablet toggle) ---------------- */
+  /* Height is capped to the viewport (min(..., 100vh - 84px)) so the whole device
+     — including the bottom nav — always fits and never clips. A floating toggle
+     switches between phone and tablet widths. Mobile screens are untouched. */
+  var frameCss = ''
+    + '#fpDeviceToggle{display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:300;gap:3px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:0 6px 20px rgba(0,0,0,.22)}'
+    + '#fpDeviceToggle button{border:0;background:transparent;border-radius:999px;padding:6px 15px;font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit}'
+    + '#fpDeviceToggle button.on{background:var(--ink);color:#fff}'
+    + '@media(min-width:760px){'
+    +   'html{min-height:100vh;display:flex;align-items:center;justify-content:center}'
+    +   'body{margin:0;max-width:none;width:min(412px,92vw);height:min(900px,calc(100vh - 84px));position:relative;overflow:hidden;border-radius:34px;border:1px solid rgba(42,33,28,.14);box-shadow:0 0 0 11px #14100c,0 0 0 12px #2a2320,0 40px 90px rgba(0,0,0,.45)}'
+    +   'body.fp-tablet{width:min(760px,92vw)}'
+    +   '.app{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}'
+    +   '.cartbar,.bottomnav,.sheet,.sheet-backdrop,#backdrop,#sheet,#modback,#modsheet,#fpFormBack,#fpFormSheet{position:absolute}'
+    +   '.toast{position:absolute}'
+    +   'body.fp-tablet .cartbar,body.fp-tablet .bottomnav,body.fp-tablet .sheet{max-width:none}'
+    +   '#fpDeviceToggle{display:flex}'
     + '}';
   var st2 = document.createElement('style'); st2.id = 'fpFrameCss'; st2.textContent = frameCss; document.head.appendChild(st2);
+  /* device size toggle (desktop only) */
+  (function(){
+    try{
+      var tg = document.createElement('div'); tg.id = 'fpDeviceToggle';
+      tg.innerHTML = '<button data-m="phone" class="on">Phone</button><button data-m="tablet">Tablet</button>';
+      document.body.appendChild(tg);
+      window.fpSetDevice = function(m){
+        var tablet = (m === 'tablet');
+        document.body.classList.toggle('fp-tablet', tablet);
+        var bs = tg.querySelectorAll('button');
+        for(var i = 0; i < bs.length; i++){ bs[i].classList.toggle('on', bs[i].getAttribute('data-m') === (tablet ? 'tablet' : 'phone')); }
+      };
+      tg.querySelector('[data-m="phone"]').onclick = function(){ window.fpSetDevice('phone'); };
+      tg.querySelector('[data-m="tablet"]').onclick = function(){ window.fpSetDevice('tablet'); };
+    }catch(e){}
+  })();
 
   /* ================= reusable inline form sheet ================= */
   var formCb = null;
