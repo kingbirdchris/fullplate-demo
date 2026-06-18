@@ -63,6 +63,10 @@
   if(typeof _fpShowEmbed === 'function'){
     window.fpShowEmbed = function(id){ _fpShowEmbed.apply(this, arguments); record('embed:' + id, function(){ _fpShowEmbed(id); }); };
   }
+  var _goWhy = window.goWhy;
+  if(typeof _goWhy === 'function'){
+    window.goWhy = function(){ _goWhy.apply(this, arguments); record('why', function(){ _goWhy(); }); };
+  }
 
   /* completing an order ends the flow: start fresh from Home */
   var _placeOrder = window.placeOrder;
