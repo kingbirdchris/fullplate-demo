@@ -8,9 +8,11 @@
    (2) Inline form sheets that replace the browser prompt() dialogs in the owner
        console (add item, edit price, add category, add modifier group, set
        photo, create promo, update truck spot) so the console looks finished.
-   (3) Owner Settings build-out: POS connect, kitchen printer connect, editable
-       diner tip presets (wired to the checkout), and indicative pricing.
-   (4) Payouts build-out: connect-your-bank via simulated Stripe Connect. */
+   (3) Owner Settings build-out: POS connect, kitchen printer, business hours,
+       team/roles, editable diner tip presets (wired to checkout), pricing.
+   (4) Payouts build-out: connect-your-bank via simulated Stripe Connect.
+   (5) Grow build-out: actionable cards (Google, embed, social, real QR).
+   (6) Customers build-out: segments, customer detail, and real CSV export. */
 (function(){
   if(window.__fpPitch) return; window.__fpPitch = true;
 
@@ -326,7 +328,7 @@
       if(!body) return;
       if(t === 'settings' && !document.getElementById('fpSettingsCards')){
         var h = document.createElement('div'); h.id = 'fpSettingsCards';
-        h.innerHTML = posCardHTML() + printerCardHTML() + tipsCardHTML() + planCardHTML();
+        h.innerHTML = posCardHTML() + printerCardHTML() + hoursCardHTML() + teamCardHTML() + tipsCardHTML() + planCardHTML();
         body.appendChild(h);
       }
       if(t === 'payouts' && !document.getElementById('fpBankCard')){
@@ -334,6 +336,197 @@
         body.insertBefore(b, body.firstChild);
       }
     }catch(e){}
+  };
+
+  /* ================= read-only info sheet (reuses the form shell) ================= */
+  function fpInfo(title, sub, bodyHTML){
+    buildSheet(); formCb = null;
+    document.getElementById('fpFormTitle').textContent = title || '';
+    document.getElementById('fpFormSub').textContent = sub || '';
+    var b = document.getElementById('fpFormBody'); b.innerHTML = bodyHTML; b.setAttribute('data-keys', '');
+    document.getElementById('fpFormSave').textContent = 'Done';
+    var back = document.getElementById('fpFormBack'); back.style.display = 'block';
+    requestAnimationFrame(function(){ back.style.opacity = '1'; document.getElementById('fpFormSheet').classList.add('open'); });
+  }
+  window.fpCloseInfo = function(){ closeForm(); };
+
+  /* ================= Settings build-out: business hours + team/roles ================= */
+  window.fpHours = window.fpHours || {};
+  var DAYS = [['mon','Mon'],['tue','Tue'],['wed','Wed'],['thu','Thu'],['fri','Fri'],['sat','Sat'],['sun','Sun']];
+  function hoursOf(r){
+    if(!fpHours[r.id]) fpHours[r.id] = { mon:'11:00am–9:00pm', tue:'11:00am–9:00pm', wed:'11:00am–9:00pm', thu:'11:00am–9:00pm', fri:'11:00am–10:00pm', sat:'11:00am–10:00pm', sun:'12:00pm–8:00pm' };
+    return fpHours[r.id];
+  }
+  function hoursCardHTML(){
+    var r = R(ownerRest) || { id:ownerRest }; var h = hoursOf(r);
+    return '<div class="fppos"><div class="fppos-h">Business hours</div>'
+      + DAYS.map(function(d){ return '<div class="fppos-row"><div class="pn">' + d[1] + '</div><span style="font-size:12.5px;color:var(--muted)">' + esc(h[d[0]] || 'Closed') + '</span></div>'; }).join('')
+      + '<div class="fppos-row"><div class="pn" style="font-weight:600;color:var(--muted);font-size:12px">Pickup ordering follows these hours</div><button class="fppos-btn" onclick="fpEditHours(\'' + r.id + '\')">Edit</button></div>'
+      + '</div>';
+  }
+  window.fpEditHours = function(rid){
+    var r = R(rid); if(!r) return; var h = hoursOf(r);
+    fpForm({ title:'Business hours', sub:'Enter hours, or type “Closed”', fields: DAYS.map(function(d){ return { key:d[0], label:d[1], type:'text', value:(h[d[0]] || '') }; }) }, function(v){
+      DAYS.forEach(function(d){ h[d[0]] = (v[d[0]] || '').trim() || 'Closed'; });
+      showToast('Hours updated'); openOwner(ownerRest, 'settings');
+    });
+  };
+  function teamCardHTML(){
+    return '<div class="fppos"><div class="fppos-h">Team &amp; roles <span>optional</span></div>'
+      + '<div class="fppos-row"><div class="pn">You (Owner)<small>Full access · billing, payouts, menu, reports</small></div><span class="fppos-tag">Owner</span></div>'
+      + '<div class="fppos-row"><div class="pn">Manager<small>Menu, hours, orders, customers — no payouts or billing</small></div><button class="fppos-btn" onclick="fpInviteStaff(\'Manager\')">Invite</button></div>'
+      + '<div class="fppos-row"><div class="pn">Cashier / line<small>Orders queue only</small></div><button class="fppos-btn" onclick="fpInviteStaff(\'Cashier\')">Invite</button></div>'
+      + '<div class="fppos-note">Role-based access, per location. In production invites go out by email and each person signs in to only what their role allows.</div>'
+      + '</div>';
+  }
+  window.fpInviteStaff = function(role){
+    fpForm({ title:'Invite ' + role, fields:[{ key:'email', label:'Their email', type:'text', placeholder:'name@email.com' }] }, function(v){
+      var e = (v.email || '').trim(); if(!e) return; showToast('Invite sent to ' + e + ' (' + role + ')');
+    });
+  };
+
+  /* ================= Grow build-out: actionable cards + real QR ================= */
+  function growHTML2(r){
+    var url = 'fullplate.app/r/' + r.id;
+    function card(ic, t, b, onclick){
+      return '<div class="growcard" style="cursor:pointer" onclick="' + onclick + '"><div class="gci">' + ic + '</div><div><b>' + t + '</b><span>' + b + '</span></div></div>';
+    }
+    return '<div class="ohero">'
+      + '<div class="lbl">Your commission-free ordering link</div>'
+      + '<div class="growlink"><span class="growurl">' + url + '</span><button class="growcopy" onclick="fpCopyOrderLink(\'' + r.id + '\')">Copy</button></div>'
+      + '<div class="osub">Put this anywhere your customers already are. Every order through it is 0% commission, and the customer is yours.</div>'
+      + '</div>'
+      + '<div class="section-label" style="padding-left:0">Drive your own orders</div>'
+      + '<div class="growgrid">'
+      + card('🔎', 'Add an Order button to Google', 'Turn on “Order online” on your Google Business Profile so searchers order direct.', 'fpGrowGoogle(\'' + r.id + '\')')
+      + card('🌐', 'Embed on your website', 'Drop FullPlate ordering onto your own site so diners never leave it.', 'fpShowEmbed(\'' + r.id + '\')')
+      + card('📲', 'Share to social', 'Post your link to Instagram and Facebook with a ready-to-go caption.', 'fpGrowSocial(\'' + r.id + '\')')
+      + card('🪧', 'QR table tents & flyers', 'Generate a printable QR for tables, windows, and to-go bags.', 'fpShowQR(\'' + r.id + '\')')
+      + '</div>'
+      + '<div class="realnote" style="margin-top:14px">FullPlate turns the customers you already have into direct, commission-free orders. You bring the demand, you keep 100%. As more spots near you join FullPlate, the local marketplace sends extra discovery on top.</div>';
+  }
+  window.fpGrowGoogle = function(rid){
+    var r = R(rid); if(!r) return; var url = 'https://fullplate.app/r/' + r.id;
+    var body = '<div style="font-size:13px;line-height:1.6;color:var(--ink)">In production FullPlate adds an <b>Order online</b> link to your Google Business Profile through Google’s food-ordering setup, so anyone who finds you on Search or Maps orders direct, commission-free.</div>'
+      + '<div class="embsnippet" style="margin-top:10px">' + url + '</div>'
+      + '<button class="embcopybtn" onclick="(navigator.clipboard&&navigator.clipboard.writeText(\'' + url + '\'));showToast(\'Order link copied\')">Copy order link</button>';
+    fpInfo('Add to Google', r.name, body);
+  };
+  window.fpGrowSocial = function(rid){
+    var r = R(rid); if(!r) return; var url = 'https://fullplate.app/r/' + r.id;
+    var tag = (r.cuisine || 'local').replace(/[^a-z0-9]/gi, '');
+    var cap = 'Skip the delivery fees 🙌 Order ' + r.name + ' direct — same great food, and we keep 100%. Order here: ' + url + ' #orderlocal #' + tag;
+    var body = '<div class="fppos-note" style="margin:0 0 8px">Ready-to-post caption — edit freely:</div>'
+      + '<textarea class="fptextarea" id="fpCapBox" style="min-height:120px">' + esc(cap) + '</textarea>'
+      + '<button class="embcopybtn" style="margin-top:10px" onclick="(navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'fpCapBox\').value));showToast(\'Caption copied\')">Copy caption</button>';
+    fpInfo('Share to social', r.name, body);
+  };
+  function withQR(cb){
+    if(window.QRCode) return cb();
+    var ex = document.getElementById('fpQRLib');
+    if(ex){ var iv = setInterval(function(){ if(window.QRCode){ clearInterval(iv); cb(); } }, 150); setTimeout(function(){ clearInterval(iv); if(!window.QRCode) cb(); }, 6000); return; }
+    var s = document.createElement('script'); s.id = 'fpQRLib'; s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = function(){ cb(); }; s.onerror = function(){ cb(); }; document.head.appendChild(s);
+  }
+  window.fpShowQR = function(rid){
+    var r = R(rid); if(!r) return; var url = 'https://fullplate.app/r/' + r.id;
+    var body = '<div id="fpQRBox" style="display:flex;justify-content:center;align-items:center;min-height:180px;padding:8px 0"></div>'
+      + '<div class="embsnippet" style="text-align:center">' + url + '</div>'
+      + '<button class="embcopybtn" id="fpQRDl" style="margin-top:10px">Download QR (PNG)</button>'
+      + '<div class="fppos-note">Print it on table tents, the window, and to-go bags. Scanning opens your commission-free ordering page.</div>';
+    fpInfo('Your order QR', r.name, body);
+    withQR(function(){
+      var box = document.getElementById('fpQRBox'); if(!box) return; box.innerHTML = '';
+      if(window.QRCode){
+        try{ new QRCode(box, { text:url, width:180, height:180, correctLevel:QRCode.CorrectLevel.M }); }catch(e){ box.textContent = 'QR unavailable'; }
+        var dl = document.getElementById('fpQRDl');
+        if(dl) dl.onclick = function(){
+          var cv = box.querySelector('canvas'); var data = cv ? cv.toDataURL('image/png') : ((box.querySelector('img') || {}).src);
+          if(!data) return; var a = document.createElement('a'); a.href = data; a.download = (r.name || 'order').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-qr.png';
+          document.body.appendChild(a); a.click(); a.remove(); showToast('QR downloaded');
+        };
+      } else { box.textContent = 'QR needs a connection to generate.'; }
+    });
+  };
+
+  /* ================= Customers build-out: segments, detail, CSV export ================= */
+  window.fpCust = window.fpCust || {};
+  function custList(r){
+    if(fpCust[r.id]) return fpCust[r.id];
+    var seed = [
+      { n:'Maria L.', o:12, lastDays:2,  ltv:184, ph:'(602) 555-0142' },
+      { n:'Devin S.', o:9,  lastDays:3,  ltv:132, ph:'(602) 555-0188' },
+      { n:'James K.', o:7,  lastDays:5,  ltv:98,  ph:'(480) 555-0119' },
+      { n:'Priya R.', o:5,  lastDays:9,  ltv:71,  ph:'(602) 555-0173' },
+      { n:'Tomas V.', o:3,  lastDays:1,  ltv:46,  ph:'(623) 555-0150' },
+      { n:'Ana G.',   o:4,  lastDays:26, ltv:56,  ph:'(480) 555-0107' },
+      { n:'Kevin M.', o:2,  lastDays:33, ltv:28,  ph:'(602) 555-0164' }
+    ];
+    seed.forEach(function(c){
+      c.seg = c.o >= 6 ? 'regulars' : (c.lastDays >= 21 ? 'lapsed' : 'new');
+      c.last = c.lastDays === 1 ? 'yesterday' : (c.lastDays + ' days ago');
+      c.email = c.n.toLowerCase().replace(/[^a-z]/g, '') + '@example.com';
+    });
+    fpCust[r.id] = seed; return seed;
+  }
+  function segLabel(s){ return s === 'regulars' ? 'regular' : (s === 'lapsed' ? 'lapsed' : 'new'); }
+  function custHTML2(r){
+    var list = custList(r);
+    var seg = window.fpCustSeg || 'all';
+    var counts = { all:list.length, regulars:0, new:0, lapsed:0 };
+    list.forEach(function(c){ counts[c.seg]++; });
+    var total = Math.max(60, Math.round((r.reviews || 200) * 0.85));
+    var repeat = Math.max(34, Math.min(72, 36 + (r.rating ? Math.round((r.rating - 4) * 34) : 12)));
+    var month = Math.round(total * 0.14);
+    var shown = list.filter(function(c){ return seg === 'all' || c.seg === seg; });
+    var segrow = [['all','All'],['regulars','Regulars'],['new','New'],['lapsed','Lapsed']].map(function(s){
+      return '<button class="kindtab ' + (seg === s[0] ? 'on' : '') + '" onclick="fpSetSeg(\'' + s[0] + '\')">' + s[1] + ' (' + counts[s[0]] + ')</button>';
+    }).join('');
+    return '<div class="ostatrow">'
+      + '<div class="ostat"><b>' + total.toLocaleString() + '</b><span>customers</span></div>'
+      + '<div class="ostat"><b>' + repeat + '%</b><span>repeat rate</span></div>'
+      + '<div class="ostat"><b>' + month + '</b><span>new this month</span></div></div>'
+      + '<div class="ownednote">✓ You own this list. On a delivery app the customer belongs to the app. On FullPlate they are yours, with contact info, for loyalty and marketing.</div>'
+      + '<div class="kindrow" style="padding:8px 0 2px">' + segrow + '</div>'
+      + shown.map(function(c){ return '<div class="orow" style="cursor:pointer" onclick="fpCustDetail(\'' + r.id + '\',' + list.indexOf(c) + ')"><div><b>' + esc(c.n) + '</b><span>' + c.o + ' orders · last ' + esc(c.last) + ' · ' + segLabel(c.seg) + '</span></div><div class="okept">$' + c.ltv + ' lifetime</div></div>'; }).join('')
+      + '<div style="display:flex;gap:8px;margin-top:12px">'
+      + '<button class="addbtn2" style="margin:0" onclick="fpSendBlast(\'' + r.id + '\')">✦ Send a promo</button>'
+      + '<button class="addbtn2" style="margin:0" onclick="fpExportCustomers(\'' + r.id + '\')">⤓ Export CSV</button>'
+      + '</div>'
+      + '<div class="realnote" style="margin-top:10px">Email and SMS campaigns, win-back offers, and loyalty all run on the list you own here. Tap a customer for their history. This is the retention engine the delivery apps keep from you.</div>';
+  }
+  window.fpSetSeg = function(s){ window.fpCustSeg = s; openOwner(ownerRest, 'customers'); };
+  window.fpCustDetail = function(rid, idx){
+    var r = R(rid); if(!r) return; var c = custList(r)[idx]; if(!c) return;
+    var body = '<div style="font-size:13.5px;line-height:1.7;color:var(--ink)">'
+      + '<div><b>' + esc(c.n) + '</b> · ' + segLabel(c.seg) + '</div>'
+      + '<div style="color:var(--muted)">' + c.o + ' orders · $' + c.ltv + ' lifetime · last order ' + esc(c.last) + '</div>'
+      + '<div style="color:var(--muted)">' + esc(c.ph) + ' · ' + esc(c.email) + '</div></div>'
+      + '<div class="fppos-note" style="margin:10px 0 0">You own this contact. Reach them directly, commission-free.</div>'
+      + '<div style="display:flex;gap:8px;margin-top:12px">'
+      + '<button class="fppos-btn" style="flex:1" onclick="showToast(\'Demo: SMS composer opens for ' + esc(c.n) + '\');fpCloseInfo()">Text a promo</button>'
+      + '<button class="fppos-btn" style="flex:1" onclick="showToast(\'Demo: email composer opens for ' + esc(c.n) + '\');fpCloseInfo()">Email</button>'
+      + '</div>';
+    fpInfo('Customer', c.n, body);
+  };
+  window.fpExportCustomers = function(rid){
+    var r = R(rid); if(!r) return; var list = custList(r);
+    var rows = [['Name','Orders','Last order','Lifetime $','Segment','Phone','Email']].concat(list.map(function(c){ return [c.n, c.o, c.last, c.ltv, c.seg, c.ph, c.email]; }));
+    var csv = rows.map(function(row){ return row.map(function(x){ var s = String(x); return /[",\n]/.test(s) ? ('"' + s.replace(/"/g, '""') + '"') : s; }).join(','); }).join('\n');
+    try{
+      var blob = new Blob([csv], { type:'text/csv' }); var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = url; a.download = (r.brandName || r.name || 'customers').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-customers.csv';
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 500);
+      showToast('Exported ' + list.length + ' customers to CSV');
+    }catch(e){ showToast('Export ready (' + list.length + ' customers)'); }
+  };
+
+  /* route the Grow + Customers tabs to the built-out versions */
+  var _ownerBody = window.ownerBody;
+  window.ownerBody = function(r){
+    if(typeof ownerTab !== 'undefined' && ownerTab === 'grow') return growHTML2(r);
+    if(typeof ownerTab !== 'undefined' && ownerTab === 'customers') return custHTML2(r);
+    return (typeof _ownerBody === 'function') ? _ownerBody(r) : '';
   };
 
   /* ================= pricing on the onboarding success screen ================= */
