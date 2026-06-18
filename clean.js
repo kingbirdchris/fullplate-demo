@@ -3,8 +3,9 @@
    the shipping product on camera: the home concept-demo footer, the .realnote
    "illustrative / built from public info" notes, the checkout "Demo only" line,
    the owner "Try it: place a test order" CTA, the green "Live: includes your
-   test orders" note, and any "Demo:" helper text. The live interactive demo
-   (no ?clean) keeps all of it. No core files edited. */
+   test orders" note, and any "Demo:" helper text. Hiding happens synchronously
+   on each render (no on-camera flash). The live interactive demo (no ?clean)
+   keeps all of it. No core files edited. */
 (function(){
   if(window.__fpClean) return;
   var on = false;
@@ -17,21 +18,31 @@
   if(!on) return;
   window.__fpClean = true;
 
+  try{ document.documentElement.classList.add('fpclean'); }catch(e){}
   try{
     var st = document.createElement('style');
-    st.textContent = '.realnote,.demo-note,#view-home > .footer{display:none!important}';
+    st.textContent = 'html.fpclean .realnote,html.fpclean .demo-note,html.fpclean #view-home > .footer,html.fpclean #view-owner .ai-launch{display:none!important}';
     (document.head || document.documentElement).appendChild(st);
   }catch(e){}
 
+  /* text-only scaffolding (the green "Live: ... test orders" note, stray "Demo:" helper notes) */
   var PAT = /place a test order|these figures include the|listing was built from public info|^\s*demo:/i;
   function sweep(){
     try{
-      Array.prototype.forEach.call(document.querySelectorAll('.ai-launch,.fppos-note,.obtiny,.realnote,.demo-note'), function(el){
+      Array.prototype.forEach.call(document.querySelectorAll('.fppos-note,.obtiny,.realnote,.demo-note,.ai-launch'), function(el){
         if(el.getAttribute('data-cln')) return;
         if(PAT.test(el.textContent || '')){ el.style.display = 'none'; el.setAttribute('data-cln', '1'); }
       });
     }catch(e){}
   }
+
+  /* run sweep synchronously right after each screen renders (so nothing flashes) */
+  ['openOwner', 'openRestaurant', 'openCheckout', 'openAccount', 'renderHome'].forEach(function(fn){
+    var orig = window[fn];
+    if(typeof orig === 'function'){ window[fn] = function(){ var r = orig.apply(this, arguments); try{ sweep(); }catch(e){} return r; }; }
+  });
+
+  /* fallback for modals / sheets that open without a nav call */
   var sched = false;
   function go(){ sched = false; sweep(); }
   try{
