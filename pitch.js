@@ -1,18 +1,12 @@
 /* FullPlate pitch layer — owner-first demo helpers. Loaded LAST (after
    ownerbar.js), so it can wrap any global without touching the other files.
-   Adds:
-   (1) Deep-link entry: ?site=<url>&name=&city=&state=&zip=&cuisine= opens the
-       onboarding flow pre-filled and auto-runs the live website import, so AJ
-       can bookmark a link per prospect and "build their page" in front of them.
-       ?pitch=1 just opens the onboarding form. Add &go=0 to fill but not scan.
-   (2) Inline form sheets that replace the browser prompt() dialogs in the owner
-       console (add item, edit price, add category, add modifier group, set
-       photo, create promo, update truck spot) so the console looks finished.
-   (3) Owner Settings build-out: POS connect, kitchen printer, business hours,
-       team/roles, editable diner tip presets (wired to checkout), pricing.
-   (4) Payouts build-out: connect-your-bank via simulated Stripe Connect.
-   (5) Grow build-out: actionable cards (Google, embed, social, real QR).
-   (6) Customers build-out: segments, customer detail, and real CSV export. */
+   Adds: deep-link entry; inline form sheets replacing prompt(); Settings
+   build-out (POS, printer, business hours, team/roles, tips inline under
+   Accept tips, pricing); Payouts connect-bank (simulated Stripe Connect);
+   Grow (actionable cards + real QR); Customers (segments, detail, CSV);
+   buyer-conversion (savings calculator, comparison, proof stats, go-live
+   checklist + test-order, sales-trend chart); diner order-ahead pickup; and a
+   desktop phone-frame. All demo-only; resets on refresh. */
 (function(){
   if(window.__fpPitch) return; window.__fpPitch = true;
 
@@ -36,6 +30,16 @@
   + '.fppos-tag{font-size:11px;font-weight:800;color:#1F6B43;background:#EAF5EE;border:1px solid #CDEBD0;border-radius:999px;padding:5px 10px;white-space:nowrap}'
   + '.fppos-note{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.45}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+
+  /* ---------------- desktop: render the app inside a phone frame ---------------- */
+  var frameCss = '@media(min-width:760px){'
+    + 'html{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 0}'
+    + 'body{width:438px;max-width:94vw;height:880px;max-height:94vh;margin:0;overflow:hidden;position:relative;border-radius:34px;border:1px solid rgba(42,33,28,.14);box-shadow:0 0 0 11px #14100c,0 0 0 12px #2a2320,0 40px 90px rgba(0,0,0,.45)}'
+    + '.app{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}'
+    + '.cartbar,.bottomnav,.sheet,.sheet-backdrop,#backdrop,#sheet,#modback,#modsheet,#fpFormBack,#fpFormSheet{position:absolute}'
+    + '.toast{position:absolute}'
+    + '}';
+  var st2 = document.createElement('style'); st2.id = 'fpFrameCss'; st2.textContent = frameCss; document.head.appendChild(st2);
 
   /* ================= reusable inline form sheet ================= */
   var formCb = null;
@@ -190,7 +194,7 @@
       + '<div class="fpplan-row"><span>Starter — listing, AI ordering, pickup</span><b>$99/mo</b></div>'
       + '<div class="fpplan-row"><span>Growth — loyalty, promos, email + SMS, analytics</span><b>$199/mo</b></div>'
       + '<div class="fpplan-row"><span>Pro — custom site/app + managed service</span><b>by assessment</b></div>'
-      + '<div class="fpplan-note">You keep 100% of every order and every tip. Only standard card processing (2.9% + 30¢) is passed through at cost — never a commission. Indicative pricing for this demo.</div>'
+      + '<div class="fpplan-note">You keep 100% of every order and every tip. Only standard card processing (2.9% + 30¢) is passed through at cost — never a commission. No contract, cancel anytime. Indicative pricing for this demo.</div>'
       + '</div>';
   }
   function posCardHTML(){
@@ -253,16 +257,6 @@
   window.fpDisconnectPrinter = function(){ fpPrinter.connected = false; fpPrinter.name = ''; showToast('Printer removed'); openOwner(ownerRest, 'settings'); };
 
   /* --- diner tip presets (owner-editable, wired to the checkout) --- */
-  function tipsCardHTML(){
-    var on = (typeof ownerSettings !== 'undefined') ? ownerSettings.tips : true;
-    var sub = on ? ('Shown at checkout: ' + fpTips.presets.map(function(p){ return p + '%'; }).join(' · ')) : 'Tips are turned off (Accept tips toggle above)';
-    return '<div class="fppos">'
-      + '<div class="fppos-h">Diner tip options</div>'
-      + '<div class="fppos-row"><div class="pn">Suggested tips<small>' + sub + '</small></div>'
-      + '<button class="fppos-btn" onclick="fpEditTips()">Edit</button></div>'
-      + '<div class="fppos-note">Diners always also see “No tip” and a custom amount, and 100% of every tip goes to you. Turn tips on or off with “Accept tips” above.</div>'
-      + '</div>';
-  }
   window.fpEditTips = function(){
     fpForm({ title:'Suggested tip amounts', sub:'Three presets diners see at checkout', fields:[
       { key:'t1', label:'Preset 1 (%)', type:'number', min:'0', value:fpTips.presets[0] },
@@ -273,7 +267,7 @@
       fpTips.presets = arr; showToast('Tip options updated'); openOwner(ownerRest, 'settings');
     });
   };
-  /* rebuild the checkout tip row from the owner's presets */
+  /* rebuild the checkout tip row from the owner's presets + add order-ahead pickup */
   var _openCheckout = window.openCheckout;
   window.openCheckout = function(){
     if(typeof _openCheckout === 'function') _openCheckout.apply(this, arguments);
@@ -286,6 +280,11 @@
           return '<button class="tipbtn ' + sel + '" onclick="setTip(' + p + ')">' + (p === 0 ? 'No tip' : p + '%') + '</button>';
         }).join('')
         + '<button class="tipbtn ' + ((typeof tipAmt !== 'undefined' && tipAmt != null) ? 'on' : '') + '" onclick="setTipCustom()">Custom</button>';
+      }
+      var sl = document.querySelector('#view-checkout .section-label');
+      if(sl && !document.getElementById('fpPickRow')){
+        var pk = document.createElement('div'); pk.innerHTML = pickupRowHTML();
+        sl.parentNode.insertBefore(pk, sl.nextSibling);
       }
     }catch(e){}
   };
@@ -318,22 +317,48 @@
   };
   window.fpManageBank = function(){ showToast('Demo: in production this opens your Stripe Express dashboard'); };
 
+  /* inline tip controls shown directly under the "Accept tips" toggle */
+  function tipInlineHTML(){
+    return '<div><b>Suggested tip amounts</b><span>Shown at checkout · diners also see “No tip” and a custom amount</span></div>'
+      + '<div class="prepwrap">'
+      + fpTips.presets.map(function(p){ return '<button class="prepbtn on" onclick="fpEditTips()">' + p + '%</button>'; }).join('')
+      + '<button class="prepbtn" onclick="fpEditTips()">Edit ✎</button>'
+      + '</div>';
+  }
+
   /* wrap openOwner (outermost, since this file loads last) to inject per tab */
   var _openOwner = window.openOwner;
   window.openOwner = function(){
     if(typeof _openOwner === 'function') _openOwner.apply(this, arguments);
     try{
       var t = (typeof ownerTab !== 'undefined') ? ownerTab : null;
+      var r = R(ownerRest) || RESTAURANTS[0];
       var body = document.getElementById('ownerBody');
       if(!body) return;
-      if(t === 'settings' && !document.getElementById('fpSettingsCards')){
-        var h = document.createElement('div'); h.id = 'fpSettingsCards';
-        h.innerHTML = posCardHTML() + printerCardHTML() + hoursCardHTML() + teamCardHTML() + tipsCardHTML() + planCardHTML();
-        body.appendChild(h);
+      if(t === 'settings'){
+        if(!document.getElementById('fpSettingsCards')){
+          var h = document.createElement('div'); h.id = 'fpSettingsCards';
+          h.innerHTML = posCardHTML() + printerCardHTML() + hoursCardHTML() + teamCardHTML() + planCardHTML();
+          body.appendChild(h);
+        }
+        if(typeof ownerSettings !== 'undefined' && ownerSettings.tips && !document.getElementById('fpTipInline')){
+          var rows = body.querySelectorAll('.hrow'); var tipRow = null;
+          for(var i = 0; i < rows.length; i++){ var bt = rows[i].querySelector('button.tgl'); if(bt && /toggleSetting\(['"]tips['"]\)/.test(bt.getAttribute('onclick') || '')){ tipRow = rows[i]; break; } }
+          if(tipRow){ var d = document.createElement('div'); d.id = 'fpTipInline'; d.className = 'hrow col'; d.innerHTML = tipInlineHTML(); tipRow.parentNode.insertBefore(d, tipRow.nextSibling); }
+        }
       }
       if(t === 'payouts' && !document.getElementById('fpBankCard')){
         var b = document.createElement('div'); b.id = 'fpBankCard'; b.innerHTML = bankCardHTML();
         body.insertBefore(b, body.firstChild);
+      }
+      if(t === 'overview' && r && !document.getElementById('fpOverviewExtras')){
+        var hero = body.querySelector('.ohero');
+        var to = document.createElement('div'); to.innerHTML = testOrderHTML(r);
+        if(hero && hero.parentNode){ hero.parentNode.insertBefore(to.firstChild, hero.nextSibling); }
+        else { body.insertBefore(to.firstChild, body.firstChild); }
+        var ex = document.createElement('div'); ex.id = 'fpOverviewExtras';
+        ex.innerHTML = checklistHTML(r) + trendHTML(r);
+        body.appendChild(ex);
       }
     }catch(e){}
   };
@@ -529,7 +554,7 @@
     return (typeof _ownerBody === 'function') ? _ownerBody(r) : '';
   };
 
-  /* ================= pricing on the onboarding success screen ================= */
+  /* ================= pricing + persuasion on the onboarding success screen ================= */
   var moTarget = document.getElementById('view-onboard');
   if(moTarget && typeof MutationObserver !== 'undefined'){
     var mo = new MutationObserver(function(){
@@ -541,11 +566,145 @@
           var card = div.firstChild;
           if(actions && actions.parentNode){ actions.parentNode.insertBefore(card, actions); }
           else { succ.appendChild(card); }
+          var bw = document.createElement('div'); bw.style.cssText = 'display:flex;gap:8px;margin-top:10px';
+          bw.innerHTML = '<button class="obbtn2" style="margin:0" onclick="fpSavingsCalc()">See your savings</button><button class="obbtn2" style="margin:0" onclick="fpCompare()">How we compare</button>';
+          succ.appendChild(bw);
         }
       }catch(e){}
     });
     mo.observe(moTarget, { childList:true, subtree:true });
   }
+
+  /* ================= owner persuasion: savings calc, comparison, proof ================= */
+  var PROOF = [
+    ['~70%', 'of diners say they prefer ordering direct from the restaurant, not a third-party app'],
+    ['30–40%', 'of each order is what delivery apps take once commission, fees, and promos stack up'],
+    ['$0', 'is what FullPlate takes in commission — you keep 100% and the customer is yours']
+  ];
+  function proofStripHTML(){
+    return '<div style="display:flex;flex-direction:column;gap:8px;margin:0 0 12px">'
+      + PROOF.map(function(p){ return '<div class="fppos" style="margin:0;padding:11px 13px"><div style="display:flex;gap:11px;align-items:baseline"><b style="font-size:18px;color:var(--good);white-space:nowrap">' + p[0] + '</b><span style="font-size:12px;color:var(--muted);line-height:1.4">' + p[1] + '</span></div></div>'; }).join('')
+      + '</div>';
+  }
+  window.fpSavingsCalc = function(){
+    var body = proofStripHTML()
+      + '<div class="fpfield"><label class="oblabel">Orders per month</label><input class="obinput" id="fpcOrders" type="number" inputmode="numeric" value="600" oninput="fpCalcRun()"></div>'
+      + '<div class="fpfield"><label class="oblabel">Average order ($)</label><input class="obinput" id="fpcAov" type="number" inputmode="decimal" value="22" oninput="fpCalcRun()"></div>'
+      + '<div class="fpfield"><label class="oblabel">FullPlate plan</label><select class="obselect" id="fpcPlan" onchange="fpCalcRun()"><option value="99">Starter — $99/mo</option><option value="199">Growth — $199/mo</option></select></div>'
+      + '<div id="fpcOut"></div>'
+      + '<button class="embcopybtn" style="margin-top:12px" onclick="fpCompare()">See how FullPlate compares ›</button>'
+      + '<div class="fppos-note" style="text-align:center">No contract, cancel anytime · we build your page from your website for you.</div>';
+    fpInfo('See your savings', 'Plug in your numbers', body);
+    fpCalcRun();
+  };
+  window.fpCalcRun = function(){
+    var g = function(id){ var el = document.getElementById(id); return el ? el.value : ''; };
+    var o = Math.max(0, parseFloat(g('fpcOrders')) || 0);
+    var a = Math.max(0, parseFloat(g('fpcAov')) || 0);
+    var plan = parseFloat(g('fpcPlan')) || 99;
+    var gross = o * a;
+    var appCost = gross * 0.30;
+    var fpCost = plan + gross * 0.029 + o * 0.30;
+    var save = appCost - fpCost;
+    var out = document.getElementById('fpcOut'); if(!out) return;
+    out.innerHTML = '<div class="savecard" style="margin:6px 0 0"><h4>✓ You keep about <span class="big">$' + Math.max(0, Math.round(save)).toLocaleString() + '/mo</span></h4>'
+      + '<p>' + o.toLocaleString() + ' orders at $' + a.toFixed(2) + ' is about $' + Math.round(gross).toLocaleString() + '/mo in sales. On delivery apps that costs roughly <b>$' + Math.round(appCost).toLocaleString() + '</b> in commission and fees. On FullPlate your only costs are the $' + plan + ' plan plus card processing at cost (about $' + Math.round(fpCost).toLocaleString() + '/mo) — roughly <b>$' + Math.max(0, Math.round(save * 12)).toLocaleString() + ' a year</b> back in your pocket.</p></div>'
+      + '<div class="fppos-note">Uses a 30% all-in delivery-app cost (commission + fees + promos), the defensible mid-range. Your real number depends on your delivery mix.</div>';
+  };
+  window.fpCompare = function(){
+    var rowsT = [
+      ['', 'FullPlate', 'DoorDash / Uber', 'ChowNow'],
+      ['Commission per order', '0%', '15–30%', '0%'],
+      ['Who owns the customer', 'You', 'The app', 'You'],
+      ['AI ordering (chat / voice)', 'Yes', 'Limited', 'No'],
+      ['Ordering on your own site', 'Yes', 'No', 'Yes'],
+      ['Built from your website', 'Yes', '—', 'Self-serve'],
+      ['Monthly cost', '$99–199', 'Commission', '~$199+']
+    ];
+    var tbl = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+      + rowsT.map(function(rw, i){
+          var cells = rw.map(function(c, ci){
+            var head = (i === 0 || ci === 0);
+            var fp = ci === 1;
+            var style = 'padding:8px 8px;border-bottom:1px solid var(--line);text-align:' + (ci === 0 ? 'left' : 'center') + ';'
+              + (head && !fp ? 'font-weight:800;color:var(--ink);' : 'color:var(--muted);')
+              + (fp ? 'color:var(--good);font-weight:800;background:#F4FBF4;' : '');
+            return '<td style="' + style + '">' + c + '</td>';
+          }).join('');
+          return '<tr>' + cells + '</tr>';
+        }).join('')
+      + '</table></div>'
+      + '<div class="fppos-note">vs delivery apps, you keep 100% and own the customer. vs ChowNow (also commission-free), FullPlate adds AI ordering, costs less, and we build your page from your website for you.</div>';
+    fpInfo('How FullPlate compares', 'Independent restaurants, US', tbl);
+  };
+
+  /* ================= owner Overview: test order, go-live checklist, trend ================= */
+  function testOrderHTML(r){
+    return '<div class="ai-launch" style="margin:14px 0 0" onclick="openRestaurant(\'' + r.id + '\')"><div class="spark">▶</div><div class="t"><b>Try it: place a test order</b><span>See exactly what your customers do — and watch it land in your queue.</span></div><div class="go">›</div></div>';
+  }
+  function checklistHTML(r){
+    var steps = [
+      { done:true, label:'Build & publish your page' },
+      { done:!!(window.fpBank && fpBank.connected), label:'Connect your bank for payouts', tab:'payouts' },
+      { done:!!(window.fpPrinter && fpPrinter.connected), label:'Connect a printer or tablet', tab:'settings' },
+      { done:false, label:'Share your order link', tab:'grow' },
+      { done:false, label:'Place a test order', act:'order' }
+    ];
+    var left = steps.filter(function(s){ return !s.done; }).length;
+    if(left === 0) return '<div class="fppos" style="margin-top:14px"><div class="fppos-h">✓ You’re all set</div><div class="fppos-note">Bank, printer, link, and a test order are done. New orders print and chime.</div></div>';
+    return '<div class="fppos" style="margin-top:14px"><div class="fppos-h">Finish setup <span>' + left + ' left</span></div>'
+      + steps.map(function(s){
+          var act = s.done ? '' : (s.act === 'order' ? ('onclick="openRestaurant(\'' + r.id + '\')"') : ('onclick="openOwner(\'' + r.id + '\',\'' + s.tab + '\')"'));
+          return '<div class="fppos-row" style="cursor:' + (s.done ? 'default' : 'pointer') + '" ' + act + '><div class="pn" style="' + (s.done ? 'color:var(--muted);font-weight:600' : '') + '">' + (s.done ? '✓ ' : '○ ') + s.label + '</div>' + (s.done ? '' : '<span style="color:var(--brand);font-weight:800;font-size:18px">›</span>') + '</div>';
+        }).join('')
+      + '</div>';
+  }
+  function hashId(s){ var h = 0; s = String(s); for(var i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; } return h; }
+  function trendHTML(r){
+    var seed = hashId(r.id), vals = [], base = 40 + (seed % 30);
+    for(var i = 0; i < 30; i++){ var d = ((seed >> (i % 16)) % 17) - 6; var weekend = (i % 7 === 5 || i % 7 === 6) ? 14 : 0; vals.push(Math.max(8, base + d + weekend + Math.round(i * 0.5))); }
+    var max = Math.max.apply(null, vals), W = 320, H = 64, bw = W / vals.length;
+    var bars = vals.map(function(v, i){ var bh = Math.round((v / max) * (H - 6)); return '<rect x="' + (i * bw + 1).toFixed(1) + '" y="' + (H - bh) + '" width="' + (bw - 2).toFixed(1) + '" height="' + bh + '" rx="1.5" fill="#2E7D52" opacity="' + (0.45 + 0.55 * (v / max)).toFixed(2) + '"></rect>'; }).join('');
+    var total = vals.reduce(function(a, b){ return a + b; }, 0);
+    return '<div class="fppos" style="margin-top:14px"><div class="fppos-h">Direct orders, last 30 days <span' + GREENBADGE + '>+' + (8 + seed % 12) + '%</span></div>'
+      + '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:100%;height:64px;display:block;margin:6px 0 2px">' + bars + '</svg>'
+      + '<div class="fppos-note">' + total.toLocaleString() + ' orders this month, all commission-free. Trend is illustrative for this location.</div></div>';
+  }
+
+  /* ================= diner order-ahead (scheduled pickup) ================= */
+  window.fpPickup = window.fpPickup || 'ASAP';
+  var FP_SLOTS = ['ASAP', '5:30pm', '6:00pm', '6:30pm', '7:00pm', '7:30pm'];
+  window.fpSetPickup = function(t){ window.fpPickup = t; if(typeof openCheckout === 'function') openCheckout(); };
+  function pickupRowHTML(){
+    return '<div class="tiplabel">Pickup time</div><div class="tiprow" id="fpPickRow">'
+      + FP_SLOTS.map(function(t){ return '<button class="tipbtn ' + (window.fpPickup === t ? 'on' : '') + '" onclick="fpSetPickup(\'' + t + '\')">' + t + '</button>'; }).join('')
+      + '</div>';
+  }
+  var _placeOrder = window.placeOrder;
+  window.placeOrder = function(){
+    if(typeof _placeOrder === 'function') _placeOrder.apply(this, arguments);
+    try{
+      if(window.fpPickup && window.fpPickup !== 'ASAP'){
+        var rl = document.querySelector('#view-done .readyline');
+        if(rl){ rl.innerHTML = rl.innerHTML.replace(/◷ <b>Estimated ready in[^<]*<\/b>/, '◷ <b>Scheduled pickup at ' + esc(window.fpPickup) + '</b>'); }
+      }
+    }catch(e){}
+    window.fpPickup = 'ASAP';
+  };
+
+  /* a "See your savings" button on the home owner banner */
+  setTimeout(function(){
+    try{
+      var bn = document.querySelector('.obbanner');
+      if(bn && !document.getElementById('fpCalcBtn')){
+        var btn = document.createElement('button'); btn.id = 'fpCalcBtn'; btn.className = 'obb-btn';
+        btn.style.background = '#fff'; btn.style.color = '#2B1E17';
+        btn.textContent = 'See your savings';
+        btn.onclick = function(e){ e.stopPropagation(); fpSavingsCalc(); };
+        bn.appendChild(btn);
+      }
+    }catch(e){}
+  }, 140);
 
   /* ================= deep-link owner-first entry ================= */
   function normUrl(u){ u = (u||'').trim(); if(!u) return ''; return /^https?:\/\//i.test(u) ? u : ('https://' + u.replace(/^\/+/, '')); }
