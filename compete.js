@@ -43,6 +43,7 @@
   function phone(r){ if(!fpPhone[r.id]) fpPhone[r.id] = { on:true }; return fpPhone[r.id]; }
   function giftSell(r){ if(!fpGiftSell[r.id]) fpGiftSell[r.id] = { on:true }; return fpGiftSell[r.id]; }
   function autoOf(r){ if(!fpAuto[r.id]) fpAuto[r.id] = { welcome:true, abandoned:false, birthday:true, postorder:true }; return fpAuto[r.id]; }
+  function schedOn(r){ if(fpScheduledOn[r.id] === undefined) fpScheduledOn[r.id] = true; return fpScheduledOn[r.id]; }
   function items(r){ var out = []; try{ (r.menu || []).forEach(function(c){ c.items.forEach(function(i){ out.push(i); }); }); }catch(e){} return out; }
 
   /* ---------------- self-contained info sheet ---------------- */
@@ -71,19 +72,12 @@
   /* ============================ DINER SIDE ============================== */
   /* ====================================================================== */
 
-  /* ---- #1 fulfillment + #5 when + #3 gift redeem + #8 upsell + #9 wallet ---- */
+  /* ---- #1 fulfillment + #3 gift redeem + #8 upsell + #9 wallet ---- */
   window.fpSetFulfill = function(rid, mode){ fpFulfill[rid] = mode; try{ openCheckout(); }catch(e){} };
   window.fpEditDeliveryAddr = function(rid){
     window.fpForm({ title:'Delivery address', sub:'Where should the courier bring it?', fields:[
       { key:'addr', label:'Address', type:'text', value:(fpDeliveryAddr[rid] || '123 W Roosevelt St, Phoenix AZ') }
     ]}, function(v){ fpDeliveryAddr[rid] = (v.addr || '').trim() || fpDeliveryAddr[rid]; try{ openCheckout(); }catch(e){} });
-  };
-  window.fpSetWhen = function(rid, mode){
-    if(mode === 'asap'){ fpWhen[rid] = 'asap'; try{ openCheckout(); }catch(e){} return; }
-    window.fpForm({ title:'Schedule your order', sub:'Order now, ready later', fields:[
-      { key:'day', label:'Day', type:'select', options:[ {label:'Today',value:'Today'}, {label:'Tomorrow',value:'Tomorrow'}, {label:'This Friday',value:'Friday'}, {label:'This Saturday',value:'Saturday'} ], value:'Today' },
-      { key:'time', label:'Time', type:'select', options:['11:30am','12:00pm','12:30pm','1:00pm','5:30pm','6:00pm','6:30pm','7:00pm'].map(function(t){ return { label:t, value:t }; }), value:'6:00pm' }
-    ]}, function(v){ fpWhen[rid] = (v.day || 'Today') + ' ' + (v.time || '6:00pm'); cToast('Scheduled for ' + fpWhen[rid]); try{ openCheckout(); }catch(e){} });
   };
   window.fpAddUpsell = function(id){ try{ addToCart(id); }catch(e){} try{ openCheckout(); }catch(e){} };
   window.fpApplyGiftField = function(){
@@ -110,20 +104,10 @@
       : '';
     return '<div class="fppos" id="cpFulfill" style="margin:12px 0 4px"><div class="fppos-h">How do you want it?</div>' + seg + addr + '</div>';
   }
-  function whenBlockHTML(r){
-    if(!fpScheduledOn[r.id]) return '';
-    var w = fpWhen[r.id] || 'asap'; var isA = (w === 'asap');
-    return '<div class="fppos" id="cpWhen" style="margin:0 0 4px"><div class="fppos-h">When?</div>'
-      + '<div style="display:flex;gap:8px;margin:2px 0 0">'
-      + '<button onclick="fpSetWhen(\'' + r.id + '\',\'asap\')" style="flex:1;padding:10px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid ' + (isA ? 'var(--brand);background:#FDEEE7;color:var(--brand)' : 'var(--line);background:#fff;color:var(--ink)') + '">As soon as possible</button>'
-      + '<button onclick="fpSetWhen(\'' + r.id + '\',\'sched\')" style="flex:1;padding:10px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid ' + (!isA ? 'var(--brand);background:#FDEEE7;color:var(--brand)' : 'var(--line);background:#fff;color:var(--ink)') + '">' + (isA ? 'Schedule for later' : cEsc(w)) + '</button></div>'
-      + '<div class="fppos-note">Diners can order now and pick a future time. Orders land in your queue at the right moment.</div></div>';
-  }
   function upsellHTML(r){
     var inCart = {}; try{ cart.forEach(function(c){ inCart[c.id] = 1; }); }catch(e){}
     var pool = items(r).filter(function(i){ return !inCart[i.id] && i.price > 0; }).slice(0, 6);
     if(!pool.length) return '';
-    var seed = cHash(r.id + (typeof cart !== 'undefined' ? cart.length : 0));
     var pick = pool.slice(0, 3);
     return '<div class="fppos" id="cpUpsell" style="margin:0 0 4px"><div class="fppos-h">Add to your order <span' + GB + '>popular</span></div>'
       + '<div style="display:flex;gap:8px;overflow-x:auto;padding:2px 0 2px">'
@@ -147,9 +131,21 @@
       var anchor = promo || view.querySelector('.co-tot');
       if(anchor && anchor.parentNode && !document.getElementById('cpStack')){
         var stack = document.createElement('div'); stack.id = 'cpStack';
-        stack.innerHTML = (delivOn ? fulfillBlockHTML(r) : '') + whenBlockHTML(r) + upsellHTML(r);
+        stack.innerHTML = (delivOn ? fulfillBlockHTML(r) : '') + upsellHTML(r);
         anchor.parentNode.insertBefore(stack, anchor);
       }
+
+      /* the owner's Order-ahead setting governs pitch.js's pickup-time picker */
+      try{
+        var schedule = schedOn(r); var ptBlock = null;
+        Array.prototype.forEach.call(view.children, function(c){
+          if(ptBlock || c.id === 'cpStack') return;
+          var cl = c.className || '';
+          if(/section-label|co-line|promorow|tiprow|tiplabel|co-tot|savecard|demo-note|cpExtras/.test(cl)) return;
+          if(/Pickup time/i.test(c.textContent || '')) ptBlock = c;
+        });
+        if(ptBlock) ptBlock.style.display = schedule ? '' : 'none';
+      }catch(e){}
 
       /* recompute the true total from source globals (this layer runs last) */
       var sub = cartTotals().sub;
@@ -306,14 +302,14 @@
       + '<div class="fppos-note">Pickup is always free and commission-free. Delivery uses on-demand couriers at a flat fee the diner pays, so you never give up a percentage of the order, the way the big apps take 15-30%.</div></div>';
   }
 
-  /* ---- #5 Settings: scheduled orders toggle ---- */
-  window.fpToggleScheduled = function(rid){ fpScheduledOn[rid] = !fpScheduledOn[rid]; cToast(fpScheduledOn[rid] ? 'Order-ahead on' : 'Order-ahead off'); try{ openOwner(ownerRest, 'settings'); }catch(e){} };
+  /* ---- #5 Settings: order-ahead (governs the diner pickup-time picker) ---- */
+  window.fpToggleScheduled = function(rid){ var cur = (fpScheduledOn[rid] === undefined) ? true : fpScheduledOn[rid]; fpScheduledOn[rid] = !cur; cToast(fpScheduledOn[rid] ? 'Order-ahead on' : 'Order-ahead off'); try{ openOwner(ownerRest, 'settings'); }catch(e){} };
   function scheduledCardHTML(r){
-    var on = !!fpScheduledOn[r.id];
+    var on = schedOn(r);
     return '<div class="fppos"><div class="fppos-h">Order ahead ' + (on ? '<span' + GB + '>On</span>' : '<span' + GY + '>off</span>') + '</div>'
       + '<div class="fppos-row"><div class="pn">Let diners schedule for later<small>Order now, ready at a chosen time. Great for lunch rushes and catering.</small></div>'
       + '<button class="fppos-btn" onclick="fpToggleScheduled(\'' + r.id + '\')">' + (on ? 'Turn off' : 'Turn on') + '</button></div>'
-      + '<div class="fppos-note">Scheduled orders land in your queue at the right moment, not all at once.</div></div>';
+      + '<div class="fppos-note">When on, diners get a pickup-time picker at checkout (as soon as possible, or a future slot). Turn off to take same-day orders only. Scheduled orders land in your queue at the right moment.</div></div>';
   }
 
   /* ---- #2 Grow: AI phone answering ---- */
