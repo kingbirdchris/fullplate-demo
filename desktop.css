@@ -78,5 +78,32 @@
   #ownerBody .profcard,
   #ownerBody .loyalcard,
   #ownerBody .trendcard,
+  #ownerBody .ocard,
   #ownerBody .checklist{break-inside:avoid}
+
+  /* uniform card-list tabs align into clean rows (a real grid, not newspaper
+     column flow) so cards line up. Orders + Reviews were visibly staggered. */
+  #ownerBody[data-otab="orders"],
+  #ownerBody[data-otab="reviews"],
+  #ownerBody[data-otab="promos"],
+  #ownerBody[data-otab="bookings"]{
+    column-count:auto;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;
+  }
+  /* rows that should run the full width of the grid */
+  #ownerBody[data-otab="orders"] .oqsum,
+  #ownerBody[data-otab="orders"] .realnote,
+  #ownerBody[data-otab="orders"] .empty,
+  #ownerBody[data-otab="reviews"] .oqsum,
+  #ownerBody[data-otab="reviews"] .rvbar,
+  #ownerBody[data-otab="reviews"] .empty,
+  #ownerBody[data-otab="promos"] .addbtn2,
+  #ownerBody[data-otab="promos"] .realnote,
+  #ownerBody[data-otab="promos"] .empty,
+  #ownerBody[data-otab="bookings"] .section-label,
+  #ownerBody[data-otab="bookings"] .fppos-note{grid-column:1 / -1}
+  /* in grid mode the cards rely on grid gap, not their own vertical margin */
+  #ownerBody[data-otab="orders"] .ocard,
+  #ownerBody[data-otab="reviews"] .ocard,
+  #ownerBody[data-otab="promos"] .ocard,
+  #ownerBody[data-otab="bookings"] .fppos{margin:0}
 }
