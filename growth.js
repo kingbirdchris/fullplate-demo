@@ -117,11 +117,15 @@
     {n:'Priya S.', s:5, t:'New favorite in the neighborhood, and ordering was easy.', w:'1 month ago'},
     {n:'Chris A.', s:4, t:'Solid and consistent, friendly staff every time.', w:'2 months ago'}
   ];
+  /* Reviews pulled live from a real website import override the demo defaults,
+     keyed by restaurant id ('__draft' during the onboarding preview). */
+  var G_OVERRIDE = {};
+  window.fpReviewOverride = G_OVERRIDE;
   function gData(r){
     var rating = (r && r.rating) ? r.rating : 4.6;
     var base = (r && r.reviews) ? r.reviews : 200;
     var count = Math.round(base * 2.3) + 140;
-    var revs = (r && G_REVIEWS[r.id]) ? G_REVIEWS[r.id] : G_GENERIC;
+    var revs = (r && G_OVERRIDE[r.id]) ? G_OVERRIDE[r.id] : ((r && G_REVIEWS[r.id]) ? G_REVIEWS[r.id] : G_GENERIC);
     var q = encodeURIComponent(((r && r.name) || '') + ' ' + ((r && (r.loc || r.city)) || ''));
     var url = 'https://www.google.com/maps/search/?api=1&query=' + q;
     return { rating: rating, count: count, reviews: revs.slice(0, 3), mapsUrl: url, reviewUrl: url };
@@ -284,7 +288,7 @@
       + '</div>'
       + '<button class="obbtn" onclick="onboardScan()">' + (mode==='location' ? 'Set up this location ›' : '✦ Scan my website') + '</button>'
       + '<div class="obtiny">' + (mode==='new'
-          ? 'Any city works. Your City and State become your marketplace area; the ZIP helps nearby diners find you. Next you will review and edit everything before publishing. Demo note: the AI import is simulated.'
+          ? 'Any city works. Your City and State become your marketplace area; the ZIP helps nearby diners find you. Next you will review and edit everything before publishing. Demo note: the AI import reads your live website.'
           : 'You can run as many locations and brands as you like from one owner account.') + '</div>'
       + '</div>';
     document.getElementById('view-onboard').innerHTML = html;
@@ -302,10 +306,39 @@
     return { city: (s ? (c + ', ' + s) : c), area: c, zip: z };
   }
 
+  /* Merge a real /api/import result into the current draft. Real values win;
+     anything missing keeps the template so the page is always complete. */
+  function applyImport(d, data){
+    if(!d || !data) return;
+    if(data.name && !d._typedName) d.name = data.name;
+    if(data.cuisine) d.cuisine = data.cuisine;
+    if(data.kind) d.kind = data.kind;
+    if(data.hours) d.hours = data.hours;
+    if(data.rating != null) d.rating = data.rating;
+    if(data.reviewCount != null) d.gcount = data.reviewCount;
+    if(Array.isArray(data.reviews) && data.reviews.length){
+      d.realReviews = data.reviews;
+      G_OVERRIDE['__draft'] = data.reviews.map(function(x){ return { n:x.name, s:x.stars, t:x.text, w:'recent' }; });
+    }
+    var ic = (data.menu || []).reduce(function(n, c){ return n + (c.items ? c.items.length : 0); }, 0);
+    if(ic >= 2){
+      d.menu = data.menu.map(function(c, ci){
+        return { cat: c.cat || 'Menu', items: (c.items || []).map(function(it, ii){
+          return { id: d.id + '_' + ci + '_' + ii, name: it.name, price: Number(it.price) || 0,
+                   desc: it.desc || '', tags: Array.isArray(it.tags) ? it.tags : [], emoji: d.emoji || '🍽️' };
+        }) };
+      });
+      d.importedMenu = true;
+    }
+    d.imported = true;
+  }
+
   window.onboardScan = function(){
     var mode = pendingBrand ? 'location' : (pendingOp ? 'brand' : 'new');
     var a = readArea();
     var id = (mode==='location' ? 'loc_' : 'new_') + Date.now();
+    delete G_OVERRIDE['__draft'];
+    var importUrl = '';
     if(mode === 'location'){
       var locLabel = (document.getElementById('obLoc').value || '').trim() || a.area;
       draft = { id:id, url:'', name:pendingBrand.name, city:a.city, zip:a.zip, loc:locLabel,
@@ -315,8 +348,10 @@
         brand:pendingBrand.id, brandName:pendingBrand.name, operator:pendingBrand.operator, operatorName:pendingBrand.operatorName,
         menu:pendingBrand.menu, shared:true };
     } else {
-      var name = (document.getElementById('obName').value || '').trim() || (mode==='brand' ? 'New Brand' : 'Your Restaurant');
+      var rawName = (document.getElementById('obName').value || '').trim();
+      var name = rawName || (mode==='brand' ? 'New Brand' : 'Your Restaurant');
       var url = (document.getElementById('obUrl').value || '').trim();
+      importUrl = url;
       var czk = document.getElementById('obCuisine').value;
       var tpl = MENU_TEMPLATES[czk] || MENU_TEMPLATES['Other'];
       var menu = tpl.menu.map(function(c){ return { cat:c.cat, items:c.items.map(function(it){
@@ -324,23 +359,45 @@
       }) }; });
       draft = { id:id, url:url, name:name, city:a.city, zip:a.zip, loc:a.area, cuisine:tpl.cuisine, kind:tpl.kind,
         emoji:tpl.emoji, color:tpl.color, rating:tpl.rating, gcount:tpl.gcount, imgUrl:imgFor(tpl.img), menu:menu,
-        hours:'Mon to Sun, 11:00am to 9:00pm',
+        hours:'Mon to Sun, 11:00am to 9:00pm', _typedName: !!rawName, _cuisineHint: czk,
         operator: pendingOp ? pendingOp.id : null, operatorName: pendingOp ? pendingOp.name : null };
     }
+    // Only attempt a real website import when onboarding fresh from a URL.
+    var wantImport = (mode === 'new') && /^https?:\/\/.+\..+/i.test(importUrl);
     var labels = (mode === 'location')
       ? ['Linking to your FullPlate account', 'Cloning your menu and prices', 'Setting this location’s hours', 'Pulling location and Google rating']
-      : ['Reading your website', 'Detecting menu items and prices', 'Importing your photos', 'Pulling your hours and location', 'Fetching your Google rating'];
+      : (wantImport
+          ? ['Reading your website', 'Detecting your menu and prices', 'Importing your hours and details', 'Pulling your rating and reviews', 'Building your FullPlate page']
+          : ['Reading your website', 'Detecting menu items and prices', 'Importing your photos', 'Pulling your hours and location', 'Fetching your Google rating']);
     document.getElementById('view-onboard').innerHTML = '<div class="obwrap">'
       + '<div class="obeyebrow">Setting up</div><h2 class="obh">Building your FullPlate page…</h2>'
-      + '<div class="obscan">' + labels.map(function(s, i){ return '<div class="obcheck" id="obc' + i + '"><span class="obspin">◷</span> ' + s + '</div>'; }).join('') + '</div></div>';
+      + '<div class="obscan">' + labels.map(function(s, i){ return '<div class="obcheck" id="obc' + i + '"><span class="obspin">◷</span> ' + s + '</div>'; }).join('') + '</div>'
+      + (wantImport ? '<div class="obtiny" id="obImpNote">Reading ' + escAttr(importUrl) + ' live…</div>' : '')
+      + '</div>';
     window.scrollTo(0, 0);
+
+    var importSettled = !wantImport, animDone = false, previewed = false;
+    function maybePreview(){ if(previewed) return; if(animDone && importSettled){ previewed = true; onboardPreview(); } }
+
     labels.forEach(function(s, i){
       setTimeout(function(){
         var el = document.getElementById('obc' + i);
         if(el){ el.classList.add('done'); var sp = el.querySelector('.obspin'); if(sp) sp.textContent = '✓'; }
-        if(i === labels.length - 1){ setTimeout(onboardPreview, 550); }
+        if(i === labels.length - 1){ animDone = true; setTimeout(maybePreview, 450); }
       }, 600 * (i + 1));
     });
+
+    if(wantImport){
+      var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      var killed = setTimeout(function(){ if(ctrl){ try{ ctrl.abort(); }catch(e){} } importSettled = true; maybePreview(); }, 13000);
+      fetch('/api/import', { method:'POST', headers:{ 'Content-Type':'application/json' },
+        signal: ctrl ? ctrl.signal : undefined,
+        body: JSON.stringify({ url: importUrl, name: draft._typedName ? draft.name : '', cuisineHint: draft._cuisineHint }) })
+        .then(function(r){ return r.json(); })
+        .then(function(res){ if(res && res.ok && res.data){ applyImport(draft, res.data); } })
+        .catch(function(){})
+        .then(function(){ clearTimeout(killed); importSettled = true; maybePreview(); });
+    }
   };
 
   /* ---------------- editable REVIEW step (before publishing) ---------------- */
@@ -351,7 +408,7 @@
       + '<div class="obeyebrow">Draft ready · review, edit, and publish</div>'
       + '<h2 class="obh">Check everything, then publish</h2>'
       + '<p class="obsub">We imported what we found. Fix anything that is off, add or remove items, and update your details before it goes live. Nothing is locked, you can keep editing in the owner console.</p>'
-      + (d.url ? '<div class="obkv">✓ Imported from ' + esc(d.url) + '</div>' : '<div class="obkv">✓ Cloned from your existing FullPlate menu</div>');
+      + (d.url ? '<div class="obkv">✓ ' + (d.importedMenu ? 'Imported from ' : 'Set up from ') + esc(d.url) + '</div>' : '<div class="obkv">✓ Cloned from your existing FullPlate menu</div>');
 
     if(d.shared){
       var ro = d.menu.map(function(c){
@@ -449,6 +506,14 @@
       if(at < 0) at = RESTAURANTS.length;
       RESTAURANTS.splice(at, 0, rest);
       IMG[d.id] = d.imgUrl || imgFor('chiwas');
+      if(d.realReviews && d.realReviews.length){
+        try{
+          if(typeof reviews !== 'undefined'){
+            reviews[d.id] = d.realReviews.map(function(x){ return { name:x.name, stars:x.stars, text:x.text, reply:'' }; });
+          }
+          G_OVERRIDE[d.id] = d.realReviews.map(function(x){ return { n:x.name, s:x.stars, t:x.text, w:'recent' }; });
+        }catch(e){}
+      }
     }
     activeCity = d.city;
     showToast(d.shared ? 'Location added' : 'Your FullPlate page is live');
