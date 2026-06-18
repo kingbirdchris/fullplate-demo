@@ -42,19 +42,7 @@
   function eClose(){ var s = document.getElementById('feSheet'); if(s) s.classList.remove('open'); var b = document.getElementById('feBack'); if(b){ b.style.opacity = '0'; setTimeout(function(){ b.style.display = 'none'; }, 200); } }
   window.eClose = eClose;
 
-  /* ================= SETTINGS: pause, alerts, tax, receipt ================= */
-  function pauseCardHTML(r){
-    var paused = false; try{ paused = !!storeOf(r).paused; }catch(e){}
-    return '<div class="fppos"><div class="fppos-h">Accept orders ' + (paused
-        ? '<span style="font-size:10.5px;font-weight:700;color:#C44A28;background:#FBEAE5;border:1px solid #E1B8AD;border-radius:999px;padding:2px 8px;text-transform:uppercase;letter-spacing:.04em">Paused</span>'
-        : '<span' + GB + '>Live</span>') + '</div>'
-      + '<div class="fppos-row"><div class="pn">' + (paused ? 'New orders are paused' : 'You’re accepting new orders')
-      + '<small>' + (paused ? 'Diners see a friendly “not taking orders right now” message' : 'Pause anytime — vacation, slammed kitchen, early close') + '</small></div>'
-      + '<button class="fppos-btn" onclick="fpTogglePause(\'' + r.id + '\')">' + (paused ? 'Resume orders' : 'Pause orders') + '</button></div>'
-      + '<div class="fppos-note">Pausing instantly stops new orders and shows diners a closed message on your page. Resume with one tap.</div></div>';
-  }
-  window.fpTogglePause = function(rid){ var r = ER(rid); if(!r) return; try{ var s = storeOf(r); s.paused = !s.paused; eToast(s.paused ? 'New orders paused' : 'Now accepting orders'); }catch(e){} try{ openOwner(ownerRest, 'settings'); }catch(e){} };
-
+  /* ================= SETTINGS: alerts, tax, receipt ================= */
   function alertsCardHTML(r){
     return '<div class="fppos"><div class="fppos-h">Test your alerts</div>'
       + '<div class="fppos-row"><div class="pn">Customer “order ready” text<small>What diners get when you mark an order ready</small></div><button class="fppos-btn" onclick="fpTestSMS(\'' + r.id + '\')">Preview</button></div>'
@@ -224,6 +212,67 @@
   /* make "Send a promo" compose to the currently filtered segment */
   window.fpSendBlast = function(rid){ window.fpCampaign(rid, window.fpCustSeg || 'all'); };
 
+  /* ================= relocate all scheduling into the Hours tab ================= */
+  var EDAYS = [['mon','Mon'],['tue','Tue'],['wed','Wed'],['thu','Thu'],['fri','Fri'],['sat','Sat'],['sun','Sun']];
+  function eHoursOf(r){
+    window.fpHours = window.fpHours || {};
+    if(!fpHours[r.id]) fpHours[r.id] = { mon:'11:00am–9:00pm', tue:'11:00am–9:00pm', wed:'11:00am–9:00pm', thu:'11:00am–9:00pm', fri:'11:00am–10:00pm', sat:'11:00am–10:00pm', sun:'12:00pm–8:00pm' };
+    return fpHours[r.id];
+  }
+  function eHolidaysOf(r){
+    window.fpHoliday = window.fpHoliday || {};
+    if(!fpHoliday[r.id]) fpHoliday[r.id] = [
+      { name:'New Year’s Day', date:'Jan 1', status:'closed' },
+      { name:'Easter Sunday', date:'Spring', status:'closed' },
+      { name:'Memorial Day', date:'Late May', status:'open' },
+      { name:'Independence Day', date:'Jul 4', status:'open' },
+      { name:'Labor Day', date:'Early Sep', status:'open' },
+      { name:'Thanksgiving', date:'Late Nov', status:'closed' },
+      { name:'Christmas Eve', date:'Dec 24', status:'custom', hours:'11:00am–4:00pm' },
+      { name:'Christmas Day', date:'Dec 25', status:'closed' },
+      { name:'New Year’s Eve', date:'Dec 31', status:'custom', hours:'11:00am–6:00pm' }
+    ];
+    return fpHoliday[r.id];
+  }
+  function eHoursCard(r){
+    var h = eHoursOf(r);
+    return '<div class="fppos"><div class="fppos-h">Business hours</div>'
+      + EDAYS.map(function(d){ return '<div class="fppos-row"><div class="pn">' + d[1] + '</div><span style="font-size:12.5px;color:var(--muted)">' + eEsc(h[d[0]] || 'Closed') + '</span></div>'; }).join('')
+      + '<div class="fppos-row"><div class="pn" style="font-weight:600;color:var(--muted);font-size:12px">Pickup ordering follows these hours</div><button class="fppos-btn" onclick="fpEditHours(\'' + r.id + '\')">Edit</button></div>'
+      + '</div>';
+  }
+  function eHolidayPill(h){
+    if(h.status === 'closed') return '<span class="fppos-tag" style="color:#C44A28;background:#FBEAE5;border-color:#E1B8AD">Closed</span>';
+    if(h.status === 'custom') return '<span class="fppos-tag" style="color:#9C6206;background:#FCEFD9;border-color:#EAD3A0">' + eEsc(h.hours || 'Reduced') + '</span>';
+    return '<span class="fppos-tag" style="color:var(--muted);background:#F3ECE2;border-color:var(--line)">Open</span>';
+  }
+  function eHolidayCard(r){
+    var hs = eHolidaysOf(r); var closed = hs.filter(function(h){ return h.status === 'closed'; }).length;
+    return '<div class="fppos"><div class="fppos-h">Holiday hours <span' + GB + '>set &amp; forget</span></div>'
+      + hs.map(function(h, i){ return '<div class="fppos-row" style="cursor:pointer" onclick="fpHolidayEdit(\'' + r.id + '\',' + i + ')"><div class="pn">' + eEsc(h.name) + '<small>' + eEsc(h.date) + '</small></div>' + eHolidayPill(h) + '</div>'; }).join('')
+      + '<div class="fppos-row" style="border-top:0;padding-top:12px"><div class="pn" style="color:var(--muted);font-weight:600;font-size:12px">' + closed + ' days closed · pre-filled with what most restaurants do</div><button class="fppos-btn" onclick="fpHolidayReset(\'' + r.id + '\')">Reset to typical</button></div>'
+      + '<div class="fppos-note">Set these once and forget them. On each holiday your page automatically shows closed or your holiday hours, and ordering pauses for that day. Tap any holiday to change it.</div></div>';
+  }
+  window.fpEditHours = function(rid){
+    var r = ER(rid); if(!r) return; var h = eHoursOf(r);
+    window.fpForm({ title:'Business hours', sub:'Enter hours, or type “Closed”', fields: EDAYS.map(function(d){ return { key:d[0], label:d[1], type:'text', value:(h[d[0]] || '') }; }) }, function(v){
+      EDAYS.forEach(function(d){ h[d[0]] = (v[d[0]] || '').trim() || 'Closed'; });
+      eToast('Hours updated'); try{ openOwner(ownerRest, 'hours'); }catch(e){}
+    });
+  };
+  window.fpHolidayEdit = function(rid, idx){
+    var r = ER(rid); if(!r) return; var h = eHolidaysOf(r)[idx]; if(!h) return;
+    window.fpForm({ title:h.name, sub:'Holiday hours', fields:[
+      { key:'status', label:'On this day', type:'select', options:[ { label:'Open — normal hours', value:'open' }, { label:'Closed', value:'closed' }, { label:'Custom hours', value:'custom' } ], value:h.status },
+      { key:'hours', label:'Custom hours (used if “Custom” above)', type:'text', value:(h.hours || '11:00am–4:00pm'), placeholder:'e.g. 11:00am–4:00pm' }
+    ]}, function(v){ h.status = v.status || 'open'; if(h.status === 'custom') h.hours = (v.hours || '').trim() || h.hours || 'Reduced hours'; eToast(h.name + ' updated'); try{ openOwner(ownerRest, 'hours'); }catch(e){} });
+  };
+  window.fpHolidayReset = function(rid){ window.fpHoliday = window.fpHoliday || {}; fpHoliday[rid] = null; eHolidaysOf(ER(rid) || { id:rid }); eToast('Holiday hours reset to typical'); try{ openOwner(ownerRest, 'hours'); }catch(e){} };
+  function removeCardByHeader(txt){
+    var anchor = document.getElementById('fpSettingsCards'); if(!anchor) return;
+    Array.prototype.forEach.call(anchor.querySelectorAll('.fppos'), function(c){ var hh = c.querySelector('.fppos-h'); if(hh && hh.textContent.indexOf(txt) === 0) c.remove(); });
+  }
+
   /* ================= wrap openOwner to inject per tab ================= */
   var _openOwner = window.openOwner;
   window.openOwner = function(){
@@ -233,11 +282,22 @@
       var r = ER(typeof ownerRest !== 'undefined' ? ownerRest : null) || RESTAURANTS[0];
       var body = document.getElementById('ownerBody');
       if(!body || !r) return;
-      if(t === 'settings' && !document.getElementById('feSettings')){
-        var d = document.createElement('div'); d.id = 'feSettings';
-        d.innerHTML = pauseCardHTML(r) + alertsCardHTML(r) + taxCardHTML(r) + receiptCardHTML(r);
-        var anchor = document.getElementById('fpSettingsCards');
-        if(anchor && anchor.parentNode){ anchor.parentNode.insertBefore(d, anchor); } else { body.appendChild(d); }
+      if(t === 'hours' && !document.getElementById('feHours')){
+        var hd = document.createElement('div'); hd.id = 'feHours'; hd.innerHTML = eHoursCard(r) + eHolidayCard(r); body.appendChild(hd);
+      }
+      if(t === 'settings'){
+        removeCardByHeader('Business hours'); removeCardByHeader('Holiday hours');
+        if(!document.getElementById('feNotifLbl')){ var nl = document.createElement('div'); nl.id = 'feNotifLbl'; nl.className = 'section-label'; nl.style.paddingLeft = '0'; nl.textContent = 'Notifications & tips'; body.insertBefore(nl, body.firstChild); }
+        if(!document.getElementById('feSettings')){
+          var d = document.createElement('div'); d.id = 'feSettings';
+          d.innerHTML = '<div class="section-label" style="padding-left:0">Alerts, tax &amp; receipts</div>' + alertsCardHTML(r) + taxCardHTML(r) + receiptCardHTML(r);
+          var anchor = document.getElementById('fpSettingsCards');
+          if(anchor && anchor.parentNode){
+            var sl = document.createElement('div'); sl.id = 'feSetupLbl'; sl.className = 'section-label'; sl.style.paddingLeft = '0'; sl.textContent = 'Setup & account';
+            anchor.parentNode.insertBefore(sl, anchor);
+            anchor.parentNode.insertBefore(d, sl);
+          } else { body.appendChild(d); }
+        }
       }
       if(t === 'grow' && !document.getElementById('feGrow')){
         var stats = document.createElement('div'); stats.id = 'feGrowStats'; stats.innerHTML = channelStatsHTML(r);
