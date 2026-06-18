@@ -1,9 +1,9 @@
 /* FullPlate growth layer: auto-onboarding (any location), multi-location and
-   multi-brand setup, an embed-on-your-site preview, live Google rating + reviews,
-   and a post-order Google-review nudge. Loaded LAST (after owner.js). Wraps
-   openRestaurant / show / rateOrder so it needs no edits to core.js.
-   Google data is demo/mock; production uses Google Places + Business Profile
-   APIs (read + attribution only), never posting reviews. */
+   multi-brand setup, an editable review step, an embed-on-your-site preview,
+   live Google rating + reviews, and a post-order Google-review nudge. Loaded
+   LAST (after owner.js). Wraps openRestaurant / show / rateOrder so it needs no
+   edits to core.js. Google data is demo/mock; production uses Google Places +
+   Business Profile APIs (read + attribution only), never posting reviews. */
 (function(){
   if(window.__fpGrowth) return; window.__fpGrowth = true;
 
@@ -61,6 +61,14 @@
   + '.obmi{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}'
   + '.obmi:last-child{border-bottom:0}'
   + '.obmp{font-weight:800;color:var(--ink);padding-left:10px}'
+  + '.edcat{display:flex;align-items:center;gap:8px;margin:14px 0 6px}'
+  + '.edcatname{flex:1;min-width:0;border:0;border-bottom:1px solid var(--line);background:transparent;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:4px 0}'
+  + '.edaddbtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--brand);cursor:pointer;white-space:nowrap}'
+  + '.edrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}'
+  + '.edname{flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:13.5px;background:#fff;color:var(--ink)}'
+  + '.edpfx{color:var(--muted);font-size:13px}'
+  + '.edprice{width:74px;flex:0 0 auto;border:1px solid var(--line);border-radius:9px;padding:9px 8px;font-size:13.5px;background:#fff;color:var(--ink)}'
+  + '.edrm{border:0;background:transparent;color:#C44A28;font-size:22px;line-height:1;cursor:pointer;padding:0 2px;flex:0 0 auto}'
   + '.obsuccess{text-align:center;padding:22px 6px 8px}'
   + '.obmark{width:58px;height:58px;border-radius:50%;background:var(--good);color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}'
   + '.obsuccess h2{font-size:21px;font-weight:900;margin-bottom:6px}'
@@ -88,6 +96,8 @@
   /* ---------------- onboarding view container ---------------- */
   var ov = document.createElement('div'); ov.id = 'view-onboard'; ov.style.display = 'none';
   (document.querySelector('.app') || document.body).appendChild(ov);
+
+  function escAttr(s){ return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
   /* ---------------- Google rating + reviews (demo) ---------------- */
   var G_REVIEWS = {
@@ -258,7 +268,7 @@
     var html = '<div class="obwrap">'
       + '<div class="obeyebrow">' + (mode==='location' ? 'Add a location' : (mode==='brand' ? 'Add a brand' : 'Restaurant onboarding')) + '</div>'
       + '<h2 class="obh">' + (mode==='location' ? 'Set up another location' : (mode==='brand' ? 'Set up another brand' : 'Build your page from your website')) + '</h2>'
-      + (mode==='new' ? '<p class="obsub">Paste your website and FullPlate pulls in your menu, prices, photos, hours, location, and Google rating. You can be in any city; we will create your area in the marketplace. In this demo the import takes a few seconds.</p>' : '')
+      + (mode==='new' ? '<p class="obsub">Paste your website and FullPlate pulls in your menu, prices, photos, hours, location, and Google rating. You can review and edit everything before it goes live. In this demo the import takes a few seconds.</p>' : '')
       + ctx;
     if(mode !== 'location'){
       html += '<label class="oblabel">Your website</label><input id="obUrl" class="obinput" value="https://" placeholder="https://yourrestaurant.com">'
@@ -274,7 +284,7 @@
       + '</div>'
       + '<button class="obbtn" onclick="onboardScan()">' + (mode==='location' ? 'Set up this location ›' : '✦ Scan my website') + '</button>'
       + '<div class="obtiny">' + (mode==='new'
-          ? 'Any city works. Your City and State become your marketplace area; the ZIP helps nearby diners find you. Demo note: the AI import is simulated; in production it reads your real site, menus (including PDFs and photos), and Google listing for you to confirm.'
+          ? 'Any city works. Your City and State become your marketplace area; the ZIP helps nearby diners find you. Next you will review and edit everything before publishing. Demo note: the AI import is simulated.'
           : 'You can run as many locations and brands as you like from one owner account.') + '</div>'
       + '</div>';
     document.getElementById('view-onboard').innerHTML = html;
@@ -301,6 +311,7 @@
       draft = { id:id, url:'', name:pendingBrand.name, city:a.city, zip:a.zip, loc:locLabel,
         cuisine:pendingBrand.cuisine, kind:pendingBrand.kind, emoji:pendingBrand.emoji, color:pendingBrand.color,
         rating:pendingBrand.rating, gcount:pendingBrand.gcount, imgUrl:pendingBrand.imgUrl,
+        hours:'Mon to Sun, 11:00am to 9:00pm',
         brand:pendingBrand.id, brandName:pendingBrand.name, operator:pendingBrand.operator, operatorName:pendingBrand.operatorName,
         menu:pendingBrand.menu, shared:true };
     } else {
@@ -313,6 +324,7 @@
       }) }; });
       draft = { id:id, url:url, name:name, city:a.city, zip:a.zip, loc:a.area, cuisine:tpl.cuisine, kind:tpl.kind,
         emoji:tpl.emoji, color:tpl.color, rating:tpl.rating, gcount:tpl.gcount, imgUrl:imgFor(tpl.img), menu:menu,
+        hours:'Mon to Sun, 11:00am to 9:00pm',
         operator: pendingOp ? pendingOp.id : null, operatorName: pendingOp ? pendingOp.name : null };
     }
     var labels = (mode === 'location')
@@ -331,41 +343,107 @@
     });
   };
 
+  /* ---------------- editable REVIEW step (before publishing) ---------------- */
   function onboardPreview(){
     var d = draft; if(!d) return;
     var nItems = d.menu.reduce(function(n, c){ return n + c.items.length; }, 0);
-    var menuHtml = d.menu.map(function(c){
-      return '<div class="obcat">' + esc(c.cat) + '</div>' + c.items.map(function(i){
-        return '<div class="obmi"><span>' + esc(i.name) + '</span><span class="obmp">$' + i.price.toFixed(2) + '</span></div>';
+    var head = '<div class="obwrap">'
+      + '<div class="obeyebrow">Draft ready · review, edit, and publish</div>'
+      + '<h2 class="obh">Check everything, then publish</h2>'
+      + '<p class="obsub">We imported what we found. Fix anything that is off, add or remove items, and update your details before it goes live. Nothing is locked, you can keep editing in the owner console.</p>'
+      + (d.url ? '<div class="obkv">✓ Imported from ' + esc(d.url) + '</div>' : '<div class="obkv">✓ Cloned from your existing FullPlate menu</div>');
+
+    if(d.shared){
+      var ro = d.menu.map(function(c){
+        return '<div class="obcat">' + esc(c.cat) + '</div>' + c.items.map(function(i){
+          return '<div class="obmi"><span>' + esc(i.name) + '</span><span class="obmp">$' + i.price.toFixed(2) + '</span></div>';
+        }).join('');
       }).join('');
+      document.getElementById('view-onboard').innerHTML = head
+        + '<label class="oblabel">Location label</label><input class="obinput" value="' + escAttr(d.loc) + '" onchange="onboardSetField(\'loc\',this.value)">'
+        + '<label class="oblabel">Area</label><input class="obinput" value="' + escAttr(d.city) + '" onchange="onboardSetField(\'city\',this.value)">'
+        + gBlock({ id:'__draft', name:d.name, loc:d.loc, city:d.city, rating:d.rating, reviews:d.gcount })
+        + '<div class="obcardlabel">Shared menu (' + nItems + ' items)</div>'
+        + '<div class="obmenu">' + ro + '</div>'
+        + '<div class="obtiny">This location shares the ' + esc(d.name) + ' menu. Edit the menu once on the brand and it updates everywhere.</div>'
+        + '<button class="obbtn" onclick="onboardPublish()">Publish this location ›</button>'
+        + '<button class="obbtn2" onclick="openOnboard()">Start over</button>'
+        + '</div>';
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    var menuHtml = d.menu.map(function(c, ci){
+      return '<div class="edcat"><input class="edcatname" value="' + escAttr(c.cat) + '" onchange="onboardSetCat(' + ci + ',this.value)"><button class="edaddbtn" onclick="onboardAddItem(' + ci + ')">+ Item</button></div>'
+        + c.items.map(function(it, ii){
+            return '<div class="edrow">'
+              + '<input class="edname" value="' + escAttr(it.name) + '" onchange="onboardSetItem(' + ci + ',' + ii + ',\'name\',this.value)">'
+              + '<span class="edpfx">$</span><input class="edprice" type="number" step="0.01" min="0" value="' + it.price.toFixed(2) + '" onchange="onboardSetItem(' + ci + ',' + ii + ',\'price\',this.value)">'
+              + '<button class="edrm" title="Remove" onclick="onboardRemoveItem(' + ci + ',' + ii + ')">×</button>'
+              + '</div>';
+          }).join('');
     }).join('');
-    document.getElementById('view-onboard').innerHTML = '<div class="obwrap">'
-      + '<div class="obeyebrow">Draft ready · review and publish</div>'
-      + '<h2 class="obh">' + esc(d.name) + (d.shared ? ' · ' + esc(d.loc) : '') + '</h2>'
-      + '<div class="obmeta">' + esc(d.cuisine) + ' · ' + esc(d.city) + (d.zip ? ' ' + esc(d.zip) : '') + ' · Mon to Sun, 11:00am to 9:00pm</div>'
-      + (d.url ? '<div class="obkv">✓ Imported from ' + esc(d.url) + '</div>' : '<div class="obkv">✓ Cloned from your existing FullPlate menu</div>')
+
+    document.getElementById('view-onboard').innerHTML = head
+      + '<label class="oblabel">Restaurant name</label><input class="obinput" value="' + escAttr(d.name) + '" onchange="onboardSetField(\'name\',this.value)">'
+      + '<div class="obrow2"><div><label class="oblabel">Cuisine</label><input class="obinput" value="' + escAttr(d.cuisine) + '" onchange="onboardSetField(\'cuisine\',this.value)"></div>'
+      + '<div><label class="oblabel">Area</label><input class="obinput" value="' + escAttr(d.city) + '" onchange="onboardSetField(\'city\',this.value)"></div></div>'
+      + '<label class="oblabel">Hours</label><input class="obinput" value="' + escAttr(d.hours || 'Mon to Sun, 11:00am to 9:00pm') + '" onchange="onboardSetField(\'hours\',this.value)">'
       + gBlock({ id:'__draft', name:d.name, loc:d.loc, city:d.city, rating:d.rating, reviews:d.gcount })
-      + '<div class="obcardlabel">' + (d.shared ? 'Shared menu' : 'Detected menu') + ' (' + nItems + ' items)</div>'
-      + '<div class="obmenu">' + menuHtml + '</div>'
+      + '<div class="obcardlabel">Menu (' + nItems + ' items) — edit, add, or remove</div>'
+      + '<div>' + menuHtml + '</div>'
+      + '<button class="obbtn2" style="margin-top:10px" onclick="onboardAddCategory()">+ Add a category</button>'
       + '<button class="obbtn" onclick="onboardPublish()">Publish to FullPlate ›</button>'
-      + '<button class="obbtn2" onclick="openOnboard()">Start over</button>'
-      + '<div class="obtiny">After publishing you can fine-tune everything in the owner console: items, prices, photos, hours, modifiers, and which POS or printer it routes to.</div>'
+      + '<button class="obbtn2" onclick="openOnboard()">Re-scan from scratch</button>'
       + '</div>';
     window.scrollTo(0, 0);
   }
 
+  window.onboardSetField = function(f, v){
+    if(!draft) return;
+    if(f === 'city'){ draft.city = v; if(!draft.shared){ draft.loc = (v.split(',')[0] || v).trim() || draft.loc; } }
+    else { draft[f] = v; }
+  };
+  window.onboardSetCat = function(ci, v){ if(draft && draft.menu[ci]) draft.menu[ci].cat = v; };
+  window.onboardSetItem = function(ci, ii, f, v){
+    if(!draft || !draft.menu[ci] || !draft.menu[ci].items[ii]) return;
+    if(f === 'price'){ var n = parseFloat(v); draft.menu[ci].items[ii].price = (n >= 0 ? n : 0); }
+    else { draft.menu[ci].items[ii][f] = v; }
+  };
+  window.onboardAddItem = function(ci){
+    if(!draft || !draft.menu[ci]) return;
+    draft.menu[ci].items.push({ id: draft.id + '_x' + Date.now(), name:'New item', price:0, desc:'', tags:[], emoji:'🍽️' });
+    onboardPreview();
+  };
+  window.onboardRemoveItem = function(ci, ii){
+    if(!draft || !draft.menu[ci]) return;
+    draft.menu[ci].items.splice(ii, 1);
+    if(!draft.menu[ci].items.length) draft.menu.splice(ci, 1);
+    onboardPreview();
+  };
+  window.onboardAddCategory = function(){
+    if(!draft) return;
+    draft.menu.push({ cat:'New category', items:[{ id: draft.id + '_x' + Date.now(), name:'New item', price:0, desc:'', tags:[], emoji:'🍽️' }] });
+    onboardPreview();
+  };
+
   window.onboardPublish = function(){
     var d = draft; if(!d) return;
+    if(!d.shared){
+      d.menu = d.menu.map(function(c){ return { cat:(c.cat || 'Menu'), items:c.items.filter(function(it){ return (it.name || '').trim(); }) }; }).filter(function(c){ return c.items.length; });
+      if(!d.menu.length){ showToast('Add at least one item before publishing'); return; }
+    }
+    var popularId = d.menu[0].items[0].id;
     if(!RESTAURANTS.find(function(r){ return r.id === d.id; })){
       var rest = { id:d.id, city:d.city, kind:d.kind, featured: !d.shared, name: d.shared ? (d.name + ' (' + d.loc + ')') : d.name,
         brand: d.brand || d.id, brandName: d.brandName || d.name,
         operator: d.operator || d.id, operatorName: d.operatorName || (d.name + ' (you)'),
         type:'fixed', loc:d.loc, cuisine:d.cuisine, emoji:d.emoji, color:d.color,
         rating:d.rating, reviews:Math.max(20, Math.round(d.gcount / 6)), eta:'15–25 min', price:'$$',
-        popular:d.menu[0].items[0].id,
+        popular:popularId,
         blurb: d.shared ? ('Another location of ' + d.brandName + ', commission-free.') : 'Commission-free ordering, imported from your website and ready to go.',
-        story: d.shared ? ('A location of ' + d.brandName + ' set up on FullPlate in this demo. It shares the brand menu and prices.') : ('This FullPlate page was built automatically from the ' + d.name + ' website in this demo: menu, prices, hours, location, and Google rating, ready for the owner to confirm.'),
-        realNote:'Demo listing generated by FullPlate onboarding. In production, FullPlate imports your real menu, prices, photos, hours, and Google rating, and syncs orders to your POS or kitchen.',
+        story: d.shared ? ('A location of ' + d.brandName + ' set up on FullPlate in this demo. It shares the brand menu and prices.') : ('This FullPlate page was built and reviewed in this demo from the ' + d.name + ' website: menu, prices, hours, location, and Google rating.'),
+        realNote:'Demo listing generated by FullPlate onboarding. In production, FullPlate imports your real menu, prices, photos, hours, and Google rating, you review and edit it, and orders sync to your POS or kitchen.',
         menu:d.menu };
       var at = RESTAURANTS.findIndex(function(r){ return r.city === d.city; });
       if(at < 0) at = RESTAURANTS.length;
