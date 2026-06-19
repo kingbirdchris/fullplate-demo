@@ -435,6 +435,26 @@
   };
   window.fpQuoteCatering = function(rid, idx){ var c = (fpCatering[rid] || [])[idx]; if(!c) return; c.status = 'quoted'; cToast('Quote sent to ' + cEsc(c.name)); try{ openOwner(ownerRest, 'bookings'); }catch(e){} };
 
+  /* ---- "If this were OpenTable" cover-fee counter ---- */
+  function money0(n){ n = Math.round(n); return '$' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function otSavingsCard(r){
+    seedBookings(r);
+    var seed = cHash(r.id + 'ot');
+    var liveCovers = (fpBookings[r.id] || []).reduce(function(s, b){ return s + (parseInt(b.party, 10) || 0); }, 0);
+    var covers = 420 + seed % 300 + liveCovers;      /* seated diners this month */
+    var netCovers = Math.round(covers * 0.6);        /* came in via a marketplace/network */
+    var webCovers = covers - netCovers;              /* booked direct */
+    var otCoverFees = netCovers * 1.5 + webCovers * 0.25;   /* OpenTable Basic: $1.50 network, $0.25 website */
+    var otMonthly = 149 + otCoverFees;               /* + $149 base */
+    var otYear = otMonthly * 12;
+    return '<div class="fppos" style="margin-top:14px;border-color:#CDEBD0;background:#F4FBF6">'
+      + '<div class="fppos-h">If this were OpenTable <span' + GB + '>cover fees</span></div>'
+      + '<div style="display:flex;align-items:baseline;gap:10px;margin:8px 0 4px"><div style="font-size:30px;font-weight:800;color:#1F6B43;line-height:1">' + money0(otMonthly) + '</div><div style="font-size:13px;color:var(--muted)">/mo they would owe &middot; ' + money0(otYear) + '/yr</div></div>'
+      + '<div class="fppos-row"><div class="pn">~' + covers + ' covers this month<small>' + netCovers + ' via network @ $1.50 + ' + webCovers + ' direct @ $0.25, plus $149 base</small></div></div>'
+      + '<div class="fppos-row"><div class="pn">The same covers on FullPlate<small>0% cover fees. Every reservation above is free.</small></div><span class="fppos-tag"' + GB + '>$0</span></div>'
+      + '<div class="fppos-note">OpenTable bills per seated diner, every month, forever. FullPlate books the same tables on your own page and you keep the guest. <b>That is about ' + money0(otYear) + ' a year you do not hand to a middleman.</b></div></div>';
+  }
+
   function bookingsHTML(r){
     seedBookings(r); seedWaitlist(r); seedCatering(r);
     var resOn = fpReserveOn[r.id] !== false; if(fpReserveOn[r.id] === undefined) fpReserveOn[r.id] = true;
@@ -457,7 +477,7 @@
       + fpCatering[r.id].map(function(c, i){ var est = c.head * c.budget; return '<div class="fppos-row"><div class="pn">' + cEsc(c.name) + ' · ' + money(est) + '<small>' + cEsc(c.date) + ' · ' + c.head + ' people · ' + cEsc(c.notes) + '</small></div>' + (c.status === 'quoted' ? catStatus('quoted') : '<button class="fppos-btn" onclick="fpQuoteCatering(\'' + r.id + '\',' + i + ')">Send quote</button>') + '</div>'; }).join('')
       + '<div class="fppos-note">Large orders are your highest-margin tickets. Capture them on your own page, commission-free.</div></div>';
 
-    return '<div class="section-label" style="padding-left:0">Bookings &middot; ' + cEsc(r.name) + '</div>' + resCard + waitCard + catCard;
+    return '<div class="section-label" style="padding-left:0">Bookings &middot; ' + cEsc(r.name) + '</div>' + otSavingsCard(r) + resCard + waitCard + catCard;
   }
 
   /* ---- #10 Reports tab: analytics ---- */
