@@ -60,14 +60,14 @@ const HEAD_SCRIM='linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,.06) 55%)';
 
 const RESTAURANTS = [
   {
-    id:'chiwas', city:'Phoenix', kind:'Mexican', featured:true, name:'Tacos Chiwas', cuisine:'Chihuahua-style Mexican', emoji:'🌮',
-    color:'#FBE3DA', rating:4.6, reviews:1064, eta:'15–25 min', price:'$$', popular:'tc1',
-    blurb:'Family-run Chihuahua-style taqueria on Indian School Rd. Handmade tortillas, made to order.',
+    id:'chiwas', city:'Phoenix', kind:'Mexican', featured:true, name:'Tacos del Comal', cuisine:'Chihuahua-style Mexican', emoji:'🌮',
+    color:'#FBE3DA', rating:4.7, reviews:326, eta:'15–25 min', price:'$$', popular:'tc1',
+    blurb:'Family-run Chihuahua-style taqueria. Handmade tortillas, made to order.',
     story:"A beloved Phoenix taqueria serving the Chihuahua-style cooking the owners grew up on. The corn tortillas are pressed by hand and the gorditas are made to order.",
-    realNote:"Real restaurant. This listing was built from public info (tacoschiwas.com) to show how a FullPlate page comes together. Menu and prices should be confirmed with the restaurant.",
+    realNote:"Sample restaurant created to demonstrate FullPlate. Not a real business; the name, menu, prices, and reviews are illustrative.",
     menu:[
       {cat:'Tacos (handmade corn tortillas)', items:[
-        {id:'tc1', name:'Taco Chiwas', price:3.49, desc:'Beef, ham, jalapeño, Anaheim chiles, asadero cheese', tags:['gf'], emoji:'🌮'},
+        {id:'tc1', name:'Taco del Comal', price:3.49, desc:'Beef, ham, jalapeño, Anaheim chiles, asadero cheese', tags:['gf'], emoji:'🌮'},
         {id:'tc2', name:'Taco Asada', price:3.49, desc:'Beef, cilantro, pickled red onion', tags:['gf'], emoji:'🌮'},
         {id:'tc3', name:'Taco Al Pastor', price:3.49, desc:'Marinated pork, cilantro, white onion', tags:['gf'], emoji:'🌮'},
         {id:'tc4', name:'Taco Carnitas', price:3.49, desc:'Shredded pork, cilantro, white onion', tags:['gf'], emoji:'🌮'},

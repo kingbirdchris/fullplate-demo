@@ -131,14 +131,14 @@ function addLocation(baseId, conf){
   IMG[conf.id]=IMG[baseId];
 }
 
-/* 2) PHOENIX — Tacos Chiwas (2 locations) + El Norteño Truck, one operator. */
+/* 2) PHOENIX — Tacos del Comal (2 locations) + El Norteño Truck, one operator. */
 (function(){
   var ch = RESTAURANTS.find(function(r){return r.id==='chiwas';});
   if(!ch) return;
-  ch.brand='chiwas'; ch.brandName='Tacos Chiwas'; ch.loc='Roosevelt Row';
+  ch.brand='chiwas'; ch.brandName='Tacos del Comal'; ch.loc='Roosevelt Row';
   ch.operator='sonoran-group'; ch.operatorName='Sonoran Hospitality Group';
-  addLocation('chiwas', {id:'chiwas-mesa', name:'Tacos Chiwas — Mesa', loc:'Mesa (Main St)', rating:4.5, reviews:412, eta:'20–30 min',
-    blurb:'The Mesa location of Tacos Chiwas. Same handmade tortillas, same menu, second kitchen.'});
+  addLocation('chiwas', {id:'chiwas-mesa', name:'Tacos del Comal — Mesa', loc:'Mesa (Main St)', rating:4.5, reviews:412, eta:'20–30 min',
+    blurb:'The Mesa location of Tacos del Comal. Same handmade tortillas, same menu, second kitchen.'});
 })();
 (function(){
   if(RESTAURANTS.find(function(r){return r.id==='norteno-truck';})) return;
@@ -151,7 +151,7 @@ function addLocation(baseId, conf){
     cuisine:'Sonoran street tacos & dogs', emoji:'🚚', color:'#FCE3D4',
     rating:4.8, reviews:233, eta:'10–15 min', price:'$', popular:'nt1', loc:'Mobile',
     blurb:'Sonoran hot dogs and mesquite street tacos from a truck. Catch us around Phoenix.',
-    story:'A roving Sonoran-style truck from the Tacos Chiwas family — bacon-wrapped dogs and mesquite-grilled street tacos wherever it parks for the day.',
+    story:'A roving Sonoran-style truck from the Tacos del Comal family — bacon-wrapped dogs and mesquite-grilled street tacos wherever it parks for the day.',
     menu:[
       {cat:'Street tacos', items:[
         {id:'nt1', name:'Carne Asada Street Taco', price:2.75, desc:'Mesquite-grilled beef, onion, cilantro', tags:['gf'], emoji:'🌮'},
