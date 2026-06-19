@@ -53,7 +53,7 @@
       +   reason('●', '0% commission, ever', 'A flat monthly subscription instead of per-order commission. The more you sell, the more you keep.')
       +   reason('👥', 'You own your customers', 'Their contact info, order history, and loyalty are yours, not locked inside a delivery app you can’t see into.')
       +   reason('⚡', 'Delivery without the markup', 'Offer delivery through flat-fee couriers the diner pays for. You never give up a percentage of the order.')
-      +   reason('🛠️', 'Done for you', 'We build your page from your existing website, sync your menu everywhere, and answer your phone with AI. Live in days, no new hardware.')
+      +   reason('🛠️', 'Done for you', 'We build your page from your existing website and sync your menu everywhere. Live in days, no new hardware.')
       + '</div>'
 
       + '<div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:0 0 18px">'
@@ -63,7 +63,7 @@
       +   vsRow('Commission per order', '0%', '15–30%')
       +   vsRow('Who owns the customer', 'You', 'The app')
       +   vsRow('Customer list &amp; data', 'Yours', 'Hidden')
-      +   vsRow('AI ordering &amp; phone', 'Included', 'No')
+      +   vsRow('AI ordering', 'Included', 'No')
       +   vsRow('Delivery cost', 'Flat fee', 'Stacked fees')
       + '</div>'
 
@@ -94,4 +94,20 @@
       }
     }catch(e){}
   };
+
+  /* Demo scope: AI phone answering has been removed. Neutralize its actions and
+     strip its card from the owner Grow/Marketing tab wherever compete.js injects it. */
+  try{ window.fpTogglePhone = function(){}; window.fpPhonePreview = function(){}; }catch(e){}
+  function stripPhone(){
+    try{
+      Array.prototype.forEach.call(document.querySelectorAll('.fppos'), function(card){
+        if(/AI phone answering/i.test(card.textContent || '')){ if(card.parentNode) card.parentNode.removeChild(card); }
+      });
+    }catch(e){}
+  }
+  var _openOwner = window.openOwner;
+  if(typeof _openOwner === 'function'){
+    window.openOwner = function(){ var r = _openOwner.apply(this, arguments); try{ stripPhone(); }catch(e){} setTimeout(stripPhone, 60); return r; };
+  }
+  setTimeout(stripPhone, 0);
 })();
