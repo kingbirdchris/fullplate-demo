@@ -183,8 +183,9 @@
       + '<div class="fpplan-h">✓ Flat monthly · 0% commission, ever</div>'
       + '<div class="fpplan-row"><span>Starter — listing, AI ordering, pickup</span><b>$99/mo</b></div>'
       + '<div class="fpplan-row"><span>Growth — loyalty, promos, email + SMS, analytics</span><b>$199/mo</b></div>'
+      + '<div class="fpplan-row"><span>Multi-location &amp; franchise — per-location rate that drops as you grow</span><b>volume pricing</b></div>'
       + '<div class="fpplan-row"><span>Pro — custom site/app + managed service</span><b>by assessment</b></div>'
-      + '<div class="fpplan-note">You keep 100% of every order and every tip. Only standard card processing (2.9% + 30¢) is passed through at cost — never a commission. No contract, cancel anytime. Indicative pricing for this demo.</div>'
+      + '<div class="fpplan-note">Software only — run it on any tablet, laptop, or printer you already have. You keep 100% of every order and every tip. Only standard card processing (2.9% + 30¢) is passed through at cost — never a commission. No contract, cancel anytime. Indicative pricing for this demo.</div>'
       + '</div>';
   }
   function posCardHTML(){
